@@ -24,6 +24,7 @@ import {
   MenuItem,
   Autocomplete,
   CircularProgress,
+  TablePagination,
 } from '@mui/material';
 import { Add, Edit, Delete, Link as LinkIcon } from '@mui/icons-material';
 import { licitacaoService } from '../services/licitacao.service';
@@ -32,6 +33,8 @@ import { Licitacao, Qualificacao } from '../types';
 import { toast } from 'react-toastify';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import TableFilters, { FilterField, FilterValues } from '../components/common/TableFilters';
+import TableExport from '../components/common/TableExport';
 
 const LicitacaoPage: React.FC = () => {
   const [licitacoes, setLicitacoes] = useState<Licitacao[]>([]);
@@ -41,6 +44,22 @@ const LicitacaoPage: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [qualificacoes, setQualificacoes] = useState<Qualificacao[]>([]);
   const [loadingQualificacoes, setLoadingQualificacoes] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  
+  // Filter states
+  const [filters, setFilters] = useState<FilterValues>({
+    search: '',
+    modalidade: '',
+    status: '',
+    pregoeiro: '',
+    valorMinEstimado: null,
+    valorMaxEstimado: null,
+    valorMinHomologado: null,
+    valorMaxHomologado: null,
+    dataInicio: '',
+    dataFim: '',
+  });
   const [formData, setFormData] = useState<Partial<Licitacao>>({
     nup: '',
     numero_contratacao: '',
@@ -57,6 +76,92 @@ const LicitacaoPage: React.FC = () => {
     link: '',
     status: 'EM ANDAMENTO',
   });
+
+  // Filter configuration
+  const filterFields: FilterField[] = [
+    {
+      key: 'modalidade',
+      label: 'Modalidade',
+      type: 'select',
+      options: [
+        { value: 'Pregão Eletrônico', label: 'Pregão Eletrônico' },
+        { value: 'Concorrência', label: 'Concorrência' },
+        { value: 'Tomada de Preços', label: 'Tomada de Preços' },
+        { value: 'Convite', label: 'Convite' },
+        { value: 'Inexigibilidade', label: 'Inexigibilidade' },
+        { value: 'Dispensa', label: 'Dispensa' },
+      ]
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select',
+      options: [
+        { value: 'EM ANDAMENTO', label: 'Em Andamento' },
+        { value: 'HOMOLOGADA', label: 'Homologada' },
+        { value: 'FRACASSADA', label: 'Fracassada' },
+        { value: 'REVOGADA', label: 'Revogada' },
+      ]
+    },
+    {
+      key: 'pregoeiro',
+      label: 'Pregoeiro',
+      type: 'text',
+      placeholder: 'Digite o nome do pregoeiro'
+    },
+    {
+      key: 'valorMinEstimado',
+      label: 'Valor Estimado Mínimo',
+      type: 'number',
+      placeholder: '0,00'
+    },
+    {
+      key: 'valorMaxEstimado',
+      label: 'Valor Estimado Máximo',
+      type: 'number',
+      placeholder: '0,00'
+    },
+    {
+      key: 'valorMinHomologado',
+      label: 'Valor Homologado Mínimo',
+      type: 'number',
+      placeholder: '0,00'
+    },
+    {
+      key: 'valorMaxHomologado',
+      label: 'Valor Homologado Máximo',
+      type: 'number',
+      placeholder: '0,00'
+    },
+    {
+      key: 'dataInicio',
+      label: 'Data Homologação Início',
+      type: 'date'
+    },
+    {
+      key: 'dataFim',
+      label: 'Data Homologação Fim',
+      type: 'date'
+    },
+  ];
+
+  // Export columns configuration
+  const exportColumns = [
+    { key: 'nup', label: 'NUP' },
+    { key: 'modalidade', label: 'Modalidade' },
+    { key: 'pregoeiro', label: 'Pregoeiro' },
+    { key: 'valor_estimado', label: 'Valor Estimado' },
+    { key: 'valor_homologado', label: 'Valor Homologado' },
+    { 
+      key: 'economia', 
+      label: 'Economia',
+      formatter: (value: number) => value ? `R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits: 2})}` : 'N/A'
+    },
+    { key: 'status', label: 'Status' },
+    { key: 'data_homologacao', label: 'Data Homologação' },
+    { key: 'area_demandante', label: 'Área Demandante' },
+    { key: 'objeto', label: 'Objeto' },
+  ];
 
   useEffect(() => {
     fetchLicitacoes();
@@ -125,6 +230,109 @@ const LicitacaoPage: React.FC = () => {
     }
   };
 
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  // Filter functions
+  const handleFilterChange = (key: string, value: string | number | null) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+    setPage(0); // Reset to first page when filtering
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      search: '',
+      modalidade: '',
+      status: '',
+      pregoeiro: '',
+      valorMinEstimado: null,
+      valorMaxEstimado: null,
+      valorMinHomologado: null,
+      valorMaxHomologado: null,
+      dataInicio: '',
+      dataFim: '',
+    });
+    setPage(0);
+  };
+
+  // Apply filters to Licitacoes
+  const filteredLicitacoes = licitacoes.filter(lic => {
+    // Search filter (searches in multiple fields)
+    if (filters.search) {
+      const searchTerm = filters.search.toString().toLowerCase();
+      const searchableFields = [
+        lic.nup,
+        lic.modalidade,
+        lic.pregoeiro,
+        lic.objeto,
+        lic.area_demandante,
+      ].join(' ').toLowerCase();
+      
+      if (!searchableFields.includes(searchTerm)) {
+        return false;
+      }
+    }
+
+    // Modalidade filter
+    if (filters.modalidade && lic.modalidade) {
+      if (lic.modalidade !== filters.modalidade) {
+        return false;
+      }
+    }
+
+    // Status filter
+    if (filters.status && lic.status) {
+      if (lic.status !== filters.status) {
+        return false;
+      }
+    }
+
+    // Pregoeiro filter
+    if (filters.pregoeiro && lic.pregoeiro) {
+      if (!lic.pregoeiro.toLowerCase().includes(filters.pregoeiro.toString().toLowerCase())) {
+        return false;
+      }
+    }
+
+    // Valor estimado range filter
+    if (filters.valorMinEstimado && lic.valor_estimado && lic.valor_estimado < Number(filters.valorMinEstimado)) {
+      return false;
+    }
+    if (filters.valorMaxEstimado && lic.valor_estimado && lic.valor_estimado > Number(filters.valorMaxEstimado)) {
+      return false;
+    }
+
+    // Valor homologado range filter
+    if (filters.valorMinHomologado && lic.valor_homologado && lic.valor_homologado < Number(filters.valorMinHomologado)) {
+      return false;
+    }
+    if (filters.valorMaxHomologado && lic.valor_homologado && lic.valor_homologado > Number(filters.valorMaxHomologado)) {
+      return false;
+    }
+
+    // Date range filter (data de homologacao)
+    if (filters.dataInicio && lic.data_homologacao) {
+      const licDate = new Date(lic.data_homologacao);
+      const startDate = new Date(filters.dataInicio.toString());
+      if (licDate < startDate) return false;
+    }
+    if (filters.dataFim && lic.data_homologacao) {
+      const licDate = new Date(lic.data_homologacao);
+      const endDate = new Date(filters.dataFim.toString());
+      if (licDate > endDate) return false;
+    }
+
+    return true;
+  });
+
+  const paginatedLicitacoes = filteredLicitacoes.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
   if (loading) {
     return <Typography>Carregando...</Typography>;
   }
@@ -135,14 +343,30 @@ const LicitacaoPage: React.FC = () => {
         <Typography variant="h4">
           Licitação
         </Typography>
-        <Button 
-          variant="contained" 
-          startIcon={<Add />}
-          onClick={() => handleOpenModal()}
-        >
-          Nova Licitação
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <TableExport
+            data={filteredLicitacoes}
+            columns={exportColumns}
+            filename="licitacoes"
+            title="Relatório de Licitações"
+          />
+          <Button 
+            variant="contained" 
+            startIcon={<Add />}
+            onClick={() => handleOpenModal()}
+          >
+            Nova Licitação
+          </Button>
+        </Box>
       </Box>
+
+      <TableFilters
+        fields={filterFields}
+        values={filters}
+        onChange={handleFilterChange}
+        onClear={handleClearFilters}
+        searchPlaceholder="Pesquisar por NUP, modalidade, pregoeiro..."
+      />
 
       <TableContainer component={Paper}>
         <Table>
@@ -160,8 +384,8 @@ const LicitacaoPage: React.FC = () => {
           </TableHead>
           <TableBody>
             {/* VERIFICAÇÃO SEGURA antes do map */}
-            {licitacoes && licitacoes.length > 0 ? (
-              licitacoes.map((lic) => (
+            {paginatedLicitacoes && paginatedLicitacoes.length > 0 ? (
+              paginatedLicitacoes.map((lic) => (
                 <TableRow key={lic.id || lic.nup}>
                   <TableCell>{lic.nup}</TableCell>
                   <TableCell>{lic.modalidade || 'N/A'}</TableCell>
@@ -225,6 +449,19 @@ const LicitacaoPage: React.FC = () => {
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          component="div"
+          count={filteredLicitacoes.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Linhas por página:"
+          labelDisplayedRows={({ from, to, count }) =>
+            `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
+          }
+        />
       </TableContainer>
 
       {/* Modal para Nova/Editar Licitação */}

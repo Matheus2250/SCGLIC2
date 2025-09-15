@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core.database import get_db
 from app.models.usuario import Usuario
-from app.models.qualificacao import Qualificacao
+from app.models.qualificacao import Qualificacao, StatusQualificacao
 from app.models.pca import PCA
 from app.schemas.qualificacao import Qualificacao as QualificacaoSchema, QualificacaoCreate, QualificacaoUpdate
 
@@ -31,7 +31,7 @@ def read_qualificacoes_concluidas(
 ) -> Any:
     """Retorna apenas as qualificações com status 'Concluído' para seleção em licitações"""
     qualificacoes = db.query(Qualificacao).filter(
-        Qualificacao.status == "Concluído"
+        Qualificacao.status == StatusQualificacao.CONCLUIDO
     ).offset(skip).limit(limit).all()
     return qualificacoes
 

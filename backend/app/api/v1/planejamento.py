@@ -35,9 +35,15 @@ def create_pca(
     if existing_pca:
         raise HTTPException(status_code=400, detail="PCA with this number already exists")
     
-    # Calculate if it's delayed
+    # Calculate if it's delayed - only "Não iniciada" contracts can be delayed
+    # NULL values in situacao_execucao also mean "Não iniciada"
     atrasada = False
-    if pca_in.data_estimada_conclusao and pca_in.data_estimada_conclusao < date.today():
+    is_nao_iniciada = (pca_in.situacao_execucao is None or 
+                       (pca_in.situacao_execucao and pca_in.situacao_execucao.lower().strip() == "não iniciada"))
+    
+    if (is_nao_iniciada and
+        pca_in.data_estimada_conclusao and 
+        pca_in.data_estimada_conclusao < date.today()):
         atrasada = True
     
     pca = PCA(
@@ -78,8 +84,14 @@ def update_pca(
     for field, value in update_data.items():
         setattr(pca, field, value)
     
-    # Update delayed status
-    if pca.data_estimada_conclusao and pca.data_estimada_conclusao < date.today():
+    # Update delayed status - only "Não iniciada" contracts can be delayed
+    # NULL values in situacao_execucao also mean "Não iniciada"
+    is_nao_iniciada = (pca.situacao_execucao is None or 
+                       (pca.situacao_execucao and pca.situacao_execucao.lower().strip() == "não iniciada"))
+    
+    if (is_nao_iniciada and
+        pca.data_estimada_conclusao and 
+        pca.data_estimada_conclusao < date.today()):
         pca.atrasada = True
     else:
         pca.atrasada = False
@@ -111,17 +123,23 @@ async def import_pca_excel(
     current_user: Usuario = Depends(deps.get_current_active_user)
 ) -> Any:
     """Importa dados do PCA a partir de arquivo Excel"""
+    print(f"INICIO IMPORT - Filename: {file.filename}, ContentType: {file.content_type}")
     try:
         # Validar tipo de arquivo
+        print(f"VALIDANDO ARQUIVO - Filename: {file.filename}")
         if not file.filename.endswith(('.xlsx', '.xls')):
+            print(f"ERRO VALIDACAO - Arquivo inválido: {file.filename}")
             raise HTTPException(
                 status_code=400,
                 detail="Arquivo deve ser Excel (.xlsx ou .xls)"
             )
         
         # Ler o arquivo Excel
+        print(f"LENDO ARQUIVO EXCEL - Size: {len(contents) if 'contents' in locals() else 'unknown'}")
         contents = await file.read()
+        print(f"ARQUIVO LIDO - Size: {len(contents)} bytes")
         df = pd.read_excel(io.BytesIO(contents))
+        print(f"EXCEL PROCESSADO - Linhas: {len(df)}, Colunas: {len(df.columns)}")
         
         # Mapear colunas do Excel para o modelo (incluindo versões com encoding corrompido)
         column_mapping = {
@@ -167,6 +185,7 @@ async def import_pca_excel(
         imported = 0
         updated = 0
         errors = []
+        processed_numbers = set()  # Para evitar duplicatas no mesmo arquivo
         
         for index, row in df.iterrows():
             try:
@@ -176,9 +195,18 @@ async def import_pca_excel(
                     errors.append(f"Linha {index + 2}: Número da contratação não informado")
                     continue
                 
+                # Verificar duplicatas dentro do mesmo arquivo
+                if numero_contratacao in processed_numbers:
+                    errors.append(f"Linha {index + 2}: Número da contratação {numero_contratacao} duplicado no arquivo")
+                    continue
+                
+                processed_numbers.add(numero_contratacao)
+                
+                print(f"VERIFICANDO DUPLICATA - Numero: {numero_contratacao}")
                 existing_pca = db.query(PCA).filter(
                     PCA.numero_contratacao == numero_contratacao
                 ).first()
+                print(f"RESULTADO DUPLICATA - Existe: {existing_pca is not None}")
                 
                 # Preparar dados
                 pca_data = {
@@ -219,12 +247,16 @@ async def import_pca_excel(
                     else:
                         pca_data[date_field] = None
                 
-                # Calcular se está atrasada
-                if pca_data.get('data_estimada_conclusao'):
-                    pca_data['atrasada'] = (
-                        pca_data['data_estimada_conclusao'] < datetime.now().date() and
-                        pca_data.get('status_contratacao', '').upper() != 'CONCLUÍDO'
-                    )
+                # Calcular se está atrasada - only "Não iniciada" contracts can be delayed
+                # NULL values in situacao_execucao also mean "Não iniciada"
+                situacao = pca_data.get('situacao_execucao')
+                is_nao_iniciada = (situacao is None or 
+                                 (situacao and situacao.lower().strip() == "não iniciada"))
+                
+                if (is_nao_iniciada and
+                    pca_data.get('data_estimada_conclusao') and
+                    pca_data['data_estimada_conclusao'] < datetime.now().date()):
+                    pca_data['atrasada'] = True
                 else:
                     pca_data['atrasada'] = False
                 
@@ -239,9 +271,17 @@ async def import_pca_excel(
                     new_pca = PCA(**pca_data)
                     db.add(new_pca)
                     imported += 1
+                
+                # Flush intermediário para detectar problemas mais cedo
+                db.flush()
                     
             except Exception as e:
-                errors.append(f"Linha {index + 2}: {str(e)}")
+                db.rollback()
+                error_msg = f"Linha {index + 2} (PCA {numero_contratacao}): {str(e)}"
+                errors.append(error_msg)
+                print(f"ERRO DE IMPORTACAO: {error_msg}")  # Debug mais visível
+                import traceback
+                print(f"TRACEBACK: {traceback.format_exc()}")  # Stack trace completo
                 continue
         
         # Commit das alterações
@@ -263,6 +303,9 @@ async def import_pca_excel(
         )
     except Exception as e:
         db.rollback()
+        print(f"ERRO GERAL IMPORT: {str(e)}")
+        import traceback
+        print(f"TRACEBACK GERAL: {traceback.format_exc()}")
         raise HTTPException(
             status_code=400,
             detail=f"Erro ao processar arquivo: {str(e)}"
@@ -291,3 +334,75 @@ def get_pcas_atrasadas(
 ) -> Any:
     pcas = db.query(PCA).filter(PCA.atrasada == True).all()
     return pcas
+
+
+@router.get("/dashboard/charts")
+def get_dashboard_charts(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(deps.get_current_active_user)
+) -> Any:
+    """Retorna dados para gráficos do dashboard de planejamento"""
+    from sqlalchemy import func
+    
+    # Gráfico por situação da execução
+    situacao_stats = db.query(
+        PCA.situacao_execucao,
+        func.count(PCA.id).label('quantidade')
+    ).group_by(PCA.situacao_execucao).all()
+    
+    situacao_data = [
+        {
+            "name": item.situacao_execucao or "Não iniciada",
+            "value": item.quantidade
+        }
+        for item in situacao_stats
+    ]
+    
+    # Gráfico por categoria
+    categoria_stats = db.query(
+        PCA.categoria_contratacao,
+        func.count(PCA.id).label('quantidade')
+    ).group_by(PCA.categoria_contratacao).all()
+    
+    categoria_data = [
+        {
+            "name": item.categoria_contratacao or "Não informada",
+            "value": item.quantidade
+        }
+        for item in categoria_stats
+    ]
+    
+    # Gráfico por status da contratação
+    status_stats = db.query(
+        PCA.status_contratacao,
+        func.count(PCA.id).label('quantidade')
+    ).group_by(PCA.status_contratacao).all()
+    
+    status_data = [
+        {
+            "name": item.status_contratacao or "Não informado",
+            "value": item.quantidade
+        }
+        for item in status_stats
+    ]
+    
+    # Gráfico de valores por categoria
+    valor_categoria_stats = db.query(
+        PCA.categoria_contratacao,
+        func.sum(PCA.valor_total).label('valor_total')
+    ).group_by(PCA.categoria_contratacao).all()
+    
+    valor_categoria_data = [
+        {
+            "name": item.categoria_contratacao or "Não informada",
+            "value": float(item.valor_total or 0)
+        }
+        for item in valor_categoria_stats
+    ]
+    
+    return {
+        "situacao_execucao": situacao_data,
+        "categoria": categoria_data,
+        "status_contratacao": status_data,
+        "valor_por_categoria": valor_categoria_data
+    }

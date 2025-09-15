@@ -18,19 +18,23 @@ import {
   DialogActions,
   Alert,
   Input,
+  TablePagination,
 } from '@mui/material';
 import {
   Add,
-  Edit,
-  Delete,
   Upload,
   FileDownload,
+  Visibility,
+  Delete,
 } from '@mui/icons-material';
 import { pcaService } from '../services/pca.service';
 import { PCA } from '../types';
 import { toast } from 'react-toastify';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import TableFilters, { FilterField, FilterValues } from '../components/common/TableFilters';
+import TableExport from '../components/common/TableExport';
+import PCADetailsModal from '../components/common/PCADetailsModal';
 
 const Planejamento: React.FC = () => {
   const [pcas, setPcas] = useState<PCA[]>([]);
@@ -38,6 +42,78 @@ const Planejamento: React.FC = () => {
   const [importDialog, setImportDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  
+  // Details modal states
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedPCA, setSelectedPCA] = useState<PCA | null>(null);
+  
+  // Filter states
+  const [filters, setFilters] = useState<FilterValues>({
+    search: '',
+    area_requisitante: '',
+    status: '',
+    valorMin: null,
+    valorMax: null,
+    dataInicio: '',
+    dataFim: '',
+  });
+
+  // Filter configuration
+  const filterFields: FilterField[] = [
+    {
+      key: 'area_requisitante',
+      label: 'Área Requisitante',
+      type: 'text',
+      placeholder: 'Digite o nome da área'
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select',
+      options: [
+        { value: 'no_prazo', label: 'No Prazo' },
+        { value: 'atrasada', label: 'Atrasada' }
+      ]
+    },
+    {
+      key: 'valorMin',
+      label: 'Valor Mínimo',
+      type: 'number',
+      placeholder: '0,00'
+    },
+    {
+      key: 'valorMax',
+      label: 'Valor Máximo',
+      type: 'number',
+      placeholder: '0,00'
+    },
+    {
+      key: 'dataInicio',
+      label: 'Data Início',
+      type: 'date'
+    },
+    {
+      key: 'dataFim',
+      label: 'Data Fim',
+      type: 'date'
+    },
+  ];
+
+  // Export columns configuration
+  const exportColumns = [
+    { key: 'numero_contratacao', label: 'Nº Contratação' },
+    { key: 'titulo_contratacao', label: 'Título' },
+    { key: 'valor_total', label: 'Valor Total' },
+    { key: 'area_requisitante', label: 'Área Requisitante' },
+    { key: 'data_estimada_conclusao', label: 'Data Conclusão' },
+    { 
+      key: 'atrasada', 
+      label: 'Status',
+      formatter: (value: boolean) => value ? 'Atrasada' : 'No Prazo'
+    },
+  ];
 
   useEffect(() => {
     fetchPCAs();
@@ -93,6 +169,16 @@ const Planejamento: React.FC = () => {
     }
   };
 
+  const handleViewDetails = (pca: PCA) => {
+    setSelectedPCA(pca);
+    setDetailsOpen(true);
+  };
+
+  const handleCloseDetails = () => {
+    setDetailsOpen(false);
+    setSelectedPCA(null);
+  };
+
   const formatCurrency = (value: number | undefined) => {
     if (!value) return 'N/A';
     return new Intl.NumberFormat('pt-BR', {
@@ -106,6 +192,89 @@ const Planejamento: React.FC = () => {
     return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
   };
 
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  // Filter functions
+  const handleFilterChange = (key: string, value: string | number | null) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+    setPage(0); // Reset to first page when filtering
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      search: '',
+      area_requisitante: '',
+      status: '',
+      valorMin: null,
+      valorMax: null,
+      dataInicio: '',
+      dataFim: '',
+    });
+    setPage(0);
+  };
+
+  // Apply filters to PCAs
+  const filteredPCAs = pcas.filter(pca => {
+    // Search filter (searches in multiple fields)
+    if (filters.search) {
+      const searchTerm = filters.search.toString().toLowerCase();
+      const searchableFields = [
+        pca.numero_contratacao,
+        pca.titulo_contratacao,
+        pca.area_requisitante,
+      ].join(' ').toLowerCase();
+      
+      if (!searchableFields.includes(searchTerm)) {
+        return false;
+      }
+    }
+
+    // Area filter
+    if (filters.area_requisitante && pca.area_requisitante) {
+      if (!pca.area_requisitante.toLowerCase().includes(filters.area_requisitante.toString().toLowerCase())) {
+        return false;
+      }
+    }
+
+    // Status filter
+    if (filters.status) {
+      const isAtrasada = pca.atrasada;
+      if (filters.status === 'atrasada' && !isAtrasada) return false;
+      if (filters.status === 'no_prazo' && isAtrasada) return false;
+    }
+
+    // Value range filter
+    if (filters.valorMin && pca.valor_total && pca.valor_total < Number(filters.valorMin)) {
+      return false;
+    }
+    if (filters.valorMax && pca.valor_total && pca.valor_total > Number(filters.valorMax)) {
+      return false;
+    }
+
+    // Date range filter
+    if (filters.dataInicio && pca.data_estimada_conclusao) {
+      const pcaDate = new Date(pca.data_estimada_conclusao);
+      const startDate = new Date(filters.dataInicio.toString());
+      if (pcaDate < startDate) return false;
+    }
+    if (filters.dataFim && pca.data_estimada_conclusao) {
+      const pcaDate = new Date(pca.data_estimada_conclusao);
+      const endDate = new Date(filters.dataFim.toString());
+      if (pcaDate > endDate) return false;
+    }
+
+    return true;
+  });
+
+  const paginatedPCAs = filteredPCAs.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
   if (loading) {
     return <Typography>Carregando...</Typography>;
   }
@@ -116,7 +285,13 @@ const Planejamento: React.FC = () => {
         <Typography variant="h4">
           Planejamento - PCA
         </Typography>
-        <Box>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <TableExport
+            data={filteredPCAs}
+            columns={exportColumns}
+            filename="planejamento_pca"
+            title="Relatório de Planejamento - PCA"
+          />
           <Button
             variant="outlined"
             startIcon={<Upload />}
@@ -126,6 +301,14 @@ const Planejamento: React.FC = () => {
           </Button>
         </Box>
       </Box>
+
+      <TableFilters
+        fields={filterFields}
+        values={filters}
+        onChange={handleFilterChange}
+        onClear={handleClearFilters}
+        searchPlaceholder="Pesquisar por número, título ou área..."
+      />
 
       <TableContainer component={Paper}>
         <Table>
@@ -137,13 +320,13 @@ const Planejamento: React.FC = () => {
               <TableCell>Área Requisitante</TableCell>
               <TableCell>Data Conclusão</TableCell>
               <TableCell>Status</TableCell>
-              <TableCell>Ações</TableCell>
+              <TableCell align="center">Ações</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {/* VERIFICAÇÃO SEGURA antes do map */}
-            {pcas && pcas.length > 0 ? (
-              pcas.map((pca) => (
+            {paginatedPCAs && paginatedPCAs.length > 0 ? (
+              paginatedPCAs.map((pca) => (
                 <TableRow key={pca.id || pca.numero_contratacao}>
                   <TableCell>{pca.numero_contratacao}</TableCell>
                   <TableCell>
@@ -161,17 +344,24 @@ const Planejamento: React.FC = () => {
                       size="small"
                     />
                   </TableCell>
-                  <TableCell>
-                    <IconButton size="small" color="primary">
-                      <Edit />
-                    </IconButton>
-                    <IconButton 
-                      size="small" 
-                      color="error"
-                      onClick={() => handleDelete(pca.id)}
-                    >
-                      <Delete />
-                    </IconButton>
+                  <TableCell align="center">
+                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleViewDetails(pca)}
+                        title="Ver detalhes"
+                      >
+                        <Visibility fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDelete(pca.id)}
+                        color="error"
+                        title="Excluir"
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))
@@ -186,6 +376,19 @@ const Planejamento: React.FC = () => {
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          component="div"
+          count={filteredPCAs.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Linhas por página:"
+          labelDisplayedRows={({ from, to, count }) =>
+            `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
+          }
+        />
       </TableContainer>
 
       {/* Import Dialog */}
@@ -228,6 +431,13 @@ const Planejamento: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* PCA Details Modal */}
+      <PCADetailsModal
+        open={detailsOpen}
+        onClose={handleCloseDetails}
+        pca={selectedPCA}
+      />
     </Box>
   );
 };

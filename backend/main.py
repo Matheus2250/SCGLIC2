@@ -21,8 +21,7 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "http://10.255.66.242:3000",  # Seu IP na rede
         "http://10.255.66.242:3001",
-        "http://10.255.66.242:5173",
-        "*"  # Permite qualquer origem (para facilitar acesso na rede)
+        "http://10.255.66.242:5173"
     ],
     allow_credentials=True,
     allow_methods=["*"],  # Permite todos os métodos (GET, POST, PUT, DELETE, etc)

@@ -10,11 +10,15 @@ import {
   Menu,
   MenuItem,
 } from '@mui/material';
-import { AccountCircle, ExitToApp } from '@mui/icons-material';
+import { AccountCircle, ExitToApp, Menu as MenuIcon } from '@mui/icons-material';
 import { useAuth } from '../../store/auth.context';
 import { useNavigate } from 'react-router-dom';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  onSidebarToggle: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onSidebarToggle }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -36,6 +40,15 @@ const Header: React.FC = () => {
   return (
     <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
       <Toolbar>
+        <IconButton
+          color="inherit"
+          aria-label="toggle sidebar"
+          onClick={onSidebarToggle}
+          edge="start"
+          sx={{ mr: 2 }}
+        >
+          <MenuIcon />
+        </IconButton>
         <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
           Sistema de Gestão de Contratações Públicas
         </Typography>

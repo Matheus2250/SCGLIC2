@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, Box } from '@mui/material';
@@ -29,6 +29,12 @@ const theme = createTheme({
 });
 
 function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const handleSidebarToggle = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -45,8 +51,8 @@ function App() {
               element={
                 <PrivateRoute>
                   <Box sx={{ display: 'flex' }}>
-                    <Header />
-                    <Sidebar />
+                    <Header onSidebarToggle={handleSidebarToggle} />
+                    <Sidebar open={sidebarOpen} />
                     <Box
                       component="main"
                       sx={{
@@ -54,7 +60,10 @@ function App() {
                         bgcolor: 'background.default',
                         p: 3,
                         mt: 8, // Account for AppBar height
-                        ml: 4, // Account for Sidebar
+                        transition: (theme) => theme.transitions.create(['margin'], {
+                          easing: theme.transitions.easing.sharp,
+                          duration: theme.transitions.duration.leavingScreen,
+                        }),
                       }}
                     >
                       <Routes>

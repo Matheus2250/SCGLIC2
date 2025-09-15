@@ -626,7 +626,7 @@ def generate_html_report(df: pd.DataFrame, config: CustomReportRequest, chart_da
             <div class="container">
                 <div class="row">
                     <div class="col-12">
-                        <h1 class="mb-0"><i class="bi bi-bar-chart-fill text-white me-2"></i>Relatório Customizado</h1>
+                        <h1 class="mb-0">Relatório Customizado</h1>
                         <p class="mb-0 opacity-75">Fonte de Dados: {data_source_label}</p>
                         <small class="opacity-75">Gerado em: {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}</small>
                     </div>
@@ -675,11 +675,11 @@ def generate_html_report(df: pd.DataFrame, config: CustomReportRequest, chart_da
             </div>
 
             <!-- Gráficos -->
-            {f'<h2 class="mb-4"><i class="bi bi-graph-up text-success me-2"></i>Visualizações</h2><div class="row">{chart_containers}</div>' if chart_containers else ''}
+            {f'<h2 class="mb-4">Visualizações</h2><div class="row">{chart_containers}</div>' if chart_containers else ''}
 
             <!-- Tabela de Dados -->
             <div class="mb-4">
-                <h2 class="mb-3"><i class="bi bi-table text-info me-2"></i>Dados</h2>
+                <h2 class="mb-3">Dados</h2>
                 <div class="table-responsive">
                     {table_html}
                 </div>
@@ -689,10 +689,10 @@ def generate_html_report(df: pd.DataFrame, config: CustomReportRequest, chart_da
             <div class="row no-print mb-4">
                 <div class="col-12 text-center">
                     <button onclick="window.print()" class="btn btn-primary btn-lg me-2">
-                        <i class="bi bi-printer me-1"></i>Imprimir
+                        Imprimir
                     </button>
                     <button onclick="exportToPDF()" class="btn btn-success btn-lg">
-                        <i class="bi bi-file-earmark-pdf me-1"></i>Salvar como PDF
+                        Salvar como PDF
                     </button>
                 </div>
             </div>

@@ -20,12 +20,17 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../store/auth.context';
 
 const DRAWER_WIDTH = 240;
+const DRAWER_WIDTH_CLOSED = 64;
 
 interface MenuItem {
   text: string;
   icon: React.ReactElement;
   path: string;
   allowedRoles?: string[];
+}
+
+interface SidebarProps {
+  open: boolean;
 }
 
 const menuItems: MenuItem[] = [
@@ -59,7 +64,7 @@ const menuItems: MenuItem[] = [
   },
 ];
 
-const Sidebar: React.FC = () => {
+const Sidebar: React.FC<SidebarProps> = ({ open }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -72,11 +77,20 @@ const Sidebar: React.FC = () => {
     <Drawer
       variant="permanent"
       sx={{
-        width: DRAWER_WIDTH,
+        width: open ? DRAWER_WIDTH : DRAWER_WIDTH_CLOSED,
         flexShrink: 0,
+        transition: (theme) => theme.transitions.create('width', {
+          easing: theme.transitions.easing.sharp,
+          duration: theme.transitions.duration.enteringScreen,
+        }),
         [`& .MuiDrawer-paper`]: { 
-          width: DRAWER_WIDTH, 
-          boxSizing: 'border-box' 
+          width: open ? DRAWER_WIDTH : DRAWER_WIDTH_CLOSED,
+          boxSizing: 'border-box',
+          transition: (theme) => theme.transitions.create('width', {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
+          overflowX: 'hidden',
         },
       }}
     >
@@ -88,10 +102,10 @@ const Sidebar: React.FC = () => {
               selected={location.pathname === item.path}
               onClick={() => navigate(item.path)}
             >
-              <ListItemIcon>
+              <ListItemIcon sx={{ minWidth: open ? 56 : 'auto', mr: open ? 3 : 'auto' }}>
                 {item.icon}
               </ListItemIcon>
-              <ListItemText primary={item.text} />
+              {open && <ListItemText primary={item.text} />}
             </ListItemButton>
           </ListItem>
         ))}

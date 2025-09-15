@@ -24,12 +24,15 @@ import {
   MenuItem,
   Autocomplete,
   CircularProgress,
+  TablePagination,
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import { qualificacaoService } from '../services/qualificacao.service';
 import { pcaService } from '../services/pca.service';
 import { Qualificacao, PCA } from '../types';
 import { toast } from 'react-toastify';
+import TableFilters, { FilterField, FilterValues } from '../components/common/TableFilters';
+import TableExport from '../components/common/TableExport';
 
 interface FormData {
   nup: string;
@@ -67,6 +70,87 @@ const QualificacaoPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [editingQualificacao, setEditingQualificacao] = useState<Qualificacao | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  
+  // Filter states
+  const [filters, setFilters] = useState<FilterValues>({
+    search: '',
+    area_demandante: '',
+    modalidade: '',
+    status: '',
+    responsavel_instrucao: '',
+    valorMin: null,
+    valorMax: null,
+  });
+
+  // Filter configuration
+  const filterFields: FilterField[] = [
+    {
+      key: 'area_demandante',
+      label: 'Área Demandante',
+      type: 'text',
+      placeholder: 'Digite o nome da área'
+    },
+    {
+      key: 'modalidade',
+      label: 'Modalidade',
+      type: 'select',
+      options: [
+        { value: 'Pregão Eletrônico', label: 'Pregão Eletrônico' },
+        { value: 'Concorrência', label: 'Concorrência' },
+        { value: 'Tomada de Preços', label: 'Tomada de Preços' },
+        { value: 'Convite', label: 'Convite' },
+        { value: 'Inexigibilidade', label: 'Inexigibilidade' },
+        { value: 'Dispensa', label: 'Dispensa' },
+      ]
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select',
+      options: [
+        { value: 'EM ANALISE', label: 'Em Análise' },
+        { value: 'CONCLUIDO', label: 'Concluído' },
+      ]
+    },
+    {
+      key: 'responsavel_instrucao',
+      label: 'Responsável pela Instrução',
+      type: 'text',
+      placeholder: 'Digite o nome do responsável'
+    },
+    {
+      key: 'valorMin',
+      label: 'Valor Mínimo',
+      type: 'number',
+      placeholder: '0,00'
+    },
+    {
+      key: 'valorMax',
+      label: 'Valor Máximo',
+      type: 'number',
+      placeholder: '0,00'
+    },
+  ];
+
+  // Export columns configuration
+  const exportColumns = [
+    { key: 'nup', label: 'NUP' },
+    { key: 'numero_contratacao', label: 'Nº Contratação' },
+    { key: 'area_demandante', label: 'Área Demandante' },
+    { key: 'responsavel_instrucao', label: 'Responsável Instrução' },
+    { key: 'modalidade', label: 'Modalidade' },
+    { key: 'objeto', label: 'Objeto' },
+    { key: 'palavra_chave', label: 'Palavra-chave' },
+    { key: 'valor_estimado', label: 'Valor Estimado' },
+    { 
+      key: 'status', 
+      label: 'Status',
+      formatter: (value: string) => value === 'EM ANALISE' ? 'Em Análise' : value === 'CONCLUIDO' ? 'Concluído' : value
+    },
+    { key: 'observacoes', label: 'Observações' },
+  ];
 
   useEffect(() => {
     fetchQualificacoes();
@@ -216,6 +300,95 @@ const QualificacaoPage: React.FC = () => {
     }).format(value);
   };
 
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  // Filter functions
+  const handleFilterChange = (key: string, value: string | number | null) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+    setPage(0); // Reset to first page when filtering
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      search: '',
+      area_demandante: '',
+      modalidade: '',
+      status: '',
+      responsavel_instrucao: '',
+      valorMin: null,
+      valorMax: null,
+    });
+    setPage(0);
+  };
+
+  // Apply filters to Qualificacoes
+  const filteredQualificacoes = qualificacoes.filter(qual => {
+    // Search filter (searches in multiple fields)
+    if (filters.search) {
+      const searchTerm = filters.search.toString().toLowerCase();
+      const searchableFields = [
+        qual.nup,
+        qual.numero_contratacao,
+        qual.area_demandante,
+        qual.modalidade,
+        qual.responsavel_instrucao,
+        qual.objeto,
+        qual.palavra_chave,
+      ].join(' ').toLowerCase();
+      
+      if (!searchableFields.includes(searchTerm)) {
+        return false;
+      }
+    }
+
+    // Area demandante filter
+    if (filters.area_demandante && qual.area_demandante) {
+      if (!qual.area_demandante.toLowerCase().includes(filters.area_demandante.toString().toLowerCase())) {
+        return false;
+      }
+    }
+
+    // Modalidade filter
+    if (filters.modalidade && qual.modalidade) {
+      if (qual.modalidade !== filters.modalidade) {
+        return false;
+      }
+    }
+
+    // Status filter
+    if (filters.status && qual.status) {
+      if (qual.status !== filters.status) {
+        return false;
+      }
+    }
+
+    // Responsavel instrucao filter
+    if (filters.responsavel_instrucao && qual.responsavel_instrucao) {
+      if (!qual.responsavel_instrucao.toLowerCase().includes(filters.responsavel_instrucao.toString().toLowerCase())) {
+        return false;
+      }
+    }
+
+    // Value range filter
+    if (filters.valorMin && qual.valor_estimado && qual.valor_estimado < Number(filters.valorMin)) {
+      return false;
+    }
+    if (filters.valorMax && qual.valor_estimado && qual.valor_estimado > Number(filters.valorMax)) {
+      return false;
+    }
+
+    return true;
+  });
+
+  const paginatedQualificacoes = filteredQualificacoes.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
   if (loading) {
     return <Typography>Carregando...</Typography>;
   }
@@ -226,10 +399,26 @@ const QualificacaoPage: React.FC = () => {
         <Typography variant="h4">
           Qualificação
         </Typography>
-        <Button variant="contained" startIcon={<Add />} onClick={handleOpenModal}>
-          Nova Qualificação
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <TableExport
+            data={filteredQualificacoes}
+            columns={exportColumns}
+            filename="qualificacoes"
+            title="Relatório de Qualificações"
+          />
+          <Button variant="contained" startIcon={<Add />} onClick={handleOpenModal}>
+            Nova Qualificação
+          </Button>
+        </Box>
       </Box>
+
+      <TableFilters
+        fields={filterFields}
+        values={filters}
+        onChange={handleFilterChange}
+        onClear={handleClearFilters}
+        searchPlaceholder="Pesquisar por NUP, número da contratação, área..."
+      />
 
       <TableContainer component={Paper}>
         <Table>
@@ -246,8 +435,8 @@ const QualificacaoPage: React.FC = () => {
           </TableHead>
           <TableBody>
             {/* VERIFICAÇÃO SEGURA antes do map */}
-            {qualificacoes && qualificacoes.length > 0 ? (
-              qualificacoes.map((qual) => (
+            {paginatedQualificacoes && paginatedQualificacoes.length > 0 ? (
+              paginatedQualificacoes.map((qual) => (
                 <TableRow key={qual.id || qual.nup}>
                   <TableCell>{qual.nup}</TableCell>
                   <TableCell>{qual.numero_contratacao}</TableCell>
@@ -292,6 +481,19 @@ const QualificacaoPage: React.FC = () => {
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          component="div"
+          count={filteredQualificacoes.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Linhas por página:"
+          labelDisplayedRows={({ from, to, count }) =>
+            `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
+          }
+        />
       </TableContainer>
 
       {/* Modal para Nova/Editar Qualificação */}
@@ -358,11 +560,11 @@ const QualificacaoPage: React.FC = () => {
                         <>
                           {loadingPcas ? <CircularProgress color="inherit" size={20} /> : null}
                           {params.InputProps.endAdornment}
-                          </>
-                        ),
-                      }}
-                    />
-                  )}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
                 />
             </Grid>
 

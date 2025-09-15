@@ -47,4 +47,14 @@ export const pcaService = {
     const response = await api.get<PCA[]>('/api/v1/pca/atrasadas');
     return response.data;
   },
+
+  async getDashboardCharts(): Promise<{
+    situacao_execucao: { name: string; value: number }[];
+    categoria: { name: string; value: number }[];
+    status_contratacao: { name: string; value: number }[];
+    valor_por_categoria: { name: string; value: number }[];
+  }> {
+    const response = await api.get('/api/v1/pca/dashboard/charts');
+    return response.data;
+  },
 };

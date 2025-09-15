@@ -25,7 +25,9 @@
       "Bash(pyinstaller:*)",
       "Bash(ipconfig)",
       "Bash(del:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(npm install:*)",
+      "Bash(cmd /c:*)"
     ],
     "deny": [],
     "ask": []
