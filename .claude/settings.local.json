@@ -27,7 +27,15 @@
       "Bash(del:*)",
       "Bash(find:*)",
       "Bash(npm install:*)",
-      "Bash(cmd /c:*)"
+      "Bash(cmd /c:*)",
+      "Bash(netstat:*)",
+      "Bash(\"taskkill\" \"/f\" \"/pid\" \"1320\")",
+      "Bash(\"taskkill\" \"/F\" \"/PID\" \"21568\")",
+      "Bash(npx tsc:*)",
+      "Bash(\"taskkill\" \"/F\" \"/PID\" \"16292\")",
+      "Bash(\"taskkill\" \"/F\" \"/PID\" \"21424\")",
+      "Bash(\"taskkill\" \"/F\" \"/PID\" \"17076\")",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

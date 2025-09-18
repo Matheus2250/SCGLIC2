@@ -9,6 +9,97 @@ from app.schemas.pca import PCA as PCASchema, PCACreate, PCAUpdate
 from datetime import date
 import pandas as pd
 import io
+import re
+
+
+def clean_text(text):
+    """Limpa e corrige caracteres especiais corrompidos"""
+    if pd.isna(text) or text == '':
+        return None
+
+    text = str(text)
+    # Correções de encoding corrompido comum
+    replacements = {
+        'ã': 'ã',
+        'ção': 'ção',
+        'çã': 'ção',
+        'contratação': 'contratação',
+        'situação': 'situação',
+        'execução': 'execução',
+        'preparação': 'preparação',
+        'título': 'título',
+        'serviço': 'serviço',
+        'informação': 'informação',
+        'comunicação': 'comunicação',
+        'aquisição': 'aquisição',
+        'manutenção': 'manutenção',
+        'área': 'área',
+        'número': 'número',
+        'início': 'início',
+        'conclusão': 'conclusão',
+        'duração': 'duração',
+        'transferência': 'transferência',
+        'assistência': 'assistência',
+        'técnica': 'técnica',
+        'científica': 'científica',
+        'implementação': 'implementação',
+        'ágil': 'ágil',
+        'agências': 'agências',
+        'mobiliários': 'mobiliários',
+        'acessórios': 'acessórios',
+        'análise': 'análise'
+    }
+
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+
+    return text.strip()
+
+
+def parse_csv_date(date_str):
+    """Converte string de data CSV para formato datetime"""
+    if pd.isna(date_str) or date_str == '':
+        return None
+
+    date_str = str(date_str).strip()
+
+    # Tentar diferentes formatos de data
+    formats = ['%d/%m/%Y', '%Y-%m-%d', '%d-%m-%Y']
+
+    for fmt in formats:
+        try:
+            from datetime import datetime
+            return datetime.strptime(date_str, fmt).date()
+        except ValueError:
+            continue
+
+    return None
+
+
+def parse_csv_currency(value_str):
+    """Converte string de valor monetário CSV para float"""
+    if pd.isna(value_str) or value_str == '':
+        return 0.0
+
+    value_str = str(value_str).strip()
+
+    # Remove espaços e outros caracteres não numéricos
+    value_str = re.sub(r'[^\d,.]', '', value_str)
+
+    # Se tem vírgula, é separador decimal brasileiro
+    if ',' in value_str:
+        # Dividir em parte inteira e decimal
+        parts = value_str.split(',')
+        integer_part = parts[0].replace('.', '')  # Remove pontos de milhares
+        decimal_part = parts[1] if len(parts) > 1 else '00'
+        value_str = integer_part + '.' + decimal_part
+
+    try:
+        return float(value_str)
+    except ValueError:
+        return 0.0
+
+
 
 router = APIRouter()
 
@@ -35,26 +126,73 @@ def create_pca(
     if existing_pca:
         raise HTTPException(status_code=400, detail="PCA with this number already exists")
     
-    # Calculate if it's delayed - only "Não iniciada" contracts can be delayed
-    # NULL values in situacao_execucao also mean "Não iniciada"
-    atrasada = False
-    is_nao_iniciada = (pca_in.situacao_execucao is None or 
-                       (pca_in.situacao_execucao and pca_in.situacao_execucao.lower().strip() == "não iniciada"))
-    
-    if (is_nao_iniciada and
-        pca_in.data_estimada_conclusao and 
-        pca_in.data_estimada_conclusao < date.today()):
-        atrasada = True
-    
     pca = PCA(
         **pca_in.dict(),
-        created_by=current_user.id,
-        atrasada=atrasada
+        created_by=current_user.id
     )
     db.add(pca)
     db.commit()
     db.refresh(pca)
     return pca
+
+
+@router.get("/atrasadas")
+def get_pcas_atrasadas(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(deps.get_current_active_user)
+) -> List[PCASchema]:
+    from sqlalchemy import text
+
+    # Buscar contratações atrasadas usando a mesma lógica SQL
+    sql_query = text("""
+        SELECT * FROM pca
+        WHERE situacao_execucao = 'Não iniciada'
+          AND data_estimada_inicio < CURRENT_DATE
+          AND data_estimada_conclusao >= CURRENT_DATE
+        ORDER BY data_estimada_inicio ASC
+    """)
+
+    result = db.execute(sql_query)
+    pcas = result.fetchall()
+
+    # Converter resultados para objetos PCA
+    pca_objects = []
+    for row in pcas:
+        pca = PCA()
+        for column, value in zip(result.keys(), row):
+            setattr(pca, column, value)
+        pca_objects.append(pca)
+
+    return pca_objects
+
+
+@router.get("/vencidas")
+def get_pcas_vencidas(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(deps.get_current_active_user)
+) -> List[PCASchema]:
+    from sqlalchemy import text
+
+    # Buscar contratações vencidas usando a mesma lógica SQL
+    sql_query = text("""
+        SELECT * FROM pca
+        WHERE situacao_execucao = 'Não iniciada'
+          AND data_estimada_conclusao < CURRENT_DATE
+        ORDER BY data_estimada_conclusao ASC
+    """)
+
+    result = db.execute(sql_query)
+    pcas = result.fetchall()
+
+    # Converter resultados para objetos PCA
+    pca_objects = []
+    for row in pcas:
+        pca = PCA()
+        for column, value in zip(result.keys(), row):
+            setattr(pca, column, value)
+        pca_objects.append(pca)
+
+    return pca_objects
 
 
 @router.get("/{pca_id}", response_model=PCASchema)
@@ -83,18 +221,6 @@ def update_pca(
     update_data = pca_in.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(pca, field, value)
-    
-    # Update delayed status - only "Não iniciada" contracts can be delayed
-    # NULL values in situacao_execucao also mean "Não iniciada"
-    is_nao_iniciada = (pca.situacao_execucao is None or 
-                       (pca.situacao_execucao and pca.situacao_execucao.lower().strip() == "não iniciada"))
-    
-    if (is_nao_iniciada and
-        pca.data_estimada_conclusao and 
-        pca.data_estimada_conclusao < date.today()):
-        pca.atrasada = True
-    else:
-        pca.atrasada = False
     
     db.commit()
     db.refresh(pca)
@@ -247,18 +373,6 @@ async def import_pca_excel(
                     else:
                         pca_data[date_field] = None
                 
-                # Calcular se está atrasada - only "Não iniciada" contracts can be delayed
-                # NULL values in situacao_execucao also mean "Não iniciada"
-                situacao = pca_data.get('situacao_execucao')
-                is_nao_iniciada = (situacao is None or 
-                                 (situacao and situacao.lower().strip() == "não iniciada"))
-                
-                if (is_nao_iniciada and
-                    pca_data.get('data_estimada_conclusao') and
-                    pca_data['data_estimada_conclusao'] < datetime.now().date()):
-                    pca_data['atrasada'] = True
-                else:
-                    pca_data['atrasada'] = False
                 
                 if existing_pca:
                     # Atualizar registro existente
@@ -312,28 +426,256 @@ async def import_pca_excel(
         )
 
 
+
+@router.post("/import-csv")
+async def import_pca_csv(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(deps.get_current_active_user)
+) -> Any:
+    """Importa dados do PCA a partir de arquivo CSV e converte automaticamente"""
+    print(f"INICIO IMPORT CSV - Filename: {file.filename}, ContentType: {file.content_type}")
+    try:
+        # Validar tipo de arquivo
+        print(f"VALIDANDO ARQUIVO CSV - Filename: {file.filename}")
+        if not file.filename.endswith('.csv'):
+            print(f"ERRO VALIDACAO CSV - Arquivo inválido: {file.filename}")
+            raise HTTPException(
+                status_code=400,
+                detail="Arquivo deve ser CSV (.csv)"
+            )
+
+        # Ler o arquivo CSV
+        print(f"LENDO ARQUIVO CSV")
+        contents = await file.read()
+        print(f"ARQUIVO CSV LIDO - Size: {len(contents)} bytes")
+
+        # Tentar diferentes encodings
+        df = None
+        encodings = ['windows-1252', 'utf-8', 'latin1']
+
+        for encoding in encodings:
+            try:
+                df = pd.read_csv(io.BytesIO(contents), sep=';', encoding=encoding)
+                print(f"CSV PROCESSADO COM ENCODING {encoding} - Linhas: {len(df)}, Colunas: {len(df.columns)}")
+                break
+            except Exception as e:
+                print(f"Erro com encoding {encoding}: {e}")
+                continue
+
+        if df is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Erro ao processar arquivo CSV. Verifique o formato e encoding."
+            )
+
+        print("Colunas encontradas no CSV:")
+        for i, col in enumerate(df.columns):
+            print(f"{i+1}. {col}")
+
+        # Mapeamento das colunas do CSV para a tabela PCA (baseado no convert_pca.py)
+        column_mapping = {
+            0: 'numero_contratacao',      # Número da contratação
+            1: 'status_contratacao',      # Status da contratação
+            2: 'situacao_execucao',       # Situação da Execução
+            3: 'titulo_contratacao',      # Título da contratação
+            4: 'categoria_contratacao',   # Categoria da contratação
+            6: 'data_estimada_inicio',    # Data estimada para o início
+            7: 'data_estimada_conclusao', # Data estimada para a conclusão
+            9: 'area_requisitante',       # Área requisitante
+            10: 'numero_dfd',             # Nº DFD
+            24: 'valor_total'             # Valor Total (coluna 25, índice 24)
+        }
+
+        # Processar e limpar dados
+        clean_data = []
+        processed_numbers = set()
+
+        print("Processando registros do CSV...")
+
+        for index, row in df.iterrows():
+            try:
+                # Extrair dados usando o mapeamento de colunas
+                record = {}
+
+                for col_index, field_name in column_mapping.items():
+                    if col_index < len(df.columns):
+                        raw_value = row.iloc[col_index] if col_index < len(row) else None
+
+                        if field_name in ['data_estimada_inicio', 'data_estimada_conclusao']:
+                            record[field_name] = parse_csv_date(raw_value)
+                        elif field_name == 'valor_total':
+                            record[field_name] = parse_csv_currency(raw_value)
+                        else:
+                            cleaned_value = clean_text(raw_value)
+                            # Se for situacao_execucao e estiver vazio, colocar "Não iniciada"
+                            if field_name == 'situacao_execucao' and (cleaned_value is None or cleaned_value == ''):
+                                cleaned_value = 'Não iniciada'
+                            record[field_name] = cleaned_value
+
+                # Verificar se tem número de contratação
+                numero_contratacao = record.get('numero_contratacao')
+                if not numero_contratacao:
+                    print(f"Linha {index + 2}: Número da contratação não informado")
+                    continue
+
+                numero_contratacao = str(numero_contratacao).strip()
+
+                # Verificar duplicatas dentro do mesmo arquivo
+                if numero_contratacao in processed_numbers:
+                    print(f"Linha {index + 2}: Número da contratação {numero_contratacao} duplicado no arquivo")
+                    continue
+
+                processed_numbers.add(numero_contratacao)
+                clean_data.append(record)
+
+            except Exception as e:
+                print(f"Erro processando linha CSV {index + 2}: {e}")
+                continue
+
+        print(f"CSV processado: {len(clean_data)} registros válidos de {len(df)} total")
+
+        # Agora processar como se fosse importação Excel normal
+        imported = 0
+        updated = 0
+        errors = []
+
+        for record in clean_data:
+            try:
+                numero_contratacao = record['numero_contratacao']
+
+                print(f"VERIFICANDO DUPLICATA CSV - Numero: {numero_contratacao}")
+                existing_pca = db.query(PCA).filter(
+                    PCA.numero_contratacao == numero_contratacao
+                ).first()
+                print(f"RESULTADO DUPLICATA CSV - Existe: {existing_pca is not None}")
+
+
+                if existing_pca:
+                    # Atualizar registro existente
+                    for key, value in record.items():
+                        setattr(existing_pca, key, value)
+                    updated += 1
+                else:
+                    # Criar novo registro
+                    record['created_by'] = current_user.id
+                    new_pca = PCA(**record)
+                    db.add(new_pca)
+                    imported += 1
+
+                # Flush intermediário
+                db.flush()
+
+            except Exception as e:
+                db.rollback()
+                error_msg = f"PCA {numero_contratacao}: {str(e)}"
+                errors.append(error_msg)
+                print(f"ERRO DE IMPORTACAO CSV: {error_msg}")
+                import traceback
+                print(f"TRACEBACK CSV: {traceback.format_exc()}")
+                continue
+
+        # Commit das alterações
+        db.commit()
+
+        return {
+            "success": True,
+            "message": f"Importação CSV concluída",
+            "imported": imported,
+            "updated": updated,
+            "total": len(clean_data),
+            "errors": errors[:5] if errors else []
+        }
+
+    except pd.errors.EmptyDataError:
+        raise HTTPException(
+            status_code=400,
+            detail="Arquivo CSV está vazio"
+        )
+    except Exception as e:
+        db.rollback()
+        print(f"ERRO GERAL IMPORT CSV: {str(e)}")
+        import traceback
+        print(f"TRACEBACK GERAL CSV: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Erro ao processar arquivo CSV: {str(e)}"
+        )
+
+
+@router.get("/debug/situacoes")
+def debug_situacoes_execucao(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(deps.get_current_active_user)
+) -> Any:
+    """Endpoint temporário para debugar valores de situacao_execucao"""
+    from datetime import date
+    from sqlalchemy import func
+    
+    # Listar todos os valores únicos de situacao_execucao
+    situacoes = db.query(PCA.situacao_execucao, func.count(PCA.id)).group_by(PCA.situacao_execucao).all()
+    
+    # Contratações com data de conclusão passada
+    today = date.today()
+    all_pcas = db.query(PCA).all()
+    vencidas_por_data = [pca for pca in all_pcas if pca.vencida]
+    
+    return {
+        "total_pcas": db.query(PCA).count(),
+        "situacoes_execucao": [{"situacao": s[0], "quantidade": s[1]} for s in situacoes],
+        "contratacoes_com_data_passada": len(vencidas_por_data),
+        "exemplos_vencidas_por_data": [
+            {
+                "numero": pca.numero_contratacao,
+                "situacao": pca.situacao_execucao,
+                "data_conclusao": str(pca.data_estimada_conclusao),
+                "atrasada": pca.atrasada
+            } for pca in vencidas_por_data[:10]  # Primeiros 10 exemplos
+        ]
+    }
+
 @router.get("/dashboard/stats")
 def get_dashboard_stats(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(deps.get_current_active_user)
 ) -> Any:
-    total_pcas = db.query(PCA).count()
-    pcas_atrasadas = db.query(PCA).filter(PCA.atrasada == True).count()
-    
+    from sqlalchemy import text
+
+    # Usar a consulta SQL direta conforme especificado
+    sql_query = text("""
+        SELECT
+            COUNT(*) as total,
+            COUNT(CASE
+                      WHEN situacao_execucao = 'Não iniciada'
+                           AND data_estimada_inicio < CURRENT_DATE
+                           AND data_estimada_conclusao >= CURRENT_DATE
+                      THEN 1
+                 END) as atrasadas,
+            COUNT(CASE
+                      WHEN situacao_execucao = 'Não iniciada'
+                           AND data_estimada_conclusao < CURRENT_DATE
+                      THEN 1
+                 END) as vencidas
+        FROM pca
+    """)
+
+    result = db.execute(sql_query).fetchone()
+
+    total_pcas = result.total
+    pcas_atrasadas = result.atrasadas
+    pcas_vencidas = result.vencidas
+    pcas_no_prazo = total_pcas - pcas_atrasadas - pcas_vencidas
+
+    print(f"SQL STATS: Total={total_pcas}, Atrasadas={pcas_atrasadas}, Vencidas={pcas_vencidas}, No prazo={pcas_no_prazo}")
+
     return {
         "total_pcas": total_pcas,
         "pcas_atrasadas": pcas_atrasadas,
-        "pcas_no_prazo": total_pcas - pcas_atrasadas
+        "pcas_vencidas": pcas_vencidas,
+        "pcas_no_prazo": pcas_no_prazo
     }
 
 
-@router.get("/atrasadas", response_model=List[PCASchema])
-def get_pcas_atrasadas(
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(deps.get_current_active_user)
-) -> Any:
-    pcas = db.query(PCA).filter(PCA.atrasada == True).all()
-    return pcas
 
 
 @router.get("/dashboard/charts")

@@ -29,8 +29,20 @@ export const pcaService = {
   async importExcel(file: File): Promise<{ message: string; errors?: string[] }> {
     const formData = new FormData();
     formData.append('file', file);
-    
+
     const response = await api.post('/api/v1/pca/import', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  async importCsv(file: File): Promise<{ message: string; errors?: string[] }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await api.post('/api/v1/pca/import-csv', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -45,6 +57,11 @@ export const pcaService = {
 
   async getAtrasadas(): Promise<PCA[]> {
     const response = await api.get<PCA[]>('/api/v1/pca/atrasadas');
+    return response.data;
+  },
+
+  async getVencidas(): Promise<PCA[]> {
+    const response = await api.get<PCA[]>('/api/v1/pca/vencidas');
     return response.data;
   },
 

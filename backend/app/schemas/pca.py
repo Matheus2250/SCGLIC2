@@ -38,6 +38,7 @@ class PCAUpdate(BaseModel):
 class PCA(PCABase):
     id: UUID
     atrasada: bool
+    vencida: bool
     created_at: datetime
     updated_at: Optional[datetime] = None
     created_by: UUID

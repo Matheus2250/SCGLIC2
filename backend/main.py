@@ -12,20 +12,10 @@ app = FastAPI(
 # CONFIGURAÇÃO CORS - CRÍTICO! - SERVIDOR CENTRAL
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # React dev server local
-        "http://localhost:3001",  # Vite dev server (alternate port)
-        "http://localhost:5173",  # Vite dev server
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:3001", 
-        "http://127.0.0.1:5173",
-        "http://10.255.66.242:3000",  # Seu IP na rede
-        "http://10.255.66.242:3001",
-        "http://10.255.66.242:5173"
-    ],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001"],  # Frontend origins
     allow_credentials=True,
-    allow_methods=["*"],  # Permite todos os métodos (GET, POST, PUT, DELETE, etc)
-    allow_headers=["*"],  # Permite todos os headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include routers

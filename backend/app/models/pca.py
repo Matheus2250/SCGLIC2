@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, date
 from sqlalchemy import Column, String, Text, DECIMAL, Boolean, DateTime, Date, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
@@ -20,7 +21,6 @@ class PCA(Base):
     numero_dfd = Column(String(50))
     data_estimada_inicio = Column(Date)
     data_estimada_conclusao = Column(Date)
-    atrasada = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     created_by = Column(UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=False)
@@ -28,3 +28,50 @@ class PCA(Base):
     # Relationships
     creator = relationship("Usuario")
     qualificacoes = relationship("Qualificacao", back_populates="pca_ref")
+
+    @property
+    def atrasada(self) -> bool:
+        """
+        Contratação é considerada atrasada se:
+        - Situação da execução é "Não iniciada" (ou similar)
+        - Data estimada de início já passou
+        - Data estimada de conclusão ainda não passou (se passou, é vencida)
+        """
+        if not self.data_estimada_inicio or not self.data_estimada_conclusao:
+            return False
+
+        # Verificar se é "Não iniciada" - normalizar string
+        situacao = (self.situacao_execucao or "").strip().lower()
+        situacao_nao_iniciada = situacao in ["", "não iniciada", "nao iniciada", "não iniciado", "nao iniciado"]
+
+        if not situacao_nao_iniciada:
+            return False
+
+        hoje = date.today()
+        # Debug para algumas contratações
+        if self.numero_contratacao in ["1/2025", "2/2025", "3/2025"]:
+            print(f"DEBUG {self.numero_contratacao}: situacao='{self.situacao_execucao}' -> nao_iniciada={situacao_nao_iniciada}, inicio={self.data_estimada_inicio}, conclusao={self.data_estimada_conclusao}, hoje={hoje}")
+
+        # Atrasada: situação não iniciada + início passou + conclusão não passou
+        return (hoje > self.data_estimada_inicio and hoje <= self.data_estimada_conclusao)
+
+    @property
+    def vencida(self) -> bool:
+        """
+        Contratação é considerada vencida se:
+        - Situação da execução é "Não iniciada" (ou similar)
+        - Data estimada de conclusão já passou
+        """
+        if not self.data_estimada_conclusao:
+            return False
+
+        # Verificar se é "Não iniciada" - normalizar string
+        situacao = (self.situacao_execucao or "").strip().lower()
+        situacao_nao_iniciada = situacao in ["", "não iniciada", "nao iniciada", "não iniciado", "nao iniciado"]
+
+        if not situacao_nao_iniciada:
+            return False
+
+        hoje = date.today()
+        # Vencida: situação não iniciada + conclusão passou
+        return hoje > self.data_estimada_conclusao

@@ -19,6 +19,9 @@ import {
   Alert,
   Input,
   TablePagination,
+  ToggleButton,
+  ToggleButtonGroup,
+  Divider,
 } from '@mui/material';
 import {
   Add,
@@ -42,6 +45,7 @@ const Planejamento: React.FC = () => {
   const [importDialog, setImportDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
+  const [importType, setImportType] = useState<'excel' | 'csv'>('excel');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   
@@ -136,13 +140,16 @@ const Planejamento: React.FC = () => {
 
   const handleImport = async () => {
     if (!selectedFile) {
-      toast.error('Selecione um arquivo Excel');
+      toast.error(`Selecione um arquivo ${importType === 'excel' ? 'Excel' : 'CSV'}`);
       return;
     }
 
     try {
       setImporting(true);
-      const result = await pcaService.importExcel(selectedFile);
+      const result = importType === 'excel'
+        ? await pcaService.importExcel(selectedFile)
+        : await pcaService.importCsv(selectedFile);
+
       toast.success(result.message);
       if (result.errors && result.errors.length > 0) {
         result.errors.forEach(error => toast.warning(error));
@@ -318,8 +325,6 @@ const Planejamento: React.FC = () => {
               <TableCell>Título</TableCell>
               <TableCell>Valor Total</TableCell>
               <TableCell>Área Requisitante</TableCell>
-              <TableCell>Data Conclusão</TableCell>
-              <TableCell>Status</TableCell>
               <TableCell align="center">Ações</TableCell>
             </TableRow>
           </TableHead>
@@ -336,38 +341,20 @@ const Planejamento: React.FC = () => {
                   </TableCell>
                   <TableCell>{formatCurrency(pca.valor_total)}</TableCell>
                   <TableCell>{pca.area_requisitante || 'N/A'}</TableCell>
-                  <TableCell>{formatDate(pca.data_estimada_conclusao)}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={pca.atrasada ? 'Atrasada' : 'No Prazo'}
-                      color={pca.atrasada ? 'error' : 'success'}
-                      size="small"
-                    />
-                  </TableCell>
                   <TableCell align="center">
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleViewDetails(pca)}
-                        title="Ver detalhes"
-                      >
-                        <Visibility fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDelete(pca.id)}
-                        color="error"
-                        title="Excluir"
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </Box>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleViewDetails(pca)}
+                      title="Ver detalhes"
+                    >
+                      <Visibility fontSize="small" />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} align="center">
+                <TableCell colSpan={5} align="center">
                   <Typography color="textSecondary">
                     {loading ? 'Carregando...' : 'Nenhuma PCA encontrada. Importe um arquivo Excel para começar.'}
                   </Typography>
@@ -393,16 +380,53 @@ const Planejamento: React.FC = () => {
 
       {/* Import Dialog */}
       <Dialog open={importDialog} onClose={() => setImportDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Importar PCAs do Excel</DialogTitle>
+        <DialogTitle>Importar PCAs</DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2 }}>
-            <Alert severity="info" sx={{ mb: 2 }}>
-              Selecione um arquivo Excel (.xlsx ou .xls) com as colunas: numero_contratacao, 
-              titulo_contratacao, valor_total, area_requisitante, etc.
-            </Alert>
+            {/* Seleção do tipo de arquivo */}
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              Tipo de arquivo:
+            </Typography>
+            <ToggleButtonGroup
+              value={importType}
+              exclusive
+              onChange={(_, value) => {
+                if (value) {
+                  setImportType(value);
+                  setSelectedFile(null); // Limpar arquivo selecionado ao trocar tipo
+                }
+              }}
+              sx={{ mb: 2 }}
+            >
+              <ToggleButton value="excel">
+                Excel (.xlsx, .xls)
+              </ToggleButton>
+              <ToggleButton value="csv">
+                CSV (.csv)
+              </ToggleButton>
+            </ToggleButtonGroup>
+
+            <Divider sx={{ my: 2 }} />
+
+            {/* Informações sobre o tipo selecionado */}
+            {importType === 'excel' ? (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Selecione um arquivo Excel (.xlsx ou .xls) com as colunas:
+                Número da Contratação, Título da Contratação, Valor Total, Área Requisitante, etc.
+              </Alert>
+            ) : (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Selecione um arquivo CSV (.csv) no formato original do PCA.
+                O sistema fará a conversão automática das colunas para o formato correto.
+              </Alert>
+            )}
+
+            {/* Seletor de arquivo */}
             <Input
               type="file"
-              inputProps={{ accept: '.xlsx,.xls' }}
+              inputProps={{
+                accept: importType === 'excel' ? '.xlsx,.xls' : '.csv'
+              }}
               onChange={(e) => {
                 const target = e.target as HTMLInputElement;
                 if (target.files && target.files[0]) {
@@ -411,6 +435,7 @@ const Planejamento: React.FC = () => {
               }}
               fullWidth
             />
+
             {selectedFile && (
               <Typography variant="body2" sx={{ mt: 1 }}>
                 Arquivo selecionado: {selectedFile.name}
@@ -419,15 +444,18 @@ const Planejamento: React.FC = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setImportDialog(false)}>
+          <Button onClick={() => {
+            setImportDialog(false);
+            setSelectedFile(null);
+          }}>
             Cancelar
           </Button>
-          <Button 
-            onClick={handleImport} 
+          <Button
+            onClick={handleImport}
             variant="contained"
             disabled={!selectedFile || importing}
           >
-            {importing ? 'Importando...' : 'Importar'}
+            {importing ? 'Importando...' : `Importar ${importType === 'excel' ? 'Excel' : 'CSV'}`}
           </Button>
         </DialogActions>
       </Dialog>

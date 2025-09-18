@@ -13,8 +13,12 @@ import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import Dashboard from './pages/Dashboard';
 import Planejamento from './pages/Planejamento';
+import ContratacaoAtrasadas from './pages/ContratacaoAtrasadas';
+import EstatisticasPlanejamento from './pages/EstatisticasPlanejamento';
 import Qualificacao from './pages/Qualificacao';
+import EstatisticasQualificacao from './pages/EstatisticasQualificacao';
 import Licitacao from './pages/Licitacao';
+import EstatisticasLicitacao from './pages/EstatisticasLicitacao';
 import Relatorios from './pages/Relatorios';
 
 const theme = createTheme({
@@ -74,14 +78,34 @@ function App() {
                             <Planejamento />
                           </PrivateRoute>
                         } />
+                        <Route path="/planejamento/atrasadas" element={
+                          <PrivateRoute allowedRoles={['COORDENADOR', 'DIPLAN']}>
+                            <ContratacaoAtrasadas />
+                          </PrivateRoute>
+                        } />
+                        <Route path="/planejamento/estatisticas" element={
+                          <PrivateRoute allowedRoles={['COORDENADOR', 'DIPLAN']}>
+                            <EstatisticasPlanejamento />
+                          </PrivateRoute>
+                        } />
                         <Route path="/qualificacao" element={
                           <PrivateRoute allowedRoles={['COORDENADOR', 'DIQUALI']}>
                             <Qualificacao />
                           </PrivateRoute>
                         } />
+                        <Route path="/qualificacao/estatisticas" element={
+                          <PrivateRoute allowedRoles={['COORDENADOR', 'DIQUALI']}>
+                            <EstatisticasQualificacao />
+                          </PrivateRoute>
+                        } />
                         <Route path="/licitacao" element={
                           <PrivateRoute allowedRoles={['COORDENADOR', 'DIPLI']}>
                             <Licitacao />
+                          </PrivateRoute>
+                        } />
+                        <Route path="/licitacao/estatisticas" element={
+                          <PrivateRoute allowedRoles={['COORDENADOR', 'DIPLI']}>
+                            <EstatisticasLicitacao />
                           </PrivateRoute>
                         } />
                         <Route path="/relatorios" element={<Relatorios />} />

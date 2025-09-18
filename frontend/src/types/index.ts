@@ -22,6 +22,7 @@ export interface PCA {
   data_estimada_inicio?: string;
   data_estimada_conclusao?: string;
   atrasada: boolean;
+  vencida: boolean;
   created_at: string;
   updated_at?: string;
   created_by: string;
@@ -87,6 +88,7 @@ export interface LoginResponse {
 export interface DashboardStats {
   total_pcas: number;
   pcas_atrasadas: number;
+  pcas_vencidas: number;
   pcas_no_prazo: number;
 }
 
