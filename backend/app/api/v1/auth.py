@@ -1,5 +1,6 @@
 from datetime import timedelta
-from typing import Any
+from typing import Any, List
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -7,8 +8,11 @@ from app.api import deps
 from app.core import security
 from app.core.config import settings
 from app.core.database import get_db
-from app.schemas.usuario import Usuario, UsuarioCreate, Token
-from app.services.auth_service import authenticate_user, create_user, get_user_by_username, get_user_by_email
+from app.schemas.usuario import Usuario, UsuarioCreate, UsuarioUpdate, Token
+from app.services.auth_service import (
+    authenticate_user, create_user, get_user_by_username, get_user_by_email,
+    get_users, get_user, update_user, delete_user
+)
 
 router = APIRouter()
 
@@ -62,3 +66,73 @@ def read_users_me(
     current_user: Usuario = Depends(deps.get_current_active_user)
 ) -> Any:
     return current_user
+
+
+# Endpoints de administração de usuários (apenas para COORDENADOR)
+@router.get("/users", response_model=List[Usuario])
+def read_users(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    admin_user: Usuario = Depends(deps.get_admin_user)
+) -> Any:
+    """
+    Retrieve all users. Only accessible by COORDENADOR.
+    """
+    users = get_users(db, skip=skip, limit=limit)
+    return users
+
+
+@router.get("/users/{user_id}", response_model=Usuario)
+def read_user(
+    user_id: UUID,
+    db: Session = Depends(get_db),
+    admin_user: Usuario = Depends(deps.get_admin_user)
+) -> Any:
+    """
+    Get a specific user by ID. Only accessible by COORDENADOR.
+    """
+    user = get_user(db, user_id=str(user_id))
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+    return user
+
+
+@router.put("/users/{user_id}", response_model=Usuario)
+def update_user_by_id(
+    user_id: UUID,
+    user_in: UsuarioUpdate,
+    db: Session = Depends(get_db),
+    admin_user: Usuario = Depends(deps.get_admin_user)
+) -> Any:
+    """
+    Update a user. Only accessible by COORDENADOR.
+    """
+    user = update_user(db, user_id=user_id, user_update=user_in)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+    return user
+
+
+@router.delete("/users/{user_id}")
+def delete_user_by_id(
+    user_id: UUID,
+    db: Session = Depends(get_db),
+    admin_user: Usuario = Depends(deps.get_admin_user)
+) -> Any:
+    """
+    Delete a user. Only accessible by COORDENADOR.
+    """
+    success = delete_user(db, user_id=user_id)
+    if not success:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+    return {"message": "User deleted successfully"}

@@ -20,20 +20,38 @@ import {
   Step,
   StepLabel,
   StepContent,
+  Tabs,
+  Tab,
+  CircularProgress,
+  Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from '@mui/material';
-import { 
-  FileDownload, 
-  Assessment, 
-  TrendingUp, 
+import {
+  FileDownload,
+  Assessment,
+  TrendingUp,
   Assignment,
   BarChart,
   PieChart,
   Timeline,
   TableChart,
-  Language
+  Language,
+  Search,
+  AccountTree,
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import { api } from '../services/api';
+import { pcaService } from '../services/pca.service';
+import { qualificacaoService } from '../services/qualificacao.service';
+import { licitacaoService } from '../services/licitacao.service';
+import { PCA, Qualificacao, Licitacao } from '../types';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface ReportConfig {
   dataSource: string;
@@ -48,7 +66,36 @@ interface ReportConfig {
   };
 }
 
+interface UnifiedReportData {
+  searchTerm: string;
+  pca?: PCA;
+  qualificacao?: Qualificacao;
+  licitacao?: Licitacao;
+}
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+}
+
 const Relatorios: React.FC = () => {
+  const [tabValue, setTabValue] = useState(0);
   const [activeStep, setActiveStep] = useState(0);
   const [reportConfig, setReportConfig] = useState<ReportConfig>({
     dataSource: '',
@@ -57,6 +104,11 @@ const Relatorios: React.FC = () => {
     filters: {}
   });
   const [generating, setGenerating] = useState(false);
+
+  // Estados para relatório unificado
+  const [unifiedSearchTerm, setUnifiedSearchTerm] = useState('');
+  const [unifiedData, setUnifiedData] = useState<UnifiedReportData | null>(null);
+  const [unifiedLoading, setUnifiedLoading] = useState(false);
 
   // Definição dos campos disponíveis para cada fonte de dados
   const fieldOptions = {
@@ -127,7 +179,7 @@ const Relatorios: React.FC = () => {
   const handleGenerateReport = async () => {
     try {
       setGenerating(true);
-      
+
       const response = await api.post('/api/v1/reports/custom', reportConfig, {
         responseType: 'blob'
       });
@@ -135,7 +187,7 @@ const Relatorios: React.FC = () => {
       const blob = new Blob([response.data], {
         type: 'text/html'
       });
-      
+
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -146,7 +198,7 @@ const Relatorios: React.FC = () => {
       window.URL.revokeObjectURL(url);
 
       toast.success('Relatório gerado com sucesso!');
-      
+
       // Reset para permitir gerar novo relatório
       setActiveStep(0);
       setReportConfig({
@@ -155,13 +207,204 @@ const Relatorios: React.FC = () => {
         charts: [],
         filters: {}
       });
-      
+
     } catch (error) {
       toast.error('Erro ao gerar relatório HTML');
       console.error(error);
     } finally {
       setGenerating(false);
     }
+  };
+
+  // Funções para relatório unificado
+  const handleUnifiedSearch = async () => {
+    if (!unifiedSearchTerm.trim()) {
+      toast.warning('Digite um NUP ou número da contratação');
+      return;
+    }
+
+    try {
+      setUnifiedLoading(true);
+      setUnifiedData(null);
+
+      // Buscar em todas as três bases
+      const [pcaData, qualificacaoData, licitacaoData] = await Promise.all([
+        pcaService.getAll().catch(() => []),
+        qualificacaoService.getAll().catch(() => []),
+        licitacaoService.getAll().catch(() => [])
+      ]);
+
+      // Filtrar dados por NUP ou número da contratação
+      const searchTerm = unifiedSearchTerm.trim();
+
+      const pca = Array.isArray(pcaData) ? pcaData.find(p =>
+        p.numero_contratacao === searchTerm
+      ) : undefined;
+
+      const qualificacao = Array.isArray(qualificacaoData) ? qualificacaoData.find(q =>
+        q.nup === searchTerm || q.numero_contratacao === searchTerm
+      ) : undefined;
+
+      const licitacao = Array.isArray(licitacaoData) ? licitacaoData.find(l =>
+        l.nup === searchTerm || l.numero_contratacao === searchTerm
+      ) : undefined;
+
+      if (!pca && !qualificacao && !licitacao) {
+        toast.warning('Nenhum dado encontrado para este NUP/número da contratação');
+        return;
+      }
+
+      setUnifiedData({
+        searchTerm,
+        pca,
+        qualificacao,
+        licitacao
+      });
+
+      toast.success('Dados encontrados com sucesso!');
+
+    } catch (error) {
+      toast.error('Erro ao buscar dados');
+      console.error(error);
+    } finally {
+      setUnifiedLoading(false);
+    }
+  };
+
+  const handleGenerateUnifiedReport = () => {
+    if (!unifiedData) return;
+
+    // Gerar HTML do relatório
+    const reportHtml = generateUnifiedReportHTML(unifiedData);
+
+    // Criar e baixar arquivo
+    const blob = new Blob([reportHtml], { type: 'text/html' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `relatorio_unificado_${unifiedData.searchTerm}_${new Date().getTime()}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    toast.success('Relatório unificado gerado com sucesso!');
+  };
+
+  const generateUnifiedReportHTML = (data: UnifiedReportData): string => {
+    const formatCurrency = (value: number | undefined) => {
+      if (!value) return 'N/A';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+      }).format(value);
+    };
+
+    const formatDate = (dateString: string | undefined) => {
+      if (!dateString) return 'N/A';
+      return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
+    };
+
+    return `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório Unificado - ${data.searchTerm}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1976d2; padding-bottom: 20px; }
+        .section { margin-bottom: 30px; background: #f5f5f5; padding: 20px; border-radius: 8px; }
+        .section h2 { color: #1976d2; margin-top: 0; }
+        .field { margin-bottom: 10px; }
+        .field strong { color: #424242; }
+        .no-data { color: #666; font-style: italic; text-align: center; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #1976d2; color: white; }
+        .summary { background: #e3f2fd; border-left: 4px solid #1976d2; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Relatório Unificado do Processo</h1>
+        <h2>NUP/Contratação: ${data.searchTerm}</h2>
+        <p>Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}</p>
+    </div>
+
+    ${data.pca ? `
+    <div class="section">
+        <h2>📋 PLANEJAMENTO (PCA)</h2>
+        <div class="field"><strong>Número da Contratação:</strong> ${data.pca.numero_contratacao || 'N/A'}</div>
+        <div class="field"><strong>Título:</strong> ${data.pca.titulo_contratacao || 'N/A'}</div>
+        <div class="field"><strong>Categoria:</strong> ${data.pca.categoria_contratacao || 'N/A'}</div>
+        <div class="field"><strong>Valor Total:</strong> ${formatCurrency(data.pca.valor_total)}</div>
+        <div class="field"><strong>Área Requisitante:</strong> ${data.pca.area_requisitante || 'N/A'}</div>
+        <div class="field"><strong>Data Estimada Início:</strong> ${formatDate(data.pca.data_estimada_inicio)}</div>
+        <div class="field"><strong>Data Estimada Conclusão:</strong> ${formatDate(data.pca.data_estimada_conclusao)}</div>
+        <div class="field"><strong>Status:</strong> ${data.pca.status_contratacao || 'N/A'}</div>
+        <div class="field"><strong>Situação Execução:</strong> ${data.pca.situacao_execucao || 'N/A'}</div>
+    </div>
+    ` : '<div class="section"><h2>📋 PLANEJAMENTO (PCA)</h2><div class="no-data">Nenhum dado de planejamento encontrado</div></div>'}
+
+    ${data.qualificacao ? `
+    <div class="section">
+        <h2>✅ QUALIFICAÇÃO</h2>
+        <div class="field"><strong>NUP:</strong> ${data.qualificacao.nup || 'N/A'}</div>
+        <div class="field"><strong>Número da Contratação:</strong> ${data.qualificacao.numero_contratacao || 'N/A'}</div>
+        <div class="field"><strong>Área Demandante:</strong> ${data.qualificacao.area_demandante || 'N/A'}</div>
+        <div class="field"><strong>Responsável Instrução:</strong> ${data.qualificacao.responsavel_instrucao || 'N/A'}</div>
+        <div class="field"><strong>Modalidade:</strong> ${data.qualificacao.modalidade || 'N/A'}</div>
+        <div class="field"><strong>Objeto:</strong> ${data.qualificacao.objeto || 'N/A'}</div>
+        <div class="field"><strong>Palavra-chave:</strong> ${data.qualificacao.palavra_chave || 'N/A'}</div>
+        <div class="field"><strong>Valor Estimado:</strong> ${formatCurrency(data.qualificacao.valor_estimado)}</div>
+        <div class="field"><strong>Status:</strong> ${data.qualificacao.status || 'N/A'}</div>
+        <div class="field"><strong>Observações:</strong> ${data.qualificacao.observacoes || 'N/A'}</div>
+    </div>
+    ` : '<div class="section"><h2>✅ QUALIFICAÇÃO</h2><div class="no-data">Nenhum dado de qualificação encontrado</div></div>'}
+
+    ${data.licitacao ? `
+    <div class="section">
+        <h2>🏆 LICITAÇÃO</h2>
+        <div class="field"><strong>NUP:</strong> ${data.licitacao.nup || 'N/A'}</div>
+        <div class="field"><strong>Número da Contratação:</strong> ${data.licitacao.numero_contratacao || 'N/A'}</div>
+        <div class="field"><strong>Área Demandante:</strong> ${data.licitacao.area_demandante || 'N/A'}</div>
+        <div class="field"><strong>Modalidade:</strong> ${data.licitacao.modalidade || 'N/A'}</div>
+        <div class="field"><strong>Pregoeiro:</strong> ${data.licitacao.pregoeiro || 'N/A'}</div>
+        <div class="field"><strong>Valor Estimado:</strong> ${formatCurrency(data.licitacao.valor_estimado)}</div>
+        <div class="field"><strong>Valor Homologado:</strong> ${formatCurrency(data.licitacao.valor_homologado)}</div>
+        <div class="field"><strong>Economia:</strong> ${formatCurrency(data.licitacao.economia)}</div>
+        <div class="field"><strong>Data Homologação:</strong> ${formatDate(data.licitacao.data_homologacao)}</div>
+        <div class="field"><strong>Status:</strong> ${data.licitacao.status || 'N/A'}</div>
+        <div class="field"><strong>Link:</strong> ${data.licitacao.link ? `<a href="${data.licitacao.link}" target="_blank">${data.licitacao.link}</a>` : 'N/A'}</div>
+        <div class="field"><strong>Observações:</strong> ${data.licitacao.observacoes || 'N/A'}</div>
+    </div>
+    ` : '<div class="section"><h2>🏆 LICITAÇÃO</h2><div class="no-data">Nenhum dado de licitação encontrado</div></div>'}
+
+    <div class="section summary">
+        <h2>📊 RESUMO DO PROCESSO</h2>
+        <table>
+            <tr><th>Etapa</th><th>Status</th><th>Valor</th></tr>
+            <tr>
+                <td>Planejamento</td>
+                <td>${data.pca ? '✅ Concluído' : '❌ Não encontrado'}</td>
+                <td>${data.pca ? formatCurrency(data.pca.valor_total) : 'N/A'}</td>
+            </tr>
+            <tr>
+                <td>Qualificação</td>
+                <td>${data.qualificacao ? '✅ Concluído' : '❌ Não encontrado'}</td>
+                <td>${data.qualificacao ? formatCurrency(data.qualificacao.valor_estimado) : 'N/A'}</td>
+            </tr>
+            <tr>
+                <td>Licitação</td>
+                <td>${data.licitacao ? '✅ Concluído' : '❌ Não encontrado'}</td>
+                <td>${data.licitacao ? formatCurrency(data.licitacao.valor_homologado) : 'N/A'}</td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>`;
   };
 
   const steps = [
@@ -175,14 +418,204 @@ const Relatorios: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
-        Construtor de Relatórios
+        Sistema de Relatórios
       </Typography>
 
       <Typography variant="body1" color="textSecondary" sx={{ mb: 4 }}>
-        Crie relatórios HTML interativos com gráficos, tabelas e filtros personalizados
+        Gere relatórios unificados ou customize relatórios específicos por área
       </Typography>
 
-      <Paper sx={{ p: 3 }}>
+      <Paper sx={{ p: 0 }}>
+        <Tabs
+          value={tabValue}
+          onChange={(_, newValue) => setTabValue(newValue)}
+          indicatorColor="primary"
+          textColor="primary"
+          variant="fullWidth"
+        >
+          <Tab
+            icon={<AccountTree />}
+            label="Relatório Unificado"
+            iconPosition="start"
+          />
+          <Tab
+            icon={<Assessment />}
+            label="Construtor Customizado"
+            iconPosition="start"
+          />
+        </Tabs>
+
+        <TabPanel value={tabValue} index={0}>
+          {/* Relatório Unificado */}
+          <Box>
+            <Typography variant="h5" gutterBottom>
+              Relatório Unificado por NUP/Contratação
+            </Typography>
+            <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
+              Digite um NUP ou número da contratação para gerar um relatório completo juntando dados de
+              Planejamento, Qualificação e Licitação
+            </Typography>
+
+            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+              <TextField
+                fullWidth
+                label="NUP ou Número da Contratação"
+                placeholder="Ex: 123456789 ou 10/2025"
+                value={unifiedSearchTerm}
+                onChange={(e) => setUnifiedSearchTerm(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleUnifiedSearch()}
+              />
+              <Button
+                variant="contained"
+                startIcon={unifiedLoading ? <CircularProgress size={20} /> : <Search />}
+                onClick={handleUnifiedSearch}
+                disabled={unifiedLoading}
+                sx={{ minWidth: 150 }}
+              >
+                {unifiedLoading ? 'Buscando...' : 'Buscar'}
+              </Button>
+            </Box>
+
+            {unifiedData && (
+              <Box>
+                <Alert severity="success" sx={{ mb: 3 }}>
+                  Dados encontrados para: <strong>{unifiedData.searchTerm}</strong>
+                  <br />
+                  <small>
+                    Planejamento: {unifiedData.pca ? '✅' : '❌'} |
+                    Qualificação: {unifiedData.qualificacao ? '✅' : '❌'} |
+                    Licitação: {unifiedData.licitacao ? '✅' : '❌'}
+                  </small>
+                </Alert>
+
+                <Grid container spacing={3}>
+                  {/* Planejamento */}
+                  <Grid item xs={12} md={4}>
+                    <Card sx={{ height: '100%' }}>
+                      <CardContent>
+                        <Box display="flex" alignItems="center" gap={1} mb={2}>
+                          <Assignment color="primary" />
+                          <Typography variant="h6">Planejamento</Typography>
+                        </Box>
+                        {unifiedData.pca ? (
+                          <Box>
+                            <Typography variant="body2" gutterBottom>
+                              <strong>Número:</strong> {unifiedData.pca.numero_contratacao}
+                            </Typography>
+                            <Typography variant="body2" gutterBottom>
+                              <strong>Título:</strong> {unifiedData.pca.titulo_contratacao}
+                            </Typography>
+                            <Typography variant="body2" gutterBottom>
+                              <strong>Valor:</strong> {unifiedData.pca.valor_total?.toLocaleString('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                              })}
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Área:</strong> {unifiedData.pca.area_requisitante}
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <Typography color="textSecondary" variant="body2">
+                            Nenhum dado encontrado
+                          </Typography>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* Qualificação */}
+                  <Grid item xs={12} md={4}>
+                    <Card sx={{ height: '100%' }}>
+                      <CardContent>
+                        <Box display="flex" alignItems="center" gap={1} mb={2}>
+                          <Assessment color="success" />
+                          <Typography variant="h6">Qualificação</Typography>
+                        </Box>
+                        {unifiedData.qualificacao ? (
+                          <Box>
+                            <Typography variant="body2" gutterBottom>
+                              <strong>NUP:</strong> {unifiedData.qualificacao.nup}
+                            </Typography>
+                            <Typography variant="body2" gutterBottom>
+                              <strong>Modalidade:</strong> {unifiedData.qualificacao.modalidade}
+                            </Typography>
+                            <Typography variant="body2" gutterBottom>
+                              <strong>Valor:</strong> {unifiedData.qualificacao.valor_estimado?.toLocaleString('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                              })}
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Status:</strong> {unifiedData.qualificacao.status}
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <Typography color="textSecondary" variant="body2">
+                            Nenhum dado encontrado
+                          </Typography>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+
+                  {/* Licitação */}
+                  <Grid item xs={12} md={4}>
+                    <Card sx={{ height: '100%' }}>
+                      <CardContent>
+                        <Box display="flex" alignItems="center" gap={1} mb={2}>
+                          <TrendingUp color="warning" />
+                          <Typography variant="h6">Licitação</Typography>
+                        </Box>
+                        {unifiedData.licitacao ? (
+                          <Box>
+                            <Typography variant="body2" gutterBottom>
+                              <strong>Pregoeiro:</strong> {unifiedData.licitacao.pregoeiro}
+                            </Typography>
+                            <Typography variant="body2" gutterBottom>
+                              <strong>Valor Homologado:</strong> {unifiedData.licitacao.valor_homologado?.toLocaleString('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                              })}
+                            </Typography>
+                            <Typography variant="body2" gutterBottom>
+                              <strong>Economia:</strong> {unifiedData.licitacao.economia?.toLocaleString('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                              })}
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Status:</strong> {unifiedData.licitacao.status}
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <Typography color="textSecondary" variant="body2">
+                            Nenhum dado encontrado
+                          </Typography>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                </Grid>
+
+                <Box sx={{ mt: 3, textAlign: 'center' }}>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    startIcon={<FileDownload />}
+                    onClick={handleGenerateUnifiedReport}
+                  >
+                    Gerar Relatório Unificado (HTML)
+                  </Button>
+                </Box>
+              </Box>
+            )}
+          </Box>
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={1}>
+          {/* Construtor Customizado */}
+          <Box sx={{ p: 3 }}>
         <Stepper activeStep={activeStep} orientation="vertical">
           {/* Passo 1: Selecionar Fonte de Dados */}
           <Step>
@@ -441,7 +874,9 @@ const Relatorios: React.FC = () => {
               </Box>
             </StepContent>
           </Step>
-        </Stepper>
+          </Stepper>
+          </Box>
+        </TabPanel>
       </Paper>
     </Box>
   );

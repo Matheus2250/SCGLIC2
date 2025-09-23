@@ -28,7 +28,7 @@ app.include_router(reports.router, prefix="/api/v1/reports", tags=["reports"])
 
 @app.get("/")
 async def root():
-    return {"message": "Sistema de Gestão de Contratações Públicas API"}
+    return {"message": "Sistema de Gestão de Contratações Públicas API", "version": "1.0.1"}
 
 
 @app.get("/health")

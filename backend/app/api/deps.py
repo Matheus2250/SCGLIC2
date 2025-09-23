@@ -5,7 +5,7 @@ from jose import jwt, JWTError
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
-from app.models.usuario import Usuario
+from app.models.usuario import Usuario, NivelAcesso
 from app.schemas.usuario import TokenData
 
 security = HTTPBearer()
@@ -45,4 +45,15 @@ def get_current_active_user(
 ) -> Usuario:
     if not current_user.ativo:
         raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
+
+
+def get_admin_user(
+    current_user: Usuario = Depends(get_current_active_user),
+) -> Usuario:
+    if current_user.nivel_acesso != NivelAcesso.COORDENADOR:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators (COORDENADOR) can perform this action"
+        )
     return current_user

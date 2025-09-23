@@ -21,6 +21,7 @@ import {
   ListAlt,
   Warning,
   BarChart,
+  AdminPanelSettings,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../store/auth.context';
@@ -112,6 +113,12 @@ const menuItems: MenuItem[] = [
     text: 'Relatórios',
     icon: <Assessment />,
     path: '/relatorios',
+  },
+  {
+    text: 'Administração',
+    icon: <AdminPanelSettings />,
+    allowedRoles: ['COORDENADOR'],
+    path: '/admin/usuarios',
   },
 ];
 

@@ -50,6 +50,7 @@ const LicitacaoPage: React.FC = () => {
   // Filter states
   const [filters, setFilters] = useState<FilterValues>({
     search: '',
+    area_demandante: '',
     modalidade: '',
     status: '',
     pregoeiro: '',
@@ -77,8 +78,25 @@ const LicitacaoPage: React.FC = () => {
     status: 'EM ANDAMENTO',
   });
 
+  // Get unique areas from licitacoes
+  const getUniqueAreas = () => {
+    const areas = licitacoes
+      .map(lic => lic.area_demandante)
+      .filter(area => area && area.trim() !== '')
+      .filter((area, index, self) => self.indexOf(area) === index)
+      .sort();
+
+    return areas.map(area => ({ value: area, label: area }));
+  };
+
   // Filter configuration
   const filterFields: FilterField[] = [
+    {
+      key: 'area_demandante',
+      label: 'Área Demandante',
+      type: 'select',
+      options: getUniqueAreas()
+    },
     {
       key: 'modalidade',
       label: 'Modalidade',
@@ -248,6 +266,7 @@ const LicitacaoPage: React.FC = () => {
   const handleClearFilters = () => {
     setFilters({
       search: '',
+      area_demandante: '',
       modalidade: '',
       status: '',
       pregoeiro: '',
@@ -273,8 +292,15 @@ const LicitacaoPage: React.FC = () => {
         lic.objeto,
         lic.area_demandante,
       ].join(' ').toLowerCase();
-      
+
       if (!searchableFields.includes(searchTerm)) {
+        return false;
+      }
+    }
+
+    // Area filter
+    if (filters.area_demandante && lic.area_demandante) {
+      if (lic.area_demandante !== filters.area_demandante) {
         return false;
       }
     }

@@ -84,13 +84,24 @@ const QualificacaoPage: React.FC = () => {
     valorMax: null,
   });
 
+  // Get unique areas from qualifications
+  const getUniqueAreas = () => {
+    const areas = qualificacoes
+      .map(qual => qual.area_demandante)
+      .filter(area => area && area.trim() !== '')
+      .filter((area, index, self) => self.indexOf(area) === index)
+      .sort();
+
+    return areas.map(area => ({ value: area, label: area }));
+  };
+
   // Filter configuration
   const filterFields: FilterField[] = [
     {
       key: 'area_demandante',
       label: 'Área Demandante',
-      type: 'text',
-      placeholder: 'Digite o nome da área'
+      type: 'select',
+      options: getUniqueAreas()
     },
     {
       key: 'modalidade',
@@ -350,7 +361,7 @@ const QualificacaoPage: React.FC = () => {
 
     // Area demandante filter
     if (filters.area_demandante && qual.area_demandante) {
-      if (!qual.area_demandante.toLowerCase().includes(filters.area_demandante.toString().toLowerCase())) {
+      if (qual.area_demandante !== filters.area_demandante) {
         return false;
       }
     }

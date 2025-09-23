@@ -64,13 +64,24 @@ const Planejamento: React.FC = () => {
     dataFim: '',
   });
 
+  // Get unique areas from PCAs
+  const getUniqueAreas = () => {
+    const areas = pcas
+      .map(pca => pca.area_requisitante)
+      .filter(area => area && area.trim() !== '')
+      .filter((area, index, self) => self.indexOf(area) === index)
+      .sort();
+
+    return areas.map(area => ({ value: area, label: area }));
+  };
+
   // Filter configuration
   const filterFields: FilterField[] = [
     {
       key: 'area_requisitante',
       label: 'Área Requisitante',
-      type: 'text',
-      placeholder: 'Digite o nome da área'
+      type: 'select',
+      options: getUniqueAreas()
     },
     {
       key: 'status',
@@ -245,7 +256,7 @@ const Planejamento: React.FC = () => {
 
     // Area filter
     if (filters.area_requisitante && pca.area_requisitante) {
-      if (!pca.area_requisitante.toLowerCase().includes(filters.area_requisitante.toString().toLowerCase())) {
+      if (pca.area_requisitante !== filters.area_requisitante) {
         return false;
       }
     }
