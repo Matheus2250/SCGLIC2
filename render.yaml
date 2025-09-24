@@ -30,11 +30,11 @@ services:
         fromService:
           type: web
           name: sistema-contratacoes-api
-          property: host
+          property: url
 
+databases:
   # PostgreSQL Database
-  - type: postgres
-    name: sistema-contratacoes-db
+  - name: sistema-contratacoes-db
     databaseName: contratos_db
     user: contratos_user
     region: oregon
