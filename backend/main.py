@@ -23,9 +23,9 @@ if settings.environment == "production":
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=["*"] if settings.environment == "production" else origins,
+    allow_credentials=False,  # Set to False when using wildcard
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 

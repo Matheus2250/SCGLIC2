@@ -7,7 +7,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Importante para CORS com credenciais
+  withCredentials: false, // Disabled for production CORS compatibility
 });
 
 // Interceptor para adicionar token se existir
