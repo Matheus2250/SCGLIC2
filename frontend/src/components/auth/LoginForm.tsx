@@ -15,12 +15,12 @@ import { useAuth } from '../../store/auth.context';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 const schema = yup.object({
-  username: yup.string().required('Username é obrigatório'),
+  email: yup.string().email('Digite um email válido').required('Email é obrigatório'),
   password: yup.string().required('Senha é obrigatória'),
 });
 
 interface LoginFormData {
-  username: string;
+  email: string;
   password: string;
 }
 
@@ -43,7 +43,7 @@ const LoginForm: React.FC = () => {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setLoginError('');
-      await login(data.username, data.password);
+      await login(data.email, data.password);
       navigate(from, { replace: true });
     } catch (error: any) {
       setLoginError(error.response?.data?.detail || 'Erro ao fazer login');
@@ -83,13 +83,14 @@ const LoginForm: React.FC = () => {
               margin="normal"
               required
               fullWidth
-              id="username"
-              label="Username"
-              autoComplete="username"
+              id="email"
+              label="Email"
+              type="email"
+              autoComplete="email"
               autoFocus
-              {...register('username')}
-              error={!!errors.username}
-              helperText={errors.username?.message}
+              {...register('email')}
+              error={!!errors.email}
+              helperText={errors.email?.message}
             />
             <TextField
               margin="normal"

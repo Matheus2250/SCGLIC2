@@ -62,8 +62,8 @@ def delete_user(db: Session, user_id: UUID) -> bool:
     return True
 
 
-def authenticate_user(db: Session, username: str, password: str) -> Usuario:
-    user = get_user_by_username(db, username)
+def authenticate_user(db: Session, email: str, password: str) -> Usuario:
+    user = get_user_by_email(db, email)
     if not user:
         return False
     if not verify_password(password, user.password_hash):

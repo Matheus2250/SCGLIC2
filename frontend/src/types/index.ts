@@ -72,7 +72,7 @@ export interface Licitacao {
 export interface AuthContextType {
   user: Usuario | null;
   token: string | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }

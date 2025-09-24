@@ -122,7 +122,7 @@ def read_pcas(
 def create_pca(
     pca_in: PCACreate,
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(deps.get_current_active_user)
+    current_user: Usuario = Depends(deps.get_user_with_write_access)
 ) -> Any:
     # Check if PCA already exists
     existing_pca = db.query(PCA).filter(PCA.numero_contratacao == pca_in.numero_contratacao).first()
@@ -217,7 +217,7 @@ def update_pca(
     pca_id: uuid.UUID,
     pca_in: PCAUpdate,
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(deps.get_current_active_user)
+    current_user: Usuario = Depends(deps.get_user_with_write_access)
 ) -> Any:
     pca = db.query(PCA).filter(PCA.id == pca_id).first()
     if not pca:
@@ -236,7 +236,7 @@ def update_pca(
 def delete_pca(
     pca_id: uuid.UUID,
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(deps.get_current_active_user)
+    current_user: Usuario = Depends(deps.get_user_with_write_access)
 ) -> Any:
     pca = db.query(PCA).filter(PCA.id == pca_id).first()
     if not pca:
@@ -251,7 +251,7 @@ def delete_pca(
 async def import_pca_excel(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(deps.get_current_active_user)
+    current_user: Usuario = Depends(deps.get_user_with_write_access)
 ) -> Any:
     """Importa dados do PCA a partir de arquivo Excel"""
     print(f"INICIO IMPORT - Filename: {file.filename}, ContentType: {file.content_type}")
@@ -436,7 +436,7 @@ async def import_pca_excel(
 async def import_pca_csv(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(deps.get_current_active_user)
+    current_user: Usuario = Depends(deps.get_user_with_write_access)
 ) -> Any:
     """Importa dados do PCA a partir de arquivo CSV e converte automaticamente"""
     print(f"INICIO IMPORT CSV - Filename: {file.filename}, ContentType: {file.content_type}")

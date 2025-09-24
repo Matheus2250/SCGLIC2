@@ -45,10 +45,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
   }, []);
 
-  const login = async (username: string, password: string) => {
+  const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const response = await authService.login({ username, password });
+      const response = await authService.login({ username: email, password });
       
       setToken(response.access_token);
       localStorage.setItem('token', response.access_token);

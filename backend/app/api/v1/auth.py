@@ -22,19 +22,19 @@ def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ) -> Any:
-    username = form_data.username
+    email = form_data.username  # FastAPI OAuth2PasswordRequestForm uses 'username' field, but we'll treat it as email
     password = form_data.password
-    user = authenticate_user(db, username, password)
+    user = authenticate_user(db, email, password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     return {
         "access_token": security.create_access_token(
-            user.username, expires_delta=access_token_expires
+            user.email, expires_delta=access_token_expires  # Use email instead of username for token
         ),
         "token_type": "bearer",
     }
@@ -45,12 +45,7 @@ def create_user_account(
     user_in: UsuarioCreate,
     db: Session = Depends(get_db)
 ) -> Any:
-    user = get_user_by_username(db, username=user_in.username)
-    if user:
-        raise HTTPException(
-            status_code=400,
-            detail="The user with this username already exists in the system."
-        )
+    # Only check for email uniqueness, username can be duplicated
     user = get_user_by_email(db, email=user_in.email)
     if user:
         raise HTTPException(

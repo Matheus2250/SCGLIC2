@@ -18,7 +18,7 @@ class Usuario(Base):
     __tablename__ = "usuarios"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    username = Column(String(50), unique=True, index=True, nullable=False)
+    username = Column(String(50), nullable=False)
     email = Column(String(100), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     nivel_acesso = Column(Enum(NivelAcesso), nullable=False, default=NivelAcesso.VISITANTE)

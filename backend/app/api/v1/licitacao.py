@@ -28,7 +28,7 @@ def read_licitacoes(
 def create_licitacao(
     licitacao_in: LicitacaoCreate,
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(deps.get_current_active_user)
+    current_user: Usuario = Depends(deps.get_user_with_write_access)
 ) -> Any:
     try:
         print(f"Dados recebidos para criação de licitação: {licitacao_in.dict()}")
@@ -82,7 +82,7 @@ def update_licitacao(
     licitacao_id: str,
     licitacao_in: LicitacaoUpdate,
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(deps.get_current_active_user)
+    current_user: Usuario = Depends(deps.get_user_with_write_access)
 ) -> Any:
     licitacao = db.query(Licitacao).filter(Licitacao.id == licitacao_id).first()
     if not licitacao:
@@ -105,7 +105,7 @@ def update_licitacao(
 def delete_licitacao(
     licitacao_id: str,
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(deps.get_current_active_user)
+    current_user: Usuario = Depends(deps.get_user_with_write_access)
 ) -> Any:
     licitacao = db.query(Licitacao).filter(Licitacao.id == licitacao_id).first()
     if not licitacao:

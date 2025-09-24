@@ -40,7 +40,7 @@ def read_qualificacoes_concluidas(
 def create_qualificacao(
     qualificacao_in: QualificacaoCreate,
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(deps.get_current_active_user)
+    current_user: Usuario = Depends(deps.get_user_with_write_access)
 ) -> Any:
     # Check if Qualificacao already exists
     existing_qualificacao = db.query(Qualificacao).filter(Qualificacao.nup == qualificacao_in.nup).first()
@@ -79,7 +79,7 @@ def update_qualificacao(
     qualificacao_id: str,
     qualificacao_in: QualificacaoUpdate,
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(deps.get_current_active_user)
+    current_user: Usuario = Depends(deps.get_user_with_write_access)
 ) -> Any:
     qualificacao = db.query(Qualificacao).filter(Qualificacao.id == qualificacao_id).first()
     if not qualificacao:
@@ -98,7 +98,7 @@ def update_qualificacao(
 def delete_qualificacao(
     qualificacao_id: str,
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(deps.get_current_active_user)
+    current_user: Usuario = Depends(deps.get_user_with_write_access)
 ) -> Any:
     qualificacao = db.query(Qualificacao).filter(Qualificacao.id == qualificacao_id).first()
     if not qualificacao:
