@@ -36,7 +36,9 @@
       "Bash(\"taskkill\" \"/F\" \"/PID\" \"21424\")",
       "Bash(\"taskkill\" \"/F\" \"/PID\" \"17076\")",
       "Bash(npm run build:*)",
-      "WebFetch(domain:pncp.gov.br)"
+      "WebFetch(domain:pncp.gov.br)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
