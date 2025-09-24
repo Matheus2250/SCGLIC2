@@ -26,10 +26,11 @@ import {
   CircularProgress,
   TablePagination,
 } from '@mui/material';
-import { Add, Edit, Delete, Link as LinkIcon } from '@mui/icons-material';
+import { Add, Edit, Delete, Link as LinkIcon, Visibility } from '@mui/icons-material';
 import { licitacaoService } from '../services/licitacao.service';
 import { qualificacaoService } from '../services/qualificacao.service';
 import { Licitacao, Qualificacao } from '../types';
+import LicitacaoDetailsModal from '../components/common/LicitacaoDetailsModal';
 import { toast } from 'react-toastify';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -46,6 +47,8 @@ const LicitacaoPage: React.FC = () => {
   const [loadingQualificacoes, setLoadingQualificacoes] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedLicitacao, setSelectedLicitacao] = useState<Licitacao | null>(null);
   
   // Filter states
   const [filters, setFilters] = useState<FilterValues>({
@@ -385,6 +388,16 @@ const LicitacaoPage: React.FC = () => {
 
   const paginatedLicitacoes = filteredLicitacoes.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
+  const handleViewDetails = (licitacao: Licitacao) => {
+    setSelectedLicitacao(licitacao);
+    setDetailsOpen(true);
+  };
+
+  const handleCloseDetails = () => {
+    setDetailsOpen(false);
+    setSelectedLicitacao(null);
+  };
+
   if (loading) {
     return <Typography>Carregando...</Typography>;
   }
@@ -463,25 +476,33 @@ const LicitacaoPage: React.FC = () => {
                     />
                   </TableCell>
                   <TableCell>
+                    <IconButton
+                      size="small"
+                      color="info"
+                      onClick={() => handleViewDetails(lic)}
+                      title="Ver detalhes"
+                    >
+                      <Visibility />
+                    </IconButton>
                     {lic.link && (
-                      <IconButton 
-                        size="small" 
+                      <IconButton
+                        size="small"
                         color="info"
                         onClick={() => window.open(lic.link, '_blank')}
                       >
                         <LinkIcon />
                       </IconButton>
                     )}
-                    <IconButton 
-                      size="small" 
+                    <IconButton
+                      size="small"
                       color="primary"
                       onClick={() => handleEditModal(lic)}
                       title="Editar licitação"
                     >
                       <Edit />
                     </IconButton>
-                    <IconButton 
-                      size="small" 
+                    <IconButton
+                      size="small"
                       color="error"
                       onClick={() => handleDelete(lic.id)}
                     >
@@ -838,6 +859,13 @@ const LicitacaoPage: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Modal de detalhes da licitação */}
+      <LicitacaoDetailsModal
+        open={detailsOpen}
+        onClose={handleCloseDetails}
+        licitacao={selectedLicitacao}
+      />
     </Box>
   );
 

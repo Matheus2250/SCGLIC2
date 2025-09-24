@@ -26,13 +26,14 @@ import {
   CircularProgress,
   TablePagination,
 } from '@mui/material';
-import { Add, Edit, Delete } from '@mui/icons-material';
+import { Add, Edit, Delete, Visibility } from '@mui/icons-material';
 import { qualificacaoService } from '../services/qualificacao.service';
 import { pcaService } from '../services/pca.service';
 import { Qualificacao, PCA } from '../types';
 import { toast } from 'react-toastify';
 import TableFilters, { FilterField, FilterValues } from '../components/common/TableFilters';
 import TableExport from '../components/common/TableExport';
+import QualificacaoDetailsModal from '../components/common/QualificacaoDetailsModal';
 
 interface FormData {
   nup: string;
@@ -74,6 +75,10 @@ const QualificacaoPage: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  // Details modal states
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedQualificacao, setSelectedQualificacao] = useState<Qualificacao | null>(null);
   
   // Filter states
   const [filters, setFilters] = useState<FilterValues>({
@@ -307,6 +312,16 @@ const QualificacaoPage: React.FC = () => {
     }
   };
 
+  const handleViewDetails = (qualificacao: Qualificacao) => {
+    setSelectedQualificacao(qualificacao);
+    setDetailsOpen(true);
+  };
+
+  const handleCloseDetails = () => {
+    setDetailsOpen(false);
+    setSelectedQualificacao(null);
+  };
+
   const formatCurrency = (value: number | undefined) => {
     if (!value) return 'N/A';
     return new Intl.NumberFormat('pt-BR', {
@@ -492,16 +507,23 @@ const QualificacaoPage: React.FC = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    <IconButton 
-                      size="small" 
-                      color="primary" 
+                    <IconButton
+                      size="small"
+                      onClick={() => handleViewDetails(qual)}
+                      title="Ver detalhes"
+                    >
+                      <Visibility fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      color="primary"
                       onClick={() => handleEditModal(qual)}
                       title="Editar qualificação"
                     >
                       <Edit />
                     </IconButton>
-                    <IconButton 
-                      size="small" 
+                    <IconButton
+                      size="small"
                       color="error"
                       onClick={() => handleDelete(qual.id)}
                       title="Excluir qualificação"
@@ -770,6 +792,13 @@ const QualificacaoPage: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Qualificacao Details Modal */}
+      <QualificacaoDetailsModal
+        open={detailsOpen}
+        onClose={handleCloseDetails}
+        qualificacao={selectedQualificacao}
+      />
     </Box>
   );
 };
