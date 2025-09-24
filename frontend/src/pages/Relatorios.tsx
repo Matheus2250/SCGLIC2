@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -30,6 +30,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Autocomplete,
 } from '@mui/material';
 import {
   FileDownload,
@@ -110,6 +111,10 @@ const Relatorios: React.FC = () => {
   const [unifiedData, setUnifiedData] = useState<UnifiedReportData | null>(null);
   const [unifiedLoading, setUnifiedLoading] = useState(false);
 
+  // Estados para autocomplete
+  const [searchOptions, setSearchOptions] = useState<Array<{value: string, label: string, type: string, source: string}>>([]);
+  const [loadingOptions, setLoadingOptions] = useState(false);
+
   // Definição dos campos disponíveis para cada fonte de dados
   const fieldOptions = {
     pca: [
@@ -167,6 +172,98 @@ const Relatorios: React.FC = () => {
     { value: 'qualificacao', label: 'Qualificação', icon: <Assessment /> },
     { value: 'licitacao', label: 'Licitação', icon: <TrendingUp /> },
   ];
+
+  // Carregar opções de busca na inicialização
+  useEffect(() => {
+    loadSearchOptions();
+  }, []);
+
+  const loadSearchOptions = async () => {
+    try {
+      setLoadingOptions(true);
+
+      // Buscar todos os dados das três fontes
+      const [pcaData, qualificacaoData, licitacaoData] = await Promise.all([
+        pcaService.getAll().catch(() => []),
+        qualificacaoService.getAll().catch(() => []),
+        licitacaoService.getAll().catch(() => [])
+      ]);
+
+      const options: Array<{value: string, label: string, type: string, source: string}> = [];
+
+      // Adicionar números de contratação do PCA
+      if (Array.isArray(pcaData)) {
+        pcaData.forEach(pca => {
+          if (pca.numero_contratacao) {
+            options.push({
+              value: pca.numero_contratacao,
+              label: `${pca.numero_contratacao} - ${pca.titulo_contratacao || 'PCA'}`,
+              type: 'Número da Contratação',
+              source: 'Planejamento (PCA)'
+            });
+          }
+        });
+      }
+
+      // Adicionar NUPs e números de contratação da Qualificação
+      if (Array.isArray(qualificacaoData)) {
+        qualificacaoData.forEach(qual => {
+          if (qual.nup) {
+            options.push({
+              value: qual.nup,
+              label: `${qual.nup} - ${qual.objeto || 'Qualificação'}`,
+              type: 'NUP',
+              source: 'Qualificação'
+            });
+          }
+          if (qual.numero_contratacao && !options.find(o => o.value === qual.numero_contratacao)) {
+            options.push({
+              value: qual.numero_contratacao,
+              label: `${qual.numero_contratacao} - ${qual.objeto || 'Qualificação'}`,
+              type: 'Número da Contratação',
+              source: 'Qualificação'
+            });
+          }
+        });
+      }
+
+      // Adicionar NUPs e números de contratação da Licitação
+      if (Array.isArray(licitacaoData)) {
+        licitacaoData.forEach(lic => {
+          if (lic.nup && !options.find(o => o.value === lic.nup)) {
+            options.push({
+              value: lic.nup,
+              label: `${lic.nup} - ${lic.objeto || 'Licitação'}`,
+              type: 'NUP',
+              source: 'Licitação'
+            });
+          }
+          if (lic.numero_contratacao && !options.find(o => o.value === lic.numero_contratacao)) {
+            options.push({
+              value: lic.numero_contratacao,
+              label: `${lic.numero_contratacao} - ${lic.objeto || 'Licitação'}`,
+              type: 'Número da Contratação',
+              source: 'Licitação'
+            });
+          }
+        });
+      }
+
+      // Organizar por tipo e depois por valor
+      options.sort((a, b) => {
+        if (a.type !== b.type) {
+          return a.type.localeCompare(b.type);
+        }
+        return a.value.localeCompare(b.value);
+      });
+      setSearchOptions(options);
+
+    } catch (error) {
+      console.error('Erro ao carregar opções de busca:', error);
+    } finally {
+      setLoadingOptions(false);
+    }
+  };
 
   const handleNext = () => {
     setActiveStep((prev) => prev + 1);
@@ -237,17 +334,27 @@ const Relatorios: React.FC = () => {
       // Filtrar dados por NUP ou número da contratação
       const searchTerm = unifiedSearchTerm.trim();
 
-      const pca = Array.isArray(pcaData) ? pcaData.find(p =>
-        p.numero_contratacao === searchTerm
-      ) : undefined;
-
+      // Primeiro, encontrar a qualificação que faz a ligação entre NUP e número da contratação
       const qualificacao = Array.isArray(qualificacaoData) ? qualificacaoData.find(q =>
         q.nup === searchTerm || q.numero_contratacao === searchTerm
       ) : undefined;
 
+      // Encontrar a licitação baseada no NUP ou número da contratação
       const licitacao = Array.isArray(licitacaoData) ? licitacaoData.find(l =>
         l.nup === searchTerm || l.numero_contratacao === searchTerm
       ) : undefined;
+
+      // Para encontrar o PCA, usar o número da contratação da qualificação se encontrou por NUP
+      let pca = undefined;
+      if (Array.isArray(pcaData)) {
+        // Se pesquisou diretamente por número da contratação
+        pca = pcaData.find(p => p.numero_contratacao === searchTerm);
+
+        // Se não encontrou e tem qualificação, usar o número da contratação da qualificação
+        if (!pca && qualificacao && qualificacao.numero_contratacao) {
+          pca = pcaData.find(p => p.numero_contratacao === qualificacao.numero_contratacao);
+        }
+      }
 
       if (!pca && !qualificacao && !licitacao) {
         toast.warning('Nenhum dado encontrado para este NUP/número da contratação');
@@ -335,7 +442,7 @@ const Relatorios: React.FC = () => {
 
     ${data.pca ? `
     <div class="section">
-        <h2>📋 PLANEJAMENTO (PCA)</h2>
+        <h2>PLANEJAMENTO (PCA)</h2>
         <div class="field"><strong>Número da Contratação:</strong> ${data.pca.numero_contratacao || 'N/A'}</div>
         <div class="field"><strong>Título:</strong> ${data.pca.titulo_contratacao || 'N/A'}</div>
         <div class="field"><strong>Categoria:</strong> ${data.pca.categoria_contratacao || 'N/A'}</div>
@@ -346,11 +453,11 @@ const Relatorios: React.FC = () => {
         <div class="field"><strong>Status:</strong> ${data.pca.status_contratacao || 'N/A'}</div>
         <div class="field"><strong>Situação Execução:</strong> ${data.pca.situacao_execucao || 'N/A'}</div>
     </div>
-    ` : '<div class="section"><h2>📋 PLANEJAMENTO (PCA)</h2><div class="no-data">Nenhum dado de planejamento encontrado</div></div>'}
+    ` : '<div class="section"><h2>PLANEJAMENTO (PCA)</h2><div class="no-data">Nenhum dado de planejamento encontrado</div></div>'}
 
     ${data.qualificacao ? `
     <div class="section">
-        <h2>✅ QUALIFICAÇÃO</h2>
+        <h2>QUALIFICAÇÃO</h2>
         <div class="field"><strong>NUP:</strong> ${data.qualificacao.nup || 'N/A'}</div>
         <div class="field"><strong>Número da Contratação:</strong> ${data.qualificacao.numero_contratacao || 'N/A'}</div>
         <div class="field"><strong>Área Demandante:</strong> ${data.qualificacao.area_demandante || 'N/A'}</div>
@@ -362,11 +469,11 @@ const Relatorios: React.FC = () => {
         <div class="field"><strong>Status:</strong> ${data.qualificacao.status || 'N/A'}</div>
         <div class="field"><strong>Observações:</strong> ${data.qualificacao.observacoes || 'N/A'}</div>
     </div>
-    ` : '<div class="section"><h2>✅ QUALIFICAÇÃO</h2><div class="no-data">Nenhum dado de qualificação encontrado</div></div>'}
+    ` : '<div class="section"><h2>QUALIFICAÇÃO</h2><div class="no-data">Nenhum dado de qualificação encontrado</div></div>'}
 
     ${data.licitacao ? `
     <div class="section">
-        <h2>🏆 LICITAÇÃO</h2>
+        <h2>LICITAÇÃO</h2>
         <div class="field"><strong>NUP:</strong> ${data.licitacao.nup || 'N/A'}</div>
         <div class="field"><strong>Número da Contratação:</strong> ${data.licitacao.numero_contratacao || 'N/A'}</div>
         <div class="field"><strong>Área Demandante:</strong> ${data.licitacao.area_demandante || 'N/A'}</div>
@@ -380,25 +487,25 @@ const Relatorios: React.FC = () => {
         <div class="field"><strong>Link:</strong> ${data.licitacao.link ? `<a href="${data.licitacao.link}" target="_blank">${data.licitacao.link}</a>` : 'N/A'}</div>
         <div class="field"><strong>Observações:</strong> ${data.licitacao.observacoes || 'N/A'}</div>
     </div>
-    ` : '<div class="section"><h2>🏆 LICITAÇÃO</h2><div class="no-data">Nenhum dado de licitação encontrado</div></div>'}
+    ` : '<div class="section"><h2>LICITAÇÃO</h2><div class="no-data">Nenhum dado de licitação encontrado</div></div>'}
 
     <div class="section summary">
-        <h2>📊 RESUMO DO PROCESSO</h2>
+        <h2>RESUMO DO PROCESSO</h2>
         <table>
             <tr><th>Etapa</th><th>Status</th><th>Valor</th></tr>
             <tr>
                 <td>Planejamento</td>
-                <td>${data.pca ? '✅ Concluído' : '❌ Não encontrado'}</td>
+                <td>${data.pca ? 'Concluído' : 'Não encontrado'}</td>
                 <td>${data.pca ? formatCurrency(data.pca.valor_total) : 'N/A'}</td>
             </tr>
             <tr>
                 <td>Qualificação</td>
-                <td>${data.qualificacao ? '✅ Concluído' : '❌ Não encontrado'}</td>
+                <td>${data.qualificacao ? 'Concluído' : 'Não encontrado'}</td>
                 <td>${data.qualificacao ? formatCurrency(data.qualificacao.valor_estimado) : 'N/A'}</td>
             </tr>
             <tr>
                 <td>Licitação</td>
-                <td>${data.licitacao ? '✅ Concluído' : '❌ Não encontrado'}</td>
+                <td>${data.licitacao ? 'Concluído' : 'Não encontrado'}</td>
                 <td>${data.licitacao ? formatCurrency(data.licitacao.valor_homologado) : 'N/A'}</td>
             </tr>
         </table>
@@ -457,13 +564,56 @@ const Relatorios: React.FC = () => {
             </Typography>
 
             <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-              <TextField
+              <Autocomplete
                 fullWidth
-                label="NUP ou Número da Contratação"
-                placeholder="Ex: 123456789 ou 10/2025"
-                value={unifiedSearchTerm}
-                onChange={(e) => setUnifiedSearchTerm(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleUnifiedSearch()}
+                freeSolo
+                loading={loadingOptions}
+                options={searchOptions}
+                getOptionLabel={(option) => typeof option === 'string' ? option : option.value}
+                renderOption={(props, option) => {
+                  const { key, ...otherProps } = props;
+                  return (
+                    <li key={key} {...otherProps}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                        <Typography variant="body2" fontWeight="bold">
+                          {option.value}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {option.type} - {option.source}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                          {option.label.split(' - ')[1]}
+                        </Typography>
+                      </Box>
+                    </li>
+                  );
+                }}
+                value={searchOptions.find(option => option.value === unifiedSearchTerm) || unifiedSearchTerm}
+                onChange={(_, newValue) => {
+                  if (typeof newValue === 'string') {
+                    setUnifiedSearchTerm(newValue);
+                  } else if (newValue) {
+                    setUnifiedSearchTerm(newValue.value);
+                  }
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="NUP ou Número da Contratação"
+                    placeholder="Digite ou selecione..."
+                    onChange={(e) => setUnifiedSearchTerm(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleUnifiedSearch()}
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingOptions ? <CircularProgress color="inherit" size={20} /> : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
               />
               <Button
                 variant="contained"

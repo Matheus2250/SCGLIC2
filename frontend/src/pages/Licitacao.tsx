@@ -248,6 +248,32 @@ const LicitacaoPage: React.FC = () => {
     }
   };
 
+  // Função para aplicar máscara no NUP
+  const applyNUPMask = (value: string) => {
+    // Remove tudo que não é dígito
+    const numbers = value.replace(/\D/g, '');
+
+    // Limita a 17 dígitos (5+6+4+2)
+    const limitedNumbers = numbers.slice(0, 17);
+
+    // Aplica a máscara 00000.000000/0000-00
+    if (limitedNumbers.length <= 5) {
+      return limitedNumbers;
+    } else if (limitedNumbers.length <= 11) {
+      return limitedNumbers.replace(/(\d{5})(\d{1,6})/, '$1.$2');
+    } else if (limitedNumbers.length <= 15) {
+      return limitedNumbers.replace(/(\d{5})(\d{6})(\d{1,4})/, '$1.$2/$3');
+    } else {
+      return limitedNumbers.replace(/(\d{5})(\d{6})(\d{4})(\d{1,2})/, '$1.$2/$3-$4');
+    }
+  };
+
+  // Função para validar o formato do NUP
+  const isValidNUP = (nup: string) => {
+    const nupRegex = /^\d{5}\.\d{6}\/\d{4}-\d{2}$/;
+    return nupRegex.test(nup);
+  };
+
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
@@ -525,6 +551,7 @@ const LicitacaoPage: React.FC = () => {
                       ...prev,
                       nup: newValue.nup,
                       numero_contratacao: newValue.numero_contratacao,
+                      ano: newValue.ano,
                       area_demandante: newValue.area_demandante || '',
                       responsavel_instrucao: newValue.responsavel_instrucao || '',
                       modalidade: newValue.modalidade || '',
@@ -536,11 +563,39 @@ const LicitacaoPage: React.FC = () => {
                     handleInputChange('nup', '');
                   }
                 }}
+                freeSolo
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     label="NUP *"
-                    placeholder="Selecione uma qualificação"
+                    placeholder="00000.000000/0000-00"
+                    value={formData.nup}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Aplicar máscara do NUP
+                      const maskedValue = applyNUPMask(value);
+                      handleInputChange('nup', maskedValue);
+
+                      // Limpar outros campos quando digitando manualmente
+                      if (!qualificacoes.find(q => q.nup === maskedValue)) {
+                        setFormData(prev => ({
+                          ...prev,
+                          nup: maskedValue,
+                          numero_contratacao: '',
+                          area_demandante: '',
+                          responsavel_instrucao: '',
+                          modalidade: '',
+                          objeto: '',
+                          palavra_chave: '',
+                          valor_estimado: 0,
+                        }));
+                      }
+                    }}
+                    error={formData.nup ? !isValidNUP(formData.nup) : false}
+                    helperText={formData.nup && !isValidNUP(formData.nup) ?
+                      "Formato inválido. Use: 00000.000000/0000-00" :
+                      "Selecione uma qualificação ou digite um NUP válido"
+                    }
                     InputProps={{
                       ...params.InputProps,
                       endAdornment: (
@@ -555,6 +610,21 @@ const LicitacaoPage: React.FC = () => {
               />
             </Grid>
 
+            {/* Campo Ano - Readonly, herdado da qualificação */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Ano"
+                type="number"
+                value={formData.ano || new Date().getFullYear()}
+                InputProps={{
+                  readOnly: true,
+                  style: { backgroundColor: '#f5f5f5' }
+                }}
+                helperText="Herdado automaticamente da qualificação selecionada"
+              />
+            </Grid>
+
             {/* Número da Contratação - Preenchido automaticamente */}
             <Grid item xs={12} md={6}>
               <TextField
@@ -563,7 +633,7 @@ const LicitacaoPage: React.FC = () => {
                 value={formData.numero_contratacao}
                 onChange={(e) => handleInputChange('numero_contratacao', e.target.value)}
                 InputProps={{
-                  style: formData.nup && formData.numero_contratacao ? 
+                  style: formData.nup && formData.numero_contratacao ?
                     { backgroundColor: '#f5f5f5' } : {}
                 }}
                 helperText="Preenchido automaticamente da qualificação selecionada"
@@ -712,6 +782,27 @@ const LicitacaoPage: React.FC = () => {
               />
             </Grid>
 
+            {/* Economia - Campo somente leitura calculado automaticamente */}
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="Economia"
+                value={
+                  formData.valor_estimado && formData.valor_homologado && formData.valor_estimado > 0 && formData.valor_homologado > 0
+                    ? `R$ ${(formData.valor_estimado - formData.valor_homologado).toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                      })}`
+                    : 'N/A'
+                }
+                InputProps={{
+                  readOnly: true,
+                  style: { backgroundColor: '#f5f5f5' }
+                }}
+                helperText="Calculado automaticamente (Valor Estimado - Valor Homologado)"
+              />
+            </Grid>
+
             {/* Link */}
             <Grid item xs={12}>
               <TextField
@@ -738,10 +829,10 @@ const LicitacaoPage: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseModal}>Cancelar</Button>
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             variant="contained"
-            disabled={!formData.nup}
+            disabled={!formData.nup || !isValidNUP(formData.nup)}
           >
             {isEditMode ? 'Atualizar' : 'Criar'}
           </Button>

@@ -37,6 +37,7 @@ import TableExport from '../components/common/TableExport';
 interface FormData {
   nup: string;
   numero_contratacao: string;
+  ano: number;
   area_demandante: string;
   responsavel_instrucao: string;
   modalidade: string;
@@ -50,6 +51,7 @@ interface FormData {
 const initialFormData: FormData = {
   nup: '',
   numero_contratacao: '',
+  ano: new Date().getFullYear(),
   area_demandante: '',
   responsavel_instrucao: '',
   modalidade: '',
@@ -215,6 +217,7 @@ const QualificacaoPage: React.FC = () => {
     setFormData({
       nup: qualificacao.nup,
       numero_contratacao: qualificacao.numero_contratacao,
+      ano: qualificacao.ano,
       area_demandante: qualificacao.area_demandante || '',
       responsavel_instrucao: qualificacao.responsavel_instrucao || '',
       modalidade: qualificacao.modalidade || '',
@@ -260,6 +263,7 @@ const QualificacaoPage: React.FC = () => {
       const qualificacaoData = {
         nup: formData.nup.trim(),
         numero_contratacao: formData.numero_contratacao,
+        ano: formData.ano,
         area_demandante: formData.area_demandante?.trim() || undefined,
         responsavel_instrucao: formData.responsavel_instrucao?.trim() || undefined,
         modalidade: formData.modalidade?.trim() || undefined,
@@ -309,6 +313,32 @@ const QualificacaoPage: React.FC = () => {
       style: 'currency',
       currency: 'BRL',
     }).format(value);
+  };
+
+  // Função para aplicar máscara no NUP
+  const applyNUPMask = (value: string) => {
+    // Remove tudo que não é dígito
+    const numbers = value.replace(/\D/g, '');
+
+    // Limita a 17 dígitos (5+6+4+2)
+    const limitedNumbers = numbers.slice(0, 17);
+
+    // Aplica a máscara 00000.000000/0000-00
+    if (limitedNumbers.length <= 5) {
+      return limitedNumbers;
+    } else if (limitedNumbers.length <= 11) {
+      return limitedNumbers.replace(/(\d{5})(\d{1,6})/, '$1.$2');
+    } else if (limitedNumbers.length <= 15) {
+      return limitedNumbers.replace(/(\d{5})(\d{6})(\d{1,4})/, '$1.$2/$3');
+    } else {
+      return limitedNumbers.replace(/(\d{5})(\d{6})(\d{4})(\d{1,2})/, '$1.$2/$3-$4');
+    }
+  };
+
+  // Função para validar o formato do NUP
+  const isValidNUP = (nup: string) => {
+    const nupRegex = /^\d{5}\.\d{6}\/\d{4}-\d{2}$/;
+    return nupRegex.test(nup);
   };
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -518,8 +548,34 @@ const QualificacaoPage: React.FC = () => {
                 fullWidth
                 label="NUP *"
                 value={formData.nup}
-                onChange={(e) => handleInputChange('nup', e.target.value)}
-                placeholder="Ex: 08001.000001/2024-11"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  const maskedValue = applyNUPMask(value);
+                  handleInputChange('nup', maskedValue);
+                }}
+                placeholder="00000.000000/0000-00"
+                error={formData.nup ? !isValidNUP(formData.nup) : false}
+                helperText={formData.nup && !isValidNUP(formData.nup) ?
+                  "Formato inválido. Use: 00000.000000/0000-00" :
+                  "Digite apenas números que serão formatados automaticamente"
+                }
+                inputProps={{
+                  pattern: "\\d{5}\\.\\d{6}/\\d{4}-\\d{2}",
+                  title: "Formato: 00000.000000/0000-00"
+                }}
+              />
+            </Grid>
+
+            {/* Campo Ano */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Ano *"
+                type="number"
+                value={formData.ano}
+                onChange={(e) => handleInputChange('ano', parseInt(e.target.value) || new Date().getFullYear())}
+                inputProps={{ min: 2020, max: 2030 }}
+                helperText="Ano de execução da contratação"
               />
             </Grid>
 
@@ -701,14 +757,14 @@ const QualificacaoPage: React.FC = () => {
           <Button onClick={handleCloseModal} disabled={submitting}>
             Cancelar
           </Button>
-          <Button 
-            onClick={handleSubmit} 
-            variant="contained" 
-            disabled={submitting}
+          <Button
+            onClick={handleSubmit}
+            variant="contained"
+            disabled={submitting || !formData.nup || !isValidNUP(formData.nup)}
             startIcon={submitting ? <CircularProgress size={20} /> : null}
           >
-            {submitting 
-              ? (isEditMode ? 'Atualizando...' : 'Salvando...') 
+            {submitting
+              ? (isEditMode ? 'Atualizando...' : 'Salvando...')
               : (isEditMode ? 'Atualizar' : 'Salvar')
             }
           </Button>

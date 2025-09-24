@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Text, DECIMAL, DateTime, Date, ForeignKey, Enum
+from sqlalchemy import Column, String, Text, DECIMAL, DateTime, Date, ForeignKey, Enum, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -20,6 +20,7 @@ class Licitacao(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     nup = Column(String(50), ForeignKey("qualificacoes.nup"), nullable=False)
     numero_contratacao = Column(String(50))
+    ano = Column(Integer, nullable=False, default=2025)
     area_demandante = Column(String(200))
     responsavel_instrucao = Column(String(200))
     modalidade = Column(String(100))

@@ -10,9 +10,18 @@ app = FastAPI(
 )
 
 # CONFIGURAÇÃO CORS - CRÍTICO! - SERVIDOR CENTRAL
+origins = ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://127.0.0.1:3001"]
+
+# Add production origins if in production
+if settings.environment == "production":
+    origins.extend([
+        "https://sistema-contratacoes.vercel.app",
+        "https://*.vercel.app"  # Allow any vercel subdomain
+    ])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001"],  # Frontend origins
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

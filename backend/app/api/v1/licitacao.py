@@ -37,14 +37,18 @@ def create_licitacao(
         qualificacao = db.query(Qualificacao).filter(Qualificacao.nup == licitacao_in.nup).first()
         if not qualificacao:
             raise HTTPException(status_code=400, detail=f"Qualificacao with NUP {licitacao_in.nup} not found")
-        
+
         # Calculate economy if both values are present
         economia = None
         if licitacao_in.valor_estimado and licitacao_in.valor_homologado:
             economia = licitacao_in.valor_estimado - licitacao_in.valor_homologado
-        
+
+        # Create licitacao with ano inherited from qualificacao
+        licitacao_data = licitacao_in.dict()
+        licitacao_data['ano'] = qualificacao.ano  # Inherit ano from qualificacao
+
         licitacao = Licitacao(
-            **licitacao_in.dict(),
+            **licitacao_data,
             economia=economia,
             created_by=current_user.id
         )

@@ -32,6 +32,7 @@ export interface Qualificacao {
   id: string;
   nup: string;
   numero_contratacao: string;
+  ano: number; // Ano de execução da contratação
   area_demandante?: string;
   responsavel_instrucao?: string;
   modalidade?: string;
@@ -49,6 +50,7 @@ export interface Licitacao {
   id: string;
   nup: string;
   numero_contratacao?: string;
+  ano: number; // Herdado da qualificação
   area_demandante?: string;
   responsavel_instrucao?: string;
   modalidade?: string;

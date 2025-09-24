@@ -46,6 +46,7 @@ class LicitacaoUpdate(BaseModel):
 
 class Licitacao(LicitacaoBase):
     id: UUID
+    ano: int  # Herdado da qualificação
     economia: Optional[Decimal] = None
     created_at: datetime
     updated_at: Optional[datetime] = None

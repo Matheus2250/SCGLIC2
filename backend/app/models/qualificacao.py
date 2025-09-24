@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Text, DECIMAL, DateTime, ForeignKey, Enum
+from sqlalchemy import Column, String, Text, DECIMAL, DateTime, ForeignKey, Enum, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -18,6 +18,7 @@ class Qualificacao(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     nup = Column(String(50), unique=True, index=True, nullable=False)
     numero_contratacao = Column(String(50), ForeignKey("pca.numero_contratacao"), nullable=False)
+    ano = Column(Integer, nullable=False, default=2025)
     area_demandante = Column(String(200))
     responsavel_instrucao = Column(String(200))
     modalidade = Column(String(100))

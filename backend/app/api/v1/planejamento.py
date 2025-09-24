@@ -10,6 +10,7 @@ from datetime import date
 import pandas as pd
 import io
 import re
+import uuid
 
 
 def clean_text(text):
@@ -18,36 +19,38 @@ def clean_text(text):
         return None
 
     text = str(text)
-    # Correções de encoding corrompido comum
+    # Correções de encoding corrompido comum (baseado em convert_pca.py)
     replacements = {
-        'ã': 'ã',
-        'ção': 'ção',
-        'çã': 'ção',
-        'contratação': 'contratação',
-        'situação': 'situação',
-        'execução': 'execução',
-        'preparação': 'preparação',
-        'título': 'título',
-        'serviço': 'serviço',
-        'informação': 'informação',
-        'comunicação': 'comunicação',
-        'aquisição': 'aquisição',
-        'manutenção': 'manutenção',
-        'área': 'área',
-        'número': 'número',
-        'início': 'início',
-        'conclusão': 'conclusão',
-        'duração': 'duração',
-        'transferência': 'transferência',
-        'assistência': 'assistência',
-        'técnica': 'técnica',
-        'científica': 'científica',
-        'implementação': 'implementação',
-        'ágil': 'ágil',
-        'agências': 'agências',
-        'mobiliários': 'mobiliários',
-        'acessórios': 'acessórios',
-        'análise': 'análise'
+        '�': 'ã',
+        '��o': 'ção',
+        '��': 'ção',
+        'contrata��o': 'contratação',
+        'situa��o': 'situação',
+        'execu��o': 'execução',
+        'prepara��o': 'preparação',
+        't�tulo': 'título',
+        'servi�o': 'serviço',
+        'informa��o': 'informação',
+        'comunica��o': 'comunicação',
+        'aquisi��o': 'aquisição',
+        'manuten��o': 'manutenção',
+        '�rea': 'área',
+        'n�mero': 'número',
+        'in�cio': 'início',
+        'conclus�o': 'conclusão',
+        'dura��o': 'duração',
+        'transfer�ncia': 'transferência',
+        'assist�ncia': 'assistência',
+        't�cnica': 'técnica',
+        'cient�fica': 'científica',
+        'implementa��o': 'implementação',
+        '�gil': 'ágil',
+        'ag�ncias': 'agências',
+        'mobili�rios': 'mobiliários',
+        'acess�rios': 'acessórios',
+        'an�lise': 'análise',
+        'tecnologia': 'tecnologia',
+        'licenciamento': 'licenciamento'
     }
 
     for old, new in replacements.items():
@@ -107,7 +110,7 @@ router = APIRouter()
 @router.get("/", response_model=List[PCASchema])
 def read_pcas(
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 1000,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(deps.get_current_active_user)
 ) -> Any:
@@ -195,9 +198,11 @@ def get_pcas_vencidas(
     return pca_objects
 
 
+
+
 @router.get("/{pca_id}", response_model=PCASchema)
 def read_pca(
-    pca_id: str,
+    pca_id: uuid.UUID,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(deps.get_current_active_user)
 ) -> Any:
@@ -209,7 +214,7 @@ def read_pca(
 
 @router.put("/{pca_id}", response_model=PCASchema)
 def update_pca(
-    pca_id: str,
+    pca_id: uuid.UUID,
     pca_in: PCAUpdate,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(deps.get_current_active_user)
@@ -217,11 +222,11 @@ def update_pca(
     pca = db.query(PCA).filter(PCA.id == pca_id).first()
     if not pca:
         raise HTTPException(status_code=404, detail="PCA not found")
-    
+
     update_data = pca_in.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(pca, field, value)
-    
+
     db.commit()
     db.refresh(pca)
     return pca
@@ -229,14 +234,14 @@ def update_pca(
 
 @router.delete("/{pca_id}")
 def delete_pca(
-    pca_id: str,
+    pca_id: uuid.UUID,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(deps.get_current_active_user)
 ) -> Any:
     pca = db.query(PCA).filter(PCA.id == pca_id).first()
     if not pca:
         raise HTTPException(status_code=404, detail="PCA not found")
-    
+
     db.delete(pca)
     db.commit()
     return {"message": "PCA deleted successfully"}
@@ -450,9 +455,9 @@ async def import_pca_csv(
         contents = await file.read()
         print(f"ARQUIVO CSV LIDO - Size: {len(contents)} bytes")
 
-        # Tentar diferentes encodings
+        # Tentar diferentes encodings (melhorado com base no convert_pca.py)
         df = None
-        encodings = ['windows-1252', 'utf-8', 'latin1']
+        encodings = ['windows-1252', 'utf-8', 'latin1', 'iso-8859-1', 'cp1252']
 
         for encoding in encodings:
             try:

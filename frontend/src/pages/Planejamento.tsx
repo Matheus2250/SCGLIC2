@@ -22,6 +22,10 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Divider,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import {
   Add,
@@ -48,7 +52,8 @@ const Planejamento: React.FC = () => {
   const [importType, setImportType] = useState<'excel' | 'csv'>('excel');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+
   // Details modal states
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedPCA, setSelectedPCA] = useState<PCA | null>(null);
@@ -66,6 +71,10 @@ const Planejamento: React.FC = () => {
 
   // Get unique areas from PCAs
   const getUniqueAreas = () => {
+    if (!pcas || !Array.isArray(pcas) || pcas.length === 0) {
+      return [];
+    }
+
     const areas = pcas
       .map(pca => pca.area_requisitante)
       .filter(area => area && area.trim() !== '')
@@ -137,7 +146,7 @@ const Planejamento: React.FC = () => {
   const fetchPCAs = async () => {
     try {
       setLoading(true);
-      const data = await pcaService.getAll();
+      const data = await pcaService.getAll(0, 10000);
       // IMPORTANTE: Garantir que sempre seja um array
       setPcas(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -239,7 +248,7 @@ const Planejamento: React.FC = () => {
   };
 
   // Apply filters to PCAs
-  const filteredPCAs = pcas.filter(pca => {
+  const filteredPCAs = (pcas || []).filter(pca => {
     // Search filter (searches in multiple fields)
     if (filters.search) {
       const searchTerm = filters.search.toString().toLowerCase();
@@ -297,18 +306,46 @@ const Planejamento: React.FC = () => {
     return <Typography>Carregando...</Typography>;
   }
 
+  // Generate year options (current year ± 3 years)
+  const generateYearOptions = () => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let i = currentYear - 3; i <= currentYear + 3; i++) {
+      years.push(i);
+    }
+    return years;
+  };
+
+  const yearOptions = generateYearOptions();
+
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Typography variant="h4">
-          Planejamento - PCA
-        </Typography>
+        <Box display="flex" alignItems="center" gap={3}>
+          <Typography variant="h4">
+            Planejamento - PCA
+          </Typography>
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Ano</InputLabel>
+            <Select
+              value={selectedYear}
+              label="Ano"
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+            >
+              {yearOptions.map((year) => (
+                <MenuItem key={year} value={year}>
+                  {year}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <TableExport
             data={filteredPCAs}
             columns={exportColumns}
-            filename="planejamento_pca"
-            title="Relatório de Planejamento - PCA"
+            filename={`planejamento_pca_${selectedYear}`}
+            title={`Relatório de Planejamento - PCA ${selectedYear}`}
           />
           <Button
             variant="outlined"
@@ -422,13 +459,42 @@ const Planejamento: React.FC = () => {
             {/* Informações sobre o tipo selecionado */}
             {importType === 'excel' ? (
               <Alert severity="info" sx={{ mb: 2 }}>
-                Selecione um arquivo Excel (.xlsx ou .xls) com as colunas:
-                Número da Contratação, Título da Contratação, Valor Total, Área Requisitante, etc.
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                  Formato Excel Requerido (.xlsx ou .xls):
+                </Typography>
+                <Typography variant="body2" component="div">
+                  O arquivo deve conter exatamente estas colunas na primeira linha:
+                  <br />• <strong>Número da Contratação</strong> - Ex: 1/2025, 2/2025
+                  <br />• <strong>Status da Contratação</strong> - Ex: Planejada, Em andamento
+                  <br />• <strong>Situação da Execução</strong> - Ex: Não iniciada, Em execução
+                  <br />• <strong>Título da Contratação</strong> - Descrição completa
+                  <br />• <strong>Categoria da Contratação</strong> - Ex: Serviços, Obras
+                  <br />• <strong>Valor Total</strong> - Formato: 1.000.000,00 ou 1000000.00
+                  <br />• <strong>Área Requisitante</strong> - Setor responsável
+                  <br />• <strong>Número DFD</strong> - Número do documento
+                  <br />• <strong>Data Estimada de Início</strong> - Formato: DD/MM/AAAA
+                  <br />• <strong>Data Estimada de Conclusão</strong> - Formato: DD/MM/AAAA
+                  <br /><br />
+                  <em>Dica: Use o arquivo CSV original e converta para Excel mantendo estes nomes de colunas.</em>
+                </Typography>
               </Alert>
             ) : (
               <Alert severity="info" sx={{ mb: 2 }}>
-                Selecione um arquivo CSV (.csv) no formato original do PCA.
-                O sistema fará a conversão automática das colunas para o formato correto.
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                  Arquivo CSV Original do PCA - Sem Formatação Necessária:
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Simplesmente faça o upload do arquivo CSV original baixado do sistema PCA!</strong>
+                  <br /><br />
+                  <strong>O que o sistema faz automaticamente:</strong>
+                  <br />• Detecta o encoding correto (Windows-1252, UTF-8, etc.)
+                  <br />• Mapeia as colunas automaticamente por posição
+                  <br />• Limpa caracteres especiais corrompidos
+                  <br />• Formata datas e valores monetários
+                  <br />• Evita duplicatas (atualiza registros existentes)
+                  <br /><br />
+                  <em>Não precisa converter, formatar ou alterar o arquivo CSV original!</em>
+                </Typography>
               </Alert>
             )}
 

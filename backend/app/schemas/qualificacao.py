@@ -9,6 +9,7 @@ from app.models.qualificacao import StatusQualificacao
 class QualificacaoBase(BaseModel):
     nup: str
     numero_contratacao: str
+    ano: int  # Ano de execução da contratação
     area_demandante: Optional[str] = None
     responsavel_instrucao: Optional[str] = None
     modalidade: Optional[str] = None
@@ -26,6 +27,7 @@ class QualificacaoCreate(QualificacaoBase):
 class QualificacaoUpdate(BaseModel):
     nup: Optional[str] = None
     numero_contratacao: Optional[str] = None
+    ano: Optional[int] = None
     area_demandante: Optional[str] = None
     responsavel_instrucao: Optional[str] = None
     modalidade: Optional[str] = None
