@@ -17,6 +17,7 @@ if settings.environment == "production":
     origins.extend([
         "https://sistema-contratacoes-web.onrender.com",
         "https://sistema-contratacoes.vercel.app",
+        "https://sistemacglic.onrender.com",
         "https://*.onrender.com",
         "https://*.vercel.app"
     ])
