@@ -9,24 +9,14 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CONFIGURAÇÃO CORS - CRÍTICO! - SERVIDOR CENTRAL
-origins = ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://127.0.0.1:3001"]
-
-# Add production origins if in production
-if settings.environment == "production":
-    origins.extend([
-        "https://sistema-contratacoes-web.onrender.com",
-        "https://sistema-contratacoes.vercel.app",
-        "https://sistemacglic.onrender.com",
-        "*"  # Temporarily allow all origins for deployment testing
-    ])
-
+# CONFIGURAÇÃO CORS SIMPLIFICADA - PERMITE TUDO EM PRODUÇÃO
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if settings.environment == "production" else origins,
-    allow_credentials=False,  # Set to False when using wildcard
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # Include routers
