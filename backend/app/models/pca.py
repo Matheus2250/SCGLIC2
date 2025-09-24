@@ -21,6 +21,7 @@ class PCA(Base):
     numero_dfd = Column(String(50))
     data_estimada_inicio = Column(Date)
     data_estimada_conclusao = Column(Date)
+    ano_pca = Column(Integer, nullable=False, default=2025)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     created_by = Column(UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=False)

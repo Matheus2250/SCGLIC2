@@ -16,6 +16,7 @@ class PCABase(BaseModel):
     numero_dfd: Optional[str] = None
     data_estimada_inicio: Optional[date] = None
     data_estimada_conclusao: Optional[date] = None
+    ano_pca: Optional[int] = 2025
 
 
 class PCACreate(PCABase):
@@ -33,10 +34,12 @@ class PCAUpdate(BaseModel):
     numero_dfd: Optional[str] = None
     data_estimada_inicio: Optional[date] = None
     data_estimada_conclusao: Optional[date] = None
+    ano_pca: Optional[int] = None
 
 
 class PCA(PCABase):
     id: UUID
+    ano_pca: int
     atrasada: bool
     vencida: bool
     created_at: datetime
