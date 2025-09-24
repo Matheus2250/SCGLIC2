@@ -8,6 +8,10 @@ import {
   Container,
   CircularProgress,
   Alert,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -23,6 +27,7 @@ const schema = yup.object({
   confirmPassword: yup.string()
     .required('Confirmação de senha é obrigatória')
     .oneOf([yup.ref('password')], 'Senhas devem ser iguais'),
+  nivel_acesso: yup.string().required('Nível de acesso é obrigatório'),
 });
 
 interface RegisterFormData {
@@ -31,6 +36,7 @@ interface RegisterFormData {
   nome_completo: string;
   password: string;
   confirmPassword: string;
+  nivel_acesso: string;
 }
 
 
@@ -58,7 +64,7 @@ const RegisterForm: React.FC = () => {
         email: data.email,
         nome_completo: data.nome_completo,
         password: data.password,
-        nivel_acesso: 'VISITANTE',
+        nivel_acesso: data.nivel_acesso,
       };
 
       await authService.register(userData);
@@ -176,6 +182,26 @@ const RegisterForm: React.FC = () => {
               helperText={errors.nome_completo?.message}
             />
 
+            <FormControl fullWidth margin="normal" required>
+              <InputLabel>Nível de Acesso</InputLabel>
+              <Select
+                {...register('nivel_acesso')}
+                error={!!errors.nivel_acesso}
+                label="Nível de Acesso"
+                defaultValue=""
+              >
+                <MenuItem value="COORDENADOR">COORDENADOR (Administrador)</MenuItem>
+                <MenuItem value="DIPLAN">DIPLAN (Planejamento)</MenuItem>
+                <MenuItem value="DIQUALI">DIQUALI (Qualificação)</MenuItem>
+                <MenuItem value="DIPLI">DIPLI (Licitação)</MenuItem>
+                <MenuItem value="VISITANTE">VISITANTE (Apenas Leitura)</MenuItem>
+              </Select>
+              {errors.nivel_acesso && (
+                <Typography color="error" variant="caption" sx={{ mt: 1, ml: 2 }}>
+                  {errors.nivel_acesso.message}
+                </Typography>
+              )}
+            </FormControl>
 
             <TextField
               margin="normal"
