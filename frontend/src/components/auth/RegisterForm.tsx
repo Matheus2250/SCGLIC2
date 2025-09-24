@@ -18,6 +18,8 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { authService } from '../../services/auth.service';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../store/auth.context';
+import PostRegistrationQuestionnaire from './PostRegistrationQuestionnaire';
 
 const schema = yup.object({
   username: yup.string().required('Username é obrigatório').min(3, 'Username deve ter pelo menos 3 caracteres'),
@@ -27,7 +29,6 @@ const schema = yup.object({
   confirmPassword: yup.string()
     .required('Confirmação de senha é obrigatória')
     .oneOf([yup.ref('password')], 'Senhas devem ser iguais'),
-  nivel_acesso: yup.string().required('Nível de acesso é obrigatório'),
 });
 
 interface RegisterFormData {
@@ -36,15 +37,16 @@ interface RegisterFormData {
   nome_completo: string;
   password: string;
   confirmPassword: string;
-  nivel_acesso: string;
 }
 
 
 const RegisterForm: React.FC = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [registerError, setRegisterError] = useState<string>('');
   const [registerSuccess, setRegisterSuccess] = useState(false);
+  const [showQuestionnaire, setShowQuestionnaire] = useState(false);
 
   const {
     register,
@@ -58,32 +60,51 @@ const RegisterForm: React.FC = () => {
     try {
       setIsLoading(true);
       setRegisterError('');
-      
+
       const userData = {
         username: data.username,
         email: data.email,
         nome_completo: data.nome_completo,
         password: data.password,
-        nivel_acesso: data.nivel_acesso,
+        nivel_acesso: 'VISITANTE', // Todos os usuários começam como VISITANTE
       };
 
       await authService.register(userData);
+
+      // Fazer login automático após registro
+      const loginResponse = await authService.login({
+        username: data.email, // Usar email para login conforme testado na API
+        password: data.password
+      });
+      login(loginResponse.access_token);
+
       setRegisterSuccess(true);
-      
-      // Redirecionar para login após 2 segundos
+
+      // Mostrar questionário em vez de redirecionar diretamente
       setTimeout(() => {
-        navigate('/login');
+        setShowQuestionnaire(true);
       }, 2000);
-      
+
     } catch (error: any) {
       setRegisterError(
-        error.response?.data?.detail || 
+        error.response?.data?.detail ||
         'Erro ao criar conta. Tente novamente.'
       );
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (registerSuccess && showQuestionnaire) {
+    return (
+      <PostRegistrationQuestionnaire
+        onComplete={() => {
+          setShowQuestionnaire(false);
+          navigate('/login');
+        }}
+      />
+    );
+  }
 
   if (registerSuccess) {
     return (
@@ -182,26 +203,6 @@ const RegisterForm: React.FC = () => {
               helperText={errors.nome_completo?.message}
             />
 
-            <FormControl fullWidth margin="normal" required>
-              <InputLabel>Nível de Acesso</InputLabel>
-              <Select
-                {...register('nivel_acesso')}
-                error={!!errors.nivel_acesso}
-                label="Nível de Acesso"
-                defaultValue=""
-              >
-                <MenuItem value="COORDENADOR">COORDENADOR (Administrador)</MenuItem>
-                <MenuItem value="DIPLAN">DIPLAN (Planejamento)</MenuItem>
-                <MenuItem value="DIQUALI">DIQUALI (Qualificação)</MenuItem>
-                <MenuItem value="DIPLI">DIPLI (Licitação)</MenuItem>
-                <MenuItem value="VISITANTE">VISITANTE (Apenas Leitura)</MenuItem>
-              </Select>
-              {errors.nivel_acesso && (
-                <Typography color="error" variant="caption" sx={{ mt: 1, ml: 2 }}>
-                  {errors.nivel_acesso.message}
-                </Typography>
-              )}
-            </FormControl>
 
             <TextField
               margin="normal"

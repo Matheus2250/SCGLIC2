@@ -23,6 +23,8 @@ import {
   BarChart,
   AdminPanelSettings,
   CloudDownload,
+  People,
+  ManageAccounts,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../store/auth.context';
@@ -119,7 +121,18 @@ const menuItems: MenuItem[] = [
     text: 'Administração',
     icon: <AdminPanelSettings />,
     allowedRoles: ['COORDENADOR'],
-    path: '/admin/usuarios',
+    subItems: [
+      {
+        text: 'Gerenciar Usuários',
+        icon: <People />,
+        path: '/admin/usuarios',
+      },
+      {
+        text: 'Requisições de Acesso',
+        icon: <ManageAccounts />,
+        path: '/admin/gerenciar-usuarios',
+      },
+    ],
   },
 ];
 

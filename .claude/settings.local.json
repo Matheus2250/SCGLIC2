@@ -40,7 +40,10 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(render psql dpg-d3a23temc7s73e36740-a)"
+      "Bash(render psql dpg-d3a23temc7s73e36740-a)",
+      "Bash(alembic current:*)",
+      "Bash(alembic heads)",
+      "Bash(alembic:*)"
     ],
     "deny": [],
     "ask": []

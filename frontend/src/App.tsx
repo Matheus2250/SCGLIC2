@@ -21,6 +21,7 @@ import Licitacao from './pages/Licitacao';
 import EstatisticasLicitacao from './pages/EstatisticasLicitacao';
 import Relatorios from './pages/Relatorios';
 import AdminUsuarios from './pages/AdminUsuarios';
+import GerenciarUsuarios from './pages/GerenciarUsuarios';
 
 const theme = createTheme({
   palette: {
@@ -113,6 +114,11 @@ function App() {
                         <Route path="/admin/usuarios" element={
                           <PrivateRoute allowedRoles={['COORDENADOR']}>
                             <AdminUsuarios />
+                          </PrivateRoute>
+                        } />
+                        <Route path="/admin/gerenciar-usuarios" element={
+                          <PrivateRoute allowedRoles={['COORDENADOR']}>
+                            <GerenciarUsuarios />
                           </PrivateRoute>
                         } />
                       </Routes>

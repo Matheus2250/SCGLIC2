@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1 import auth, planejamento, qualificacao, licitacao, reports
+from app.api.v1 import auth, planejamento, qualificacao, licitacao, reports, access_requests
 from app.core.config import settings
 
 app = FastAPI(
@@ -25,6 +25,7 @@ app.include_router(planejamento.router, prefix="/api/v1/pca", tags=["planejament
 app.include_router(qualificacao.router, prefix="/api/v1/qualificacao", tags=["qualificacao"])
 app.include_router(licitacao.router, prefix="/api/v1/licitacao", tags=["licitacao"])
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["reports"])
+app.include_router(access_requests.router, prefix="/api/v1/access-requests", tags=["access-requests"])
 
 
 @app.get("/")

@@ -45,19 +45,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (emailOrToken: string, password?: string) => {
     try {
       setIsLoading(true);
-      const response = await authService.login({ username: email, password });
-      
-      setToken(response.access_token);
-      localStorage.setItem('token', response.access_token);
-      
-      const userData = await authService.getMe();
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-      
-      toast.success('Login realizado com sucesso!');
+
+      if (password) {
+        // Login tradicional com email/username e senha
+        const response = await authService.login({ username: emailOrToken, password });
+
+        setToken(response.access_token);
+        localStorage.setItem('token', response.access_token);
+
+        const userData = await authService.getMe();
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+
+        toast.success('Login realizado com sucesso!');
+      } else {
+        // Login direto com token (usado após registro)
+        setToken(emailOrToken);
+        localStorage.setItem('token', emailOrToken);
+
+        const userData = await authService.getMe();
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+      }
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error(error.response?.data?.detail || 'Erro ao fazer login');
