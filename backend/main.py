@@ -15,8 +15,10 @@ origins = ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3
 # Add production origins if in production
 if settings.environment == "production":
     origins.extend([
+        "https://sistema-contratacoes-web.onrender.com",
         "https://sistema-contratacoes.vercel.app",
-        "https://*.vercel.app"  # Allow any vercel subdomain
+        "https://*.onrender.com",
+        "https://*.vercel.app"
     ])
 
 app.add_middleware(
