@@ -18,8 +18,7 @@ if settings.environment == "production":
         "https://sistema-contratacoes-web.onrender.com",
         "https://sistema-contratacoes.vercel.app",
         "https://sistemacglic.onrender.com",
-        "https://*.onrender.com",
-        "https://*.vercel.app"
+        "*"  # Temporarily allow all origins for deployment testing
     ])
 
 app.add_middleware(
