@@ -4,7 +4,7 @@ services:
     name: sistema-contratacoes-api
     env: python
     region: oregon
-    plan: starter
+    plan: free
     buildCommand: cd backend && pip install -r requirements.txt
     startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
@@ -22,7 +22,7 @@ services:
     name: sistema-contratacoes-web
     env: node
     region: oregon
-    plan: starter
+    plan: free
     buildCommand: cd frontend && npm ci && npm run build
     startCommand: cd frontend && npx serve -s build -l $PORT
     envVars:
@@ -35,4 +35,4 @@ databases:
     databaseName: contratos_db
     user: contratos_user
     region: oregon
-    plan: starter
+    plan: free
