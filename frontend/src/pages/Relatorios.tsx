@@ -632,9 +632,9 @@ const Relatorios: React.FC = () => {
                   Dados encontrados para: <strong>{unifiedData.searchTerm}</strong>
                   <br />
                   <small>
-                    Planejamento: {unifiedData.pca ? '✅' : '❌'} |
-                    Qualificação: {unifiedData.qualificacao ? '✅' : '❌'} |
-                    Licitação: {unifiedData.licitacao ? '✅' : '❌'}
+                    Planejamento: {unifiedData.pca ? 'Sim' : 'Não'} |
+                    Qualificação: {unifiedData.qualificacao ? 'Sim' : 'Não'} |
+                    Licitação: {unifiedData.licitacao ? 'Sim' : 'Não'}
                   </small>
                 </Alert>
 

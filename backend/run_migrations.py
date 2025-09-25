@@ -17,15 +17,15 @@ def run_migrations():
         ], capture_output=True, text=True, cwd=os.getcwd())
 
         if result.returncode == 0:
-            print("✅ Migrations executadas com sucesso!")
+            print("Migrations executadas com sucesso!")
             print(result.stdout)
         else:
-            print("❌ Erro nas migrations:")
+            print("Erro nas migrations:")
             print(result.stderr)
             sys.exit(1)
 
     except Exception as e:
-        print(f"❌ Erro executando migrations: {e}")
+        print(f"Erro executando migrations: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

@@ -196,7 +196,7 @@ const EstatisticasLicitacao: React.FC = () => {
         <Grid item xs={12}>
           <Paper sx={{ p: 4, textAlign: 'center' }}>
             <Typography variant="h6" color="textSecondary">
-              📈 Relatórios Detalhados
+              Relatórios Detalhados
             </Typography>
             <Typography variant="body1" color="textSecondary" sx={{ mt: 2 }}>
               Para análises mais detalhadas das licitações, utilize a seção de Relatórios.

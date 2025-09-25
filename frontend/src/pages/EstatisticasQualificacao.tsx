@@ -113,7 +113,7 @@ const EstatisticasQualificacao: React.FC = () => {
       {qualificacoes.length > 0 ? (
         <Paper sx={{ p: 4 }}>
           <Typography variant="h6" sx={{ mb: 2 }}>
-            📊 Resumo das Qualificações
+            Resumo das Qualificações
           </Typography>
           <Typography variant="body1" color="textSecondary">
             Total de {stats.total} qualificações cadastradas no sistema, sendo {stats.concluidas} concluídas
@@ -124,7 +124,7 @@ const EstatisticasQualificacao: React.FC = () => {
       ) : (
         <Paper sx={{ p: 4, textAlign: 'center' }}>
           <Typography variant="h6" color="textSecondary">
-            📊 Estatísticas da Qualificação
+            Estatísticas da Qualificação
           </Typography>
           <Typography variant="body1" color="textSecondary" sx={{ mt: 2 }}>
             Nenhuma qualificação encontrada no sistema.
