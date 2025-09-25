@@ -487,18 +487,22 @@ def generate_html_report(df: pd.DataFrame, config: CustomReportRequest, chart_da
         
         # JavaScript para gerar o gráfico
         if chart_type == 'status_distribution':
+            import json
+            labels = json.dumps(chart_data.get('Status', []))
+            values = json.dumps(chart_data.get('Quantidade', []))
+
             charts_js += f'''
             // {chart_title}
             const ctx_{i} = document.getElementById('{chart_id}').getContext('2d');
             new Chart(ctx_{i}, {{
                 type: 'pie',
                 data: {{
-                    labels: {chart_data.get('Status', [])},
+                    labels: {labels},
                     datasets: [{{
-                        data: {chart_data.get('Quantidade', [])},
+                        data: {values},
                         backgroundColor: [
-                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
-                            '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+                            '#2563eb', '#dc2626', '#16a34a', '#ca8a04',
+                            '#9333ea', '#c2410c', '#0891b2', '#4338ca'
                         ]
                     }}]
                 }},
@@ -514,19 +518,24 @@ def generate_html_report(df: pd.DataFrame, config: CustomReportRequest, chart_da
             '''
             
         elif chart_type == 'value_timeline':
+            import json
+            timeline_labels = json.dumps(chart_data.get('Mes', []))
+            timeline_values = json.dumps(chart_data.get('Valor', []))
+
             charts_js += f'''
             // {chart_title}
             const ctx_{i} = document.getElementById('{chart_id}').getContext('2d');
             new Chart(ctx_{i}, {{
                 type: 'line',
                 data: {{
-                    labels: {chart_data.get('Mes', [])},
+                    labels: {timeline_labels},
                     datasets: [{{
                         label: 'Valor',
-                        data: {chart_data.get('Valor', [])},
-                        borderColor: '#36A2EB',
-                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                        tension: 0.1
+                        data: {timeline_values},
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        tension: 0.1,
+                        fill: true
                     }}]
                 }},
                 options: {{
@@ -546,17 +555,21 @@ def generate_html_report(df: pd.DataFrame, config: CustomReportRequest, chart_da
             '''
             
         elif chart_type == 'category_comparison':
+            import json
+            category_labels = json.dumps(chart_data.get('Categoria', []))
+            category_values = json.dumps(chart_data.get('Valor', []))
+
             charts_js += f'''
             // {chart_title}
             const ctx_{i} = document.getElementById('{chart_id}').getContext('2d');
             new Chart(ctx_{i}, {{
                 type: 'bar',
                 data: {{
-                    labels: {chart_data.get('Categoria', [])},
+                    labels: {category_labels},
                     datasets: [{{
                         label: 'Valor',
-                        data: {chart_data.get('Valor', [])},
-                        backgroundColor: '#4BC0C0'
+                        data: {category_values},
+                        backgroundColor: '#16a34a'
                     }}]
                 }},
                 options: {{
@@ -612,12 +625,62 @@ def generate_html_report(df: pd.DataFrame, config: CustomReportRequest, chart_da
         <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
-            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }}
-            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem 0; }}
-            .stats-card {{ background: #f8f9fa; border-left: 4px solid #007bff; }}
-            .table-responsive {{ max-height: 500px; overflow-y: auto; }}
+            body {{
+                font-family: 'Times New Roman', serif;
+                color: #212529;
+                background-color: #ffffff;
+            }}
+            .header {{
+                background-color: #f8f9fa;
+                border-bottom: 3px solid #6c757d;
+                color: #212529;
+                padding: 2rem 0;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }}
+            .stats-card {{
+                background: #ffffff;
+                border: 1px solid #dee2e6;
+                border-left: 4px solid #6c757d;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }}
+            .table-responsive {{
+                max-height: 500px;
+                overflow-y: auto;
+                border: 1px solid #dee2e6;
+            }}
+            .card {{
+                border: 1px solid #dee2e6;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }}
+            .card-header {{
+                background-color: #f8f9fa;
+                border-bottom: 1px solid #dee2e6;
+                font-weight: bold;
+            }}
+            .btn-primary {{
+                background-color: #6c757d;
+                border-color: #6c757d;
+            }}
+            .btn-primary:hover {{
+                background-color: #5a6268;
+                border-color: #545b62;
+            }}
+            .btn-success {{
+                background-color: #28a745;
+                border-color: #28a745;
+            }}
+            .alert-info {{
+                background-color: #f8f9fa;
+                border-color: #dee2e6;
+                color: #495057;
+            }}
+            h1, h2, h3, h4, h5, h6 {{
+                color: #495057;
+                font-weight: bold;
+            }}
             @media print {{
                 .no-print {{ display: none !important; }}
+                .header {{ background-color: #ffffff !important; }}
             }}
         </style>
     </head>
@@ -626,9 +689,9 @@ def generate_html_report(df: pd.DataFrame, config: CustomReportRequest, chart_da
             <div class="container">
                 <div class="row">
                     <div class="col-12">
-                        <h1 class="mb-0">Relatório Customizado</h1>
-                        <p class="mb-0 opacity-75">Fonte de Dados: {data_source_label}</p>
-                        <small class="opacity-75">Gerado em: {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}</small>
+                        <h1 class="mb-0">RELATÓRIO GERENCIAL</h1>
+                        <p class="mb-0">{data_source_label}</p>
+                        <small>Data de Emissão: {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}</small>
                     </div>
                 </div>
             </div>
@@ -643,7 +706,7 @@ def generate_html_report(df: pd.DataFrame, config: CustomReportRequest, chart_da
                 <div class="col-md-3">
                     <div class="card stats-card">
                         <div class="card-body text-center">
-                            <h3 class="text-primary">{len(df)}</h3>
+                            <h3 style="color: #6c757d;">{len(df)}</h3>
                             <p class="mb-0">Total de Registros</p>
                         </div>
                     </div>
@@ -651,7 +714,7 @@ def generate_html_report(df: pd.DataFrame, config: CustomReportRequest, chart_da
                 <div class="col-md-3">
                     <div class="card stats-card">
                         <div class="card-body text-center">
-                            <h3 class="text-success">{len(config.selectedFields)}</h3>
+                            <h3 style="color: #6c757d;">{len(config.selectedFields)}</h3>
                             <p class="mb-0">Campos Selecionados</p>
                         </div>
                     </div>
@@ -659,27 +722,27 @@ def generate_html_report(df: pd.DataFrame, config: CustomReportRequest, chart_da
                 <div class="col-md-3">
                     <div class="card stats-card">
                         <div class="card-body text-center">
-                            <h3 class="text-info">{len(chart_data_list)}</h3>
-                            <p class="mb-0">Gráficos</p>
+                            <h3 style="color: #6c757d;">{len(chart_data_list)}</h3>
+                            <p class="mb-0">Visualizações</p>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="card stats-card">
                         <div class="card-body text-center">
-                            <h3 class="text-warning">{len(active_filters)}</h3>
-                            <p class="mb-0">Filtros Ativos</p>
+                            <h3 style="color: #6c757d;">{len(active_filters)}</h3>
+                            <p class="mb-0">Filtros Aplicados</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Gráficos -->
-            {f'<h2 class="mb-4">Visualizações</h2><div class="row">{chart_containers}</div>' if chart_containers else ''}
+            {f'<h2 class="mb-4">ANÁLISE GRÁFICA</h2><div class="row">{chart_containers}</div>' if chart_containers else ''}
 
             <!-- Tabela de Dados -->
             <div class="mb-4">
-                <h2 class="mb-3">Dados</h2>
+                <h2 class="mb-3">DADOS DETALHADOS</h2>
                 <div class="table-responsive">
                     {table_html}
                 </div>
@@ -688,20 +751,20 @@ def generate_html_report(df: pd.DataFrame, config: CustomReportRequest, chart_da
             <!-- Botões de Ação -->
             <div class="row no-print mb-4">
                 <div class="col-12 text-center">
-                    <button onclick="window.print()" class="btn btn-primary btn-lg me-2">
-                        Imprimir
+                    <button onclick="window.print()" class="btn btn-primary me-2">
+                        Imprimir Relatório
                     </button>
-                    <button onclick="exportToPDF()" class="btn btn-success btn-lg">
-                        Salvar como PDF
+                    <button onclick="exportToPDF()" class="btn btn-success">
+                        Exportar PDF
                     </button>
                 </div>
             </div>
         </div>
 
-        <footer class="bg-light py-3 mt-5">
+        <footer class="py-3 mt-5" style="background-color: #f8f9fa; border-top: 1px solid #dee2e6;">
             <div class="container text-center">
                 <small class="text-muted">
-                    Sistema de Gestão de Contratações Públicas - Relatório gerado automaticamente
+                    Sistema de Contratações Públicas - Documento Oficial
                 </small>
             </div>
         </footer>

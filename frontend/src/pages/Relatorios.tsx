@@ -524,12 +524,12 @@ const Relatorios: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Sistema de Relatórios
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#495057' }}>
+        Relatórios Gerenciais
       </Typography>
 
       <Typography variant="body1" color="textSecondary" sx={{ mb: 4 }}>
-        Gere relatórios unificados ou customize relatórios específicos por área
+        Sistema de geração de relatórios para acompanhamento dos processos de contratação pública
       </Typography>
 
       <Paper sx={{ p: 0 }}>
@@ -539,6 +539,15 @@ const Relatorios: React.FC = () => {
           indicatorColor="primary"
           textColor="primary"
           variant="fullWidth"
+          sx={{
+            '& .MuiTab-root': {
+              color: '#495057',
+              fontWeight: '500'
+            },
+            '& .Mui-selected': {
+              color: '#495057 !important'
+            }
+          }}
         >
           <Tab
             icon={<AccountTree />}
@@ -547,7 +556,7 @@ const Relatorios: React.FC = () => {
           />
           <Tab
             icon={<Assessment />}
-            label="Construtor Customizado"
+            label="Construtor de Relatórios"
             iconPosition="start"
           />
         </Tabs>
@@ -555,12 +564,12 @@ const Relatorios: React.FC = () => {
         <TabPanel value={tabValue} index={0}>
           {/* Relatório Unificado */}
           <Box>
-            <Typography variant="h5" gutterBottom>
-              Relatório Unificado por NUP/Contratação
+            <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: '#495057' }}>
+              Relatório Unificado por Processo
             </Typography>
             <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
-              Digite um NUP ou número da contratação para gerar um relatório completo juntando dados de
-              Planejamento, Qualificação e Licitação
+              Informe um NUP ou número da contratação para consolidar informações das etapas de
+              planejamento, qualificação e licitação
             </Typography>
 
             <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
@@ -620,9 +629,15 @@ const Relatorios: React.FC = () => {
                 startIcon={unifiedLoading ? <CircularProgress size={20} /> : <Search />}
                 onClick={handleUnifiedSearch}
                 disabled={unifiedLoading}
-                sx={{ minWidth: 150 }}
+                sx={{
+                  minWidth: 150,
+                  backgroundColor: '#6c757d',
+                  '&:hover': {
+                    backgroundColor: '#5a6268'
+                  }
+                }}
               >
-                {unifiedLoading ? 'Buscando...' : 'Buscar'}
+                {unifiedLoading ? 'Processando...' : 'Consultar'}
               </Button>
             </Box>
 
@@ -754,8 +769,14 @@ const Relatorios: React.FC = () => {
                     size="large"
                     startIcon={<FileDownload />}
                     onClick={handleGenerateUnifiedReport}
+                    sx={{
+                      backgroundColor: '#28a745',
+                      '&:hover': {
+                        backgroundColor: '#218838'
+                      }
+                    }}
                   >
-                    Gerar Relatório Unificado (HTML)
+                    Gerar Relatório Unificado
                   </Button>
                 </Box>
               </Box>
@@ -800,6 +821,12 @@ const Relatorios: React.FC = () => {
                   variant="contained"
                   onClick={handleNext}
                   disabled={!reportConfig.dataSource}
+                  sx={{
+                    backgroundColor: '#6c757d',
+                    '&:hover': {
+                      backgroundColor: '#5a6268'
+                    }
+                  }}
                 >
                   Continuar
                 </Button>
@@ -842,7 +869,8 @@ const Relatorios: React.FC = () => {
               <Box sx={{ mb: 1 }}>
                 <Button
                   onClick={handleBack}
-                  sx={{ mr: 1 }}
+                  sx={{ mr: 1, color: '#6c757d', borderColor: '#6c757d' }}
+                  variant="outlined"
                 >
                   Voltar
                 </Button>
@@ -850,6 +878,12 @@ const Relatorios: React.FC = () => {
                   variant="contained"
                   onClick={handleNext}
                   disabled={reportConfig.selectedFields.length === 0}
+                  sx={{
+                    backgroundColor: '#6c757d',
+                    '&:hover': {
+                      backgroundColor: '#5a6268'
+                    }
+                  }}
                 >
                   Continuar
                 </Button>
@@ -899,13 +933,20 @@ const Relatorios: React.FC = () => {
               <Box sx={{ mb: 1, mt: 2 }}>
                 <Button
                   onClick={handleBack}
-                  sx={{ mr: 1 }}
+                  sx={{ mr: 1, color: '#6c757d', borderColor: '#6c757d' }}
+                  variant="outlined"
                 >
                   Voltar
                 </Button>
                 <Button
                   variant="contained"
                   onClick={handleNext}
+                  sx={{
+                    backgroundColor: '#6c757d',
+                    '&:hover': {
+                      backgroundColor: '#5a6268'
+                    }
+                  }}
                 >
                   Continuar
                 </Button>
@@ -975,13 +1016,20 @@ const Relatorios: React.FC = () => {
               <Box sx={{ mb: 1, mt: 2 }}>
                 <Button
                   onClick={handleBack}
-                  sx={{ mr: 1 }}
+                  sx={{ mr: 1, color: '#6c757d', borderColor: '#6c757d' }}
+                  variant="outlined"
                 >
                   Voltar
                 </Button>
                 <Button
                   variant="contained"
                   onClick={handleNext}
+                  sx={{
+                    backgroundColor: '#6c757d',
+                    '&:hover': {
+                      backgroundColor: '#5a6268'
+                    }
+                  }}
                 >
                   Continuar
                 </Button>
@@ -1009,7 +1057,8 @@ const Relatorios: React.FC = () => {
               <Box sx={{ mb: 1 }}>
                 <Button
                   onClick={handleBack}
-                  sx={{ mr: 1 }}
+                  sx={{ mr: 1, color: '#6c757d', borderColor: '#6c757d' }}
+                  variant="outlined"
                 >
                   Voltar
                 </Button>
@@ -1018,8 +1067,14 @@ const Relatorios: React.FC = () => {
                   startIcon={<Language />}
                   onClick={handleGenerateReport}
                   disabled={generating}
+                  sx={{
+                    backgroundColor: '#28a745',
+                    '&:hover': {
+                      backgroundColor: '#218838'
+                    }
+                  }}
                 >
-                  {generating ? 'Gerando...' : 'Gerar Relatório HTML'}
+                  {generating ? 'Processando...' : 'Gerar Relatório'}
                 </Button>
               </Box>
             </StepContent>
