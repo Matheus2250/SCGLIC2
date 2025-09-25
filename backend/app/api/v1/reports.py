@@ -414,18 +414,28 @@ def generate_chart_data(df: pd.DataFrame, chart_type: str, data_source: str) -> 
         
         elif chart_type == "summary_table":
             numeric_columns = df.select_dtypes(include=['number']).columns
-            summary_data = []
-            
-            for col in numeric_columns:
-                summary_data.append({
-                    'Campo': col,
-                    'Total': df[col].sum(),
-                    'Média': df[col].mean(),
-                    'Máximo': df[col].max(),
-                    'Mínimo': df[col].min()
-                })
-            
-            return summary_data
+            if len(numeric_columns) > 0:
+                # Retornar dados para gráfico de barras com estatísticas
+                col = numeric_columns[0]  # Usar a primeira coluna numérica
+                return {
+                    'Estatistica': ['Total', 'Média', 'Máximo', 'Mínimo'],
+                    'Valor': [
+                        float(df[col].sum()) if not pd.isna(df[col].sum()) else 0,
+                        float(df[col].mean()) if not pd.isna(df[col].mean()) else 0,
+                        float(df[col].max()) if not pd.isna(df[col].max()) else 0,
+                        float(df[col].min()) if not pd.isna(df[col].min()) else 0
+                    ]
+                }
+            else:
+                # Se não há colunas numéricas, mostrar contagem por status
+                status_col = 'status' if 'status' in df.columns else 'status_contratacao'
+                if status_col in df.columns:
+                    status_counts = df[status_col].value_counts()
+                    return {
+                        'Estatistica': status_counts.index.tolist()[:4],
+                        'Valor': status_counts.values.tolist()[:4]
+                    }
+                return None
         
         return None
         
@@ -587,7 +597,43 @@ def generate_html_report(df: pd.DataFrame, config: CustomReportRequest, chart_da
                 }}
             }});
             '''
-    
+
+        elif chart_type == 'summary_table':
+            import json
+            summary_labels = json.dumps(chart_data.get('Estatistica', []))
+            summary_values = json.dumps(chart_data.get('Valor', []))
+
+            charts_js += f'''
+            // {chart_title}
+            const ctx_{i} = document.getElementById('{chart_id}').getContext('2d');
+            new Chart(ctx_{i}, {{
+                type: 'bar',
+                data: {{
+                    labels: {summary_labels},
+                    datasets: [{{
+                        label: 'Valor',
+                        data: {summary_values},
+                        backgroundColor: [
+                            '#2563eb', '#dc2626', '#16a34a', '#ca8a04'
+                        ]
+                    }}]
+                }},
+                options: {{
+                    responsive: true,
+                    scales: {{
+                        y: {{
+                            beginAtZero: true,
+                            ticks: {{
+                                callback: function(value) {{
+                                    return 'R$ ' + value.toLocaleString('pt-BR');
+                                }}
+                            }}
+                        }}
+                    }}
+                }}
+            }});
+            '''
+
     # Filtros ativos
     active_filters = []
     if config.filters.dateStart:
@@ -644,9 +690,26 @@ def generate_html_report(df: pd.DataFrame, config: CustomReportRequest, chart_da
                 box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             }}
             .table-responsive {{
-                max-height: 500px;
-                overflow-y: auto;
                 border: 1px solid #dee2e6;
+            }}
+            @media screen {{
+                .table-responsive {{
+                    max-height: 500px;
+                    overflow-y: auto;
+                }}
+            }}
+            @media print {{
+                .table-responsive {{
+                    max-height: none !important;
+                    overflow-y: visible !important;
+                }}
+                table {{
+                    font-size: 10px !important;
+                }}
+                th, td {{
+                    padding: 4px !important;
+                    word-wrap: break-word;
+                }}
             }}
             .card {{
                 border: 1px solid #dee2e6;
@@ -784,7 +847,19 @@ def generate_html_report(df: pd.DataFrame, config: CustomReportRequest, chart_da
                     pageLength: 25,
                     responsive: true,
                     dom: 'Bfrtip',
-                    buttons: ['copy', 'csv', 'excel', 'pdf']
+                    buttons: ['copy', 'csv', 'excel', 'pdf'],
+                    // Para impressão, mostrar todos os registros
+                    'drawCallback': function() {{
+                        if (window.matchMedia('print').matches) {{
+                            this.api().page.len(-1).draw();
+                        }}
+                    }}
+                }});
+
+                // Configurar impressão para mostrar tabela completa
+                window.addEventListener('beforeprint', function() {{
+                    var table = $('#dataTable').DataTable();
+                    table.page.len(-1).draw();
                 }});
             }});
 
