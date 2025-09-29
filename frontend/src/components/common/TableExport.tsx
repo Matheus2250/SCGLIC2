@@ -74,6 +74,7 @@ const TableExport: React.FC<TableExportProps> = ({
   };
 
   const prepareData = () => {
+    if (!data || !Array.isArray(data)) return [];
     return data.map(row => {
       const processedRow: any = {};
       columns.forEach(column => {
@@ -100,10 +101,10 @@ const TableExport: React.FC<TableExportProps> = ({
     const worksheet = utils.json_to_sheet(processedData);
     
     // Auto-width columns
-    const colWidths = columns.map(col => {
+    const colWidths = (columns || []).map(col => {
       const maxLength = Math.max(
         col.label.length,
-        ...processedData.map(row => String(row[col.label] || '').length)
+        ...(processedData || []).map(row => String(row[col.label] || '').length)
       );
       return { wch: Math.min(maxLength + 2, 30) };
     });
@@ -130,9 +131,9 @@ const TableExport: React.FC<TableExportProps> = ({
     doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}`, 14, 25);
     
     // Table
-    const tableColumns = columns.map(col => col.label);
-    const tableRows = processedData.map(row => 
-      columns.map(col => row[col.label] || 'N/A')
+    const tableColumns = (columns || []).map(col => col.label);
+    const tableRows = (processedData || []).map(row =>
+      (columns || []).map(col => row[col.label] || 'N/A')
     );
 
     doc.autoTable({
@@ -153,7 +154,7 @@ const TableExport: React.FC<TableExportProps> = ({
       },
       columnStyles: {
         // Adjust column widths based on content
-        ...columns.reduce((acc, col, index) => {
+        ...(columns || []).reduce((acc, col, index) => {
           if (col.key.includes('valor')) {
             acc[index] = { halign: 'right' };
           } else if (col.key.includes('data')) {
@@ -176,11 +177,11 @@ const TableExport: React.FC<TableExportProps> = ({
     const processedData = prepareData();
     
     // Create CSV content
-    const headers = columns.map(col => col.label);
+    const headers = (columns || []).map(col => col.label);
     const csvContent = [
       headers.join(','),
-      ...processedData.map(row => 
-        columns.map(col => {
+      ...(processedData || []).map(row =>
+        (columns || []).map(col => {
           const value = row[col.label] || '';
           // Escape commas and quotes
           return `"${String(value).replace(/"/g, '""')}"`;

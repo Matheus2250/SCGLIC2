@@ -105,7 +105,7 @@ const TableFilters: React.FC<TableFiltersProps> = ({
             Filtros Avançados
           </Typography>
           <Grid container spacing={2}>
-            {fields.map((field) => (
+            {(fields || []).map((field) => (
               <Grid item xs={12} sm={6} md={4} key={field.key}>
                 {field.type === 'select' ? (
                   <FormControl fullWidth size="small">
@@ -116,7 +116,7 @@ const TableFilters: React.FC<TableFiltersProps> = ({
                       label={field.label}
                     >
                       <MenuItem value="">Todos</MenuItem>
-                      {field.options?.map((option) => (
+                      {(field.options || []).map((option) => (
                         <MenuItem key={option.value} value={option.value}>
                           {option.label}
                         </MenuItem>

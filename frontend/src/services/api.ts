@@ -27,12 +27,22 @@ api.interceptors.request.use(
 // Interceptor para tratar erros e garantir arrays
 api.interceptors.response.use(
   (response) => {
-    // Se a resposta deveria ser um array mas não é, retornar array vazio
-    if (response.config.method === 'get' && 
-        !Array.isArray(response.data) && 
-        (response.config.url?.includes('?skip=') || response.config.url?.endsWith('/'))) {
-      console.warn('Expected array but got:', response.data, 'for URL:', response.config.url);
-      response.data = [];
+    // Verificar se a resposta é null ou undefined e deveria ser um array
+    if (response.config.method === 'get') {
+      // Para endpoints que retornam listas, garantir que sempre retorne array
+      if (response.config.url?.includes('/users') ||
+          response.config.url?.includes('?skip=') ||
+          response.config.url?.endsWith('/') ||
+          response.config.url?.includes('requests') ||
+          response.config.url?.includes('pca') ||
+          response.config.url?.includes('qualificacao') ||
+          response.config.url?.includes('licitacao')) {
+
+        if (response.data === null || response.data === undefined || !Array.isArray(response.data)) {
+          console.warn('Expected array but got:', response.data, 'for URL:', response.config.url);
+          response.data = [];
+        }
+      }
     }
     return response;
   },
