@@ -13,9 +13,15 @@ const api = axios.create({
 // Interceptor para adicionar token se existir
 api.interceptors.request.use(
   (config) => {
+    console.log('API Request:', config.method?.toUpperCase(), config.url);
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    // Forçar cache refresh para DELETE requests
+    if (config.method?.toLowerCase() === 'delete') {
+      config.headers['Cache-Control'] = 'no-cache';
+      config.headers['Pragma'] = 'no-cache';
     }
     return config;
   },

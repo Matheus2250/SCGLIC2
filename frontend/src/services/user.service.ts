@@ -27,6 +27,12 @@ export const userService = {
 
   async deleteUser(id: string): Promise<void> {
     console.log('UserService: Deletando usuário com ID:', id);
+
+    // Tentar com URL absoluta para contornar possíveis problemas de CORS
+    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
+    const fullURL = `${baseURL}/api/v1/auth/users/${id}`;
+    console.log('UserService: URL completa:', fullURL);
+
     const response = await api.delete(`/api/v1/auth/users/${id}`);
     console.log('UserService: Resposta da exclusão:', response);
     return response.data;
