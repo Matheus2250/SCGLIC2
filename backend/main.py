@@ -9,14 +9,20 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CONFIGURAÇÃO CORS SIMPLIFICADA - PERMITE TUDO EM PRODUÇÃO
+# CONFIGURAÇÃO CORS PARA PRODUÇÃO E DESENVOLVIMENTO
+origins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://sistemacglic.onrender.com",
+    "https://scglic.onrender.com"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["*"],
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
-    expose_headers=["*"]
 )
 
 # Include routers
