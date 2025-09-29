@@ -27,7 +27,7 @@ services:
     startCommand: cd frontend && npx serve -s build -l $PORT
     envVars:
       - key: VITE_API_URL
-        value: https://sistema-contratacoes-api.onrender.com
+        value: https://scglic.onrender.com
 
 databases:
   # PostgreSQL Database
