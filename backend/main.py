@@ -38,9 +38,6 @@ async def health_check():
     return {"status": "healthy"}
 
 
-@app.options("/api/v1/auth/users/{user_id}")
-async def options_user(user_id: str):
-    return {"message": "OK"}
 
 
 if __name__ == "__main__":
