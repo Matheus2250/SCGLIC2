@@ -124,10 +124,23 @@ def delete_user_by_id(
     """
     Delete a user. Only accessible by COORDENADOR.
     """
-    success = delete_user(db, user_id=user_id)
-    if not success:
+    try:
+        print(f"[DELETE USER] Attempting to delete user: {user_id}")
+        print(f"[DELETE USER] Admin user: {admin_user.email}")
+
+        success = delete_user(db, user_id=user_id)
+        if not success:
+            print(f"[DELETE USER] User not found: {user_id}")
+            raise HTTPException(
+                status_code=404,
+                detail="User not found"
+            )
+
+        print(f"[DELETE USER] User deleted successfully: {user_id}")
+        return {"message": "User deleted successfully"}
+    except Exception as e:
+        print(f"[DELETE USER] Error deleting user {user_id}: {str(e)}")
         raise HTTPException(
-            status_code=404,
-            detail="User not found"
+            status_code=500,
+            detail=f"Internal server error: {str(e)}"
         )
-    return {"message": "User deleted successfully"}
