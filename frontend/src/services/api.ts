@@ -48,12 +48,30 @@ api.interceptors.response.use(
   },
   (error) => {
     console.error('API Error:', error);
+
+    // Se não há resposta do servidor
+    if (!error.response) {
+      console.error('Network error or server unavailable:', error.message);
+      return Promise.reject({
+        message: 'Erro de conexão com o servidor',
+        response: { data: { detail: 'Não foi possível conectar ao servidor' } }
+      });
+    }
+
     if (error.response?.status === 401) {
       // Token expirado ou inválido
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
+
+    // Se a resposta do erro é vazia ou malformada
+    if (!error.response.data || error.response.data === '') {
+      error.response.data = {
+        detail: `Erro no servidor (${error.response.status || 'desconhecido'})`
+      };
+    }
+
     return Promise.reject(error);
   }
 );

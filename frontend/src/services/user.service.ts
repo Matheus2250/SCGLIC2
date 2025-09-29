@@ -26,6 +26,9 @@ export const userService = {
   },
 
   async deleteUser(id: string): Promise<void> {
-    await api.delete(`/api/v1/auth/users/${id}`);
+    console.log('UserService: Deletando usuário com ID:', id);
+    const response = await api.delete(`/api/v1/auth/users/${id}`);
+    console.log('UserService: Resposta da exclusão:', response);
+    return response.data;
   },
 };

@@ -131,11 +131,15 @@ const AdminUsuarios: React.FC = () => {
 
     if (window.confirm(`Tem certeza que deseja excluir o usuário "${user.nome_completo}"?`)) {
       try {
+        console.log('Tentando excluir usuário:', user.id);
         await userService.deleteUser(user.id);
+        console.log('Usuário excluído com sucesso');
         toast.success('Usuário excluído com sucesso!');
         fetchUsuarios();
       } catch (error: any) {
-        toast.error(error.response?.data?.detail || 'Erro ao excluir usuário');
+        console.error('Erro ao excluir usuário:', error);
+        const errorMessage = error.response?.data?.detail || error.message || 'Erro ao excluir usuário';
+        toast.error(errorMessage);
       }
     }
   };
