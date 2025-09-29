@@ -9,6 +9,8 @@ import {
   Toolbar,
   Divider,
   Collapse,
+  Badge,
+  Box,
 } from '@mui/material';
 import {
   Dashboard,
@@ -28,6 +30,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../store/auth.context';
+import { usePendingRequests } from '../../hooks/usePendingRequests';
 
 const DRAWER_WIDTH = 240;
 const DRAWER_WIDTH_CLOSED = 64;
@@ -140,6 +143,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { pendingCount } = usePendingRequests();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   const handleToggleExpand = (itemText: string) => {
@@ -191,7 +195,25 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
                 }}
               >
                 <ListItemIcon sx={{ minWidth: open ? 56 : 'auto', mr: open ? 3 : 'auto' }}>
-                  {item.icon}
+                  {item.text === 'Administração' && pendingCount > 0 ? (
+                    <Badge
+                      badgeContent={pendingCount}
+                      color="error"
+                      sx={{
+                        '& .MuiBadge-badge': {
+                          right: -3,
+                          top: 3,
+                          fontSize: '0.7rem',
+                          minWidth: 16,
+                          height: 16,
+                        }
+                      }}
+                    >
+                      {item.icon}
+                    </Badge>
+                  ) : (
+                    item.icon
+                  )}
                 </ListItemIcon>
                 {open && <ListItemText primary={item.text} />}
                 {open && item.subItems && (
@@ -211,7 +233,25 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
                         onClick={() => navigate(subItem.path)}
                       >
                         <ListItemIcon sx={{ minWidth: open ? 56 : 'auto', mr: open ? 3 : 'auto' }}>
-                          {subItem.icon}
+                          {subItem.text === 'Requisições de Acesso' && pendingCount > 0 ? (
+                            <Badge
+                              badgeContent={pendingCount}
+                              color="error"
+                              sx={{
+                                '& .MuiBadge-badge': {
+                                  right: -3,
+                                  top: 3,
+                                  fontSize: '0.7rem',
+                                  minWidth: 16,
+                                  height: 16,
+                                }
+                              }}
+                            >
+                              {subItem.icon}
+                            </Badge>
+                          ) : (
+                            subItem.icon
+                          )}
                         </ListItemIcon>
                         {open && <ListItemText primary={subItem.text} />}
                       </ListItemButton>
