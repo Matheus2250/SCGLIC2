@@ -1,7 +1,7 @@
 services:
   # Backend API
   - type: web
-    name: sistema-contratacoes-api
+    name: scglic
     env: python
     region: oregon
     plan: free
@@ -19,7 +19,7 @@ services:
 
   # Frontend React
   - type: web
-    name: sistema-contratacoes-web
+    name: sistemacglic
     env: node
     region: oregon
     plan: free
