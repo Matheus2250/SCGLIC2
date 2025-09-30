@@ -76,17 +76,17 @@ function App() {
                         <Route path="/" element={<Navigate to="/dashboard" replace />} />
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/planejamento" element={
-                          <PrivateRoute allowedRoles={['COORDENADOR', 'DIPLAN']}>
+                          <PrivateRoute allowedRoles={['COORDENADOR', 'DIPLAN', 'VISITANTE']}>
                             <Planejamento />
                           </PrivateRoute>
                         } />
                         <Route path="/planejamento/atrasadas" element={
-                          <PrivateRoute allowedRoles={['COORDENADOR', 'DIPLAN']}>
+                          <PrivateRoute allowedRoles={['COORDENADOR', 'DIPLAN', 'VISITANTE']}>
                             <ContratacaoAtrasadas />
                           </PrivateRoute>
                         } />
                         <Route path="/planejamento/estatisticas" element={
-                          <PrivateRoute allowedRoles={['COORDENADOR', 'DIPLAN']}>
+                          <PrivateRoute allowedRoles={['COORDENADOR', 'DIPLAN', 'VISITANTE']}>
                             <EstatisticasPlanejamento />
                           </PrivateRoute>
                         } />
