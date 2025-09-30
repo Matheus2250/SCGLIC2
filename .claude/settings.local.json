@@ -43,7 +43,8 @@
       "Bash(render psql dpg-d3a23temc7s73e36740-a)",
       "Bash(alembic current:*)",
       "Bash(alembic heads)",
-      "Bash(alembic:*)"
+      "Bash(alembic:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []
