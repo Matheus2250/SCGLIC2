@@ -36,13 +36,15 @@ api.interceptors.response.use(
     // Verificar se a resposta é null ou undefined e deveria ser um array
     if (response.config.method === 'get') {
       // Para endpoints que retornam listas, garantir que sempre retorne array
-      if (response.config.url?.includes('/users') ||
+      // Excluir endpoints de dashboard que retornam objetos
+      if ((response.config.url?.includes('/users') ||
           response.config.url?.includes('?skip=') ||
           response.config.url?.endsWith('/') ||
           response.config.url?.includes('requests') ||
           response.config.url?.includes('pca') ||
           response.config.url?.includes('qualificacao') ||
-          response.config.url?.includes('licitacao')) {
+          response.config.url?.includes('licitacao')) &&
+          !response.config.url?.includes('/dashboard/')) {
 
         if (response.data === null || response.data === undefined || !Array.isArray(response.data)) {
           console.warn('Expected array but got:', response.data, 'for URL:', response.config.url);
