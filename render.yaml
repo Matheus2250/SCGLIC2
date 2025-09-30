@@ -20,10 +20,11 @@ services:
   # Frontend React
   - type: web
     name: SistemaCGLIC
-    env: static
+    env: node
+    region: oregon
     plan: free
     buildCommand: cd frontend && npm ci && npm run build
-    staticPublishPath: frontend/build
+    startCommand: cd frontend && npx serve -s build
     envVars:
       - key: VITE_API_URL
         value: https://scglic.onrender.com
