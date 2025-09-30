@@ -307,19 +307,19 @@ const Relatorios: React.FC = () => {
       });
 
       const blob = new Blob([response.data], {
-        type: 'text/html'
+        type: 'application/pdf'
       });
 
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `relatorio_customizado_${reportConfig.dataSource}_${new Date().getTime()}.html`;
+      link.download = `relatorio_customizado_${reportConfig.dataSource}_${new Date().getTime()}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      toast.success('Relatório gerado com sucesso!');
+      toast.success('Relatório PDF gerado com sucesso!');
 
       // Reset para permitir gerar novo relatório
       setActiveStep(0);
@@ -331,7 +331,7 @@ const Relatorios: React.FC = () => {
       });
 
     } catch (error) {
-      toast.error('Erro ao gerar relatório HTML');
+      toast.error('Erro ao gerar relatório PDF');
       console.error(error);
     } finally {
       setGenerating(false);
@@ -544,7 +544,7 @@ const Relatorios: React.FC = () => {
     'Escolher Campos',
     'Configurar Gráficos',
     'Aplicar Filtros',
-    'Gerar Relatório'
+    'Gerar Relatório PDF'
   ];
 
   return (
@@ -1144,9 +1144,9 @@ const Relatorios: React.FC = () => {
             </StepContent>
           </Step>
 
-          {/* Passo 5: Gerar Relatório */}
+          {/* Passo 5: Gerar Relatório PDF */}
           <Step>
-            <StepLabel>Gerar Relatório</StepLabel>
+            <StepLabel>Gerar Relatório PDF</StepLabel>
             <StepContent>
               <Typography sx={{ mb: 2 }}>
                 Revise suas configurações e gere o relatório customizado:
@@ -1171,7 +1171,7 @@ const Relatorios: React.FC = () => {
                 </Button>
                 <Button
                   variant="contained"
-                  startIcon={<Language />}
+                  startIcon={<FileDownload />}
                   onClick={handleGenerateReport}
                   disabled={generating}
                   sx={{
@@ -1181,7 +1181,7 @@ const Relatorios: React.FC = () => {
                     }
                   }}
                 >
-                  {generating ? 'Processando...' : 'Gerar Relatório'}
+                  {generating ? 'Gerando PDF...' : 'Gerar Relatório PDF'}
                 </Button>
               </Box>
             </StepContent>

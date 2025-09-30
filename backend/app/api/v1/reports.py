@@ -12,8 +12,79 @@ from app.models.licitacao import Licitacao
 import pandas as pd
 import io
 from datetime import datetime
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+from reportlab.lib import colors
+from reportlab.lib.colors import HexColor
+import matplotlib.pyplot as plt
+import seaborn as sns
+import base64
+from reportlab.platypus import Image
+import tempfile
+import os
 
 router = APIRouter()
+
+# Mapeamento de campos para labels legíveis
+FIELD_LABELS = {
+    'numero_contratacao': 'Número da Contratação',
+    'titulo_contratacao': 'Título da Contratação',
+    'categoria_contratacao': 'Categoria da Contratação',
+    'valor_total': 'Valor Total',
+    'area_requisitante': 'Área Requisitante',
+    'area_demandante': 'Área Demandante',
+    'numero_dfd': 'Número DFD',
+    'data_estimada_inicio': 'Data Estimada de Início',
+    'data_estimada_conclusao': 'Data Estimada de Conclusão',
+    'status_contratacao': 'Status da Contratação',
+    'situacao_execucao': 'Situação da Execução',
+    'atrasada': 'Atrasada',
+    'nup': 'NUP',
+    'responsavel_instrucao': 'Responsável pela Instrução',
+    'modalidade': 'Modalidade',
+    'objeto': 'Objeto',
+    'palavra_chave': 'Palavra-chave',
+    'valor_estimado': 'Valor Estimado',
+    'status': 'Status',
+    'observacoes': 'Observações',
+    'pregoeiro': 'Pregoeiro',
+    'valor_homologado': 'Valor Homologado',
+    'data_homologacao': 'Data de Homologação',
+    'link': 'Link',
+    'economia': 'Economia'
+}
+
+def format_currency(value):
+    """Formatar valor monetário"""
+    if value is None or value == 0:
+        return 'R$ 0,00'
+    return f'R$ {value:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.')
+
+def format_date(date_value):
+    """Formatar data"""
+    if date_value is None:
+        return 'N/A'
+    if isinstance(date_value, str):
+        try:
+            date_obj = datetime.strptime(date_value, '%Y-%m-%d')
+            return date_obj.strftime('%d/%m/%Y')
+        except:
+            return date_value
+    return date_value.strftime('%d/%m/%Y') if hasattr(date_value, 'strftime') else str(date_value)
+
+def format_boolean(value):
+    """Formatar valores booleanos"""
+    if value is True:
+        return 'Sim'
+    elif value is False:
+        return 'Não'
+    return str(value) if value is not None else 'N/A'
+
+def get_field_label(field_name):
+    """Obter label legível para o campo"""
+    return FIELD_LABELS.get(field_name, field_name.replace('_', ' ').title())
 
 # Schemas para o relatório customizado
 class ReportFilters(BaseModel):
@@ -397,19 +468,19 @@ def generate_custom_report(
                     print(f"Erro ao gerar gráfico {chart_type}: {str(e)}")
                     continue
         
-        # Gerar HTML
-        html_content = generate_html_report(
+        # Gerar PDF
+        pdf_content = generate_pdf_report(
             df=df,
             config=config,
             chart_data_list=chart_data_list,
             data_source_label=get_data_source_label(config.dataSource)
         )
-        
+
         return Response(
-            content=html_content,
-            media_type="text/html",
+            content=pdf_content,
+            media_type="application/pdf",
             headers={
-                "Content-Disposition": f"attachment; filename=relatorio_customizado_{config.dataSource}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+                "Content-Disposition": f"attachment; filename=relatorio_customizado_{config.dataSource}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
             }
         )
         
@@ -511,416 +582,266 @@ def get_data_source_label(data_source: str) -> str:
     return labels.get(data_source, data_source)
 
 
-def generate_html_report(df: pd.DataFrame, config: CustomReportRequest, chart_data_list: List[Dict], data_source_label: str) -> str:
-    """Gera o relatório em HTML com gráficos Chart.js"""
-    
-    # Converter DataFrame para HTML table
-    table_html = df.to_html(classes='table table-striped table-hover', table_id='dataTable', escape=False, index=False)
-    
-    # Preparar dados dos gráficos para JavaScript
-    charts_js = ""
-    chart_containers = ""
-    
-    for i, chart_info in enumerate(chart_data_list):
-        chart_id = f"chart_{i}"
-        chart_type = chart_info['type']
-        chart_data = chart_info['data']
-        chart_title = chart_info['title']
-        
-        # Container do gráfico
-        chart_containers += f'''
-        <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5>{chart_title}</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="{chart_id}" width="400" height="200"></canvas>
-                </div>
-            </div>
-        </div>
-        '''
-        
-        # JavaScript para gerar o gráfico
-        if chart_type == 'status_distribution':
-            import json
-            labels = json.dumps(chart_data.get('Status', []))
-            values = json.dumps(chart_data.get('Quantidade', []))
+def generate_pdf_report(df: pd.DataFrame, config: CustomReportRequest, chart_data_list: List[Dict], data_source_label: str) -> bytes:
+    """Gera o relatório em PDF com gráficos e formatação profissional"""
 
-            charts_js += f'''
-            // {chart_title}
-            const ctx_{i} = document.getElementById('{chart_id}').getContext('2d');
-            new Chart(ctx_{i}, {{
-                type: 'pie',
-                data: {{
-                    labels: {labels},
-                    datasets: [{{
-                        data: {values},
-                        backgroundColor: [
-                            '#2563eb', '#dc2626', '#16a34a', '#ca8a04',
-                            '#9333ea', '#c2410c', '#0891b2', '#4338ca'
-                        ]
-                    }}]
-                }},
-                options: {{
-                    responsive: true,
-                    plugins: {{
-                        legend: {{
-                            position: 'bottom'
-                        }}
-                    }}
-                }}
-            }});
-            '''
-            
-        elif chart_type == 'value_timeline':
-            import json
-            timeline_labels = json.dumps(chart_data.get('Mes', []))
-            timeline_values = json.dumps(chart_data.get('Valor', []))
+    # Criar buffer de bytes para o PDF
+    buffer = io.BytesIO()
 
-            charts_js += f'''
-            // {chart_title}
-            const ctx_{i} = document.getElementById('{chart_id}').getContext('2d');
-            new Chart(ctx_{i}, {{
-                type: 'line',
-                data: {{
-                    labels: {timeline_labels},
-                    datasets: [{{
-                        label: 'Valor',
-                        data: {timeline_values},
-                        borderColor: '#2563eb',
-                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                        tension: 0.1,
-                        fill: true
-                    }}]
-                }},
-                options: {{
-                    responsive: true,
-                    scales: {{
-                        y: {{
-                            beginAtZero: true,
-                            ticks: {{
-                                callback: function(value) {{
-                                    return 'R$ ' + value.toLocaleString('pt-BR');
-                                }}
-                            }}
-                        }}
-                    }}
-                }}
-            }});
-            '''
-            
-        elif chart_type == 'category_comparison':
-            import json
-            category_labels = json.dumps(chart_data.get('Categoria', []))
-            category_values = json.dumps(chart_data.get('Valor', []))
+    # Configurar documento PDF em paisagem para tabelas
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=landscape(A4),
+        rightMargin=40,
+        leftMargin=40,
+        topMargin=60,
+        bottomMargin=40
+    )
 
-            charts_js += f'''
-            // {chart_title}
-            const ctx_{i} = document.getElementById('{chart_id}').getContext('2d');
-            new Chart(ctx_{i}, {{
-                type: 'bar',
-                data: {{
-                    labels: {category_labels},
-                    datasets: [{{
-                        label: 'Valor',
-                        data: {category_values},
-                        backgroundColor: '#16a34a'
-                    }}]
-                }},
-                options: {{
-                    responsive: true,
-                    scales: {{
-                        y: {{
-                            beginAtZero: true,
-                            ticks: {{
-                                callback: function(value) {{
-                                    return 'R$ ' + value.toLocaleString('pt-BR');
-                                }}
-                            }}
-                        }}
-                    }}
-                }}
-            }});
-            '''
+    # Estilos
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=18,
+        textColor=HexColor('#495057'),
+        spaceAfter=30,
+        alignment=1  # Centralizado
+    )
 
-        elif chart_type == 'summary_table':
-            import json
-            summary_labels = json.dumps(chart_data.get('Estatistica', []))
-            summary_values = json.dumps(chart_data.get('Valor', []))
+    subtitle_style = ParagraphStyle(
+        'CustomSubtitle',
+        parent=styles['Heading2'],
+        fontSize=14,
+        textColor=HexColor('#6c757d'),
+        spaceAfter=20,
+        alignment=1
+    )
 
-            charts_js += f'''
-            // {chart_title}
-            const ctx_{i} = document.getElementById('{chart_id}').getContext('2d');
-            new Chart(ctx_{i}, {{
-                type: 'bar',
-                data: {{
-                    labels: {summary_labels},
-                    datasets: [{{
-                        label: 'Valor',
-                        data: {summary_values},
-                        backgroundColor: [
-                            '#2563eb', '#dc2626', '#16a34a', '#ca8a04'
-                        ]
-                    }}]
-                }},
-                options: {{
-                    responsive: true,
-                    scales: {{
-                        y: {{
-                            beginAtZero: true,
-                            ticks: {{
-                                callback: function(value) {{
-                                    return 'R$ ' + value.toLocaleString('pt-BR');
-                                }}
-                            }}
-                        }}
-                    }}
-                }}
-            }});
-            '''
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading3'],
+        fontSize=12,
+        textColor=HexColor('#495057'),
+        spaceAfter=15
+    )
 
-    # Filtros ativos
+    # Lista de elementos do PDF
+    elements = []
+
+    # Cabeçalho
+    elements.append(Paragraph("RELATÓRIO GERENCIAL", title_style))
+    elements.append(Paragraph(f"{data_source_label}", subtitle_style))
+    elements.append(Paragraph(f"Data de Emissão: {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}", styles['Normal']))
+    elements.append(Spacer(1, 20))
+
+    # Filtros aplicados
     active_filters = []
     if config.filters.dateStart:
-        active_filters.append(f"Data Início: {config.filters.dateStart}")
+        active_filters.append(f"Data Início: {format_date(config.filters.dateStart)}")
     if config.filters.dateEnd:
-        active_filters.append(f"Data Fim: {config.filters.dateEnd}")
+        active_filters.append(f"Data Fim: {format_date(config.filters.dateEnd)}")
     if config.filters.minValue:
-        active_filters.append(f"Valor Mínimo: R$ {config.filters.minValue:,.2f}")
+        active_filters.append(f"Valor Mínimo: {format_currency(config.filters.minValue)}")
     if config.filters.maxValue:
-        active_filters.append(f"Valor Máximo: R$ {config.filters.maxValue:,.2f}")
+        active_filters.append(f"Valor Máximo: {format_currency(config.filters.maxValue)}")
     if config.filters.status:
         active_filters.append(f"Status: {', '.join(config.filters.status)}")
     if config.filters.areasDemandantes:
         active_filters.append(f"Áreas Demandantes: {', '.join(config.filters.areasDemandantes)}")
 
-    filters_html = ""
     if active_filters:
-        filters_html = f'''
-        <div class="alert alert-info">
-            <h6>Filtros Aplicados:</h6>
-            <ul class="mb-0">
-                {"".join([f"<li>{f}</li>" for f in active_filters])}
-            </ul>
-        </div>
-        '''
-    
-    # Template HTML completo
-    html_template = f'''
-    <!DOCTYPE html>
-    <html lang="pt-BR">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Relatório Customizado - {data_source_label}</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
-        <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <style>
-            body {{
-                font-family: 'Times New Roman', serif;
-                color: #212529;
-                background-color: #ffffff;
-            }}
-            .header {{
-                background-color: #f8f9fa;
-                border-bottom: 3px solid #6c757d;
-                color: #212529;
-                padding: 2rem 0;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }}
-            .stats-card {{
-                background: #ffffff;
-                border: 1px solid #dee2e6;
-                border-left: 4px solid #6c757d;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            }}
-            .table-responsive {{
-                border: 1px solid #dee2e6;
-            }}
-            @media screen {{
-                .table-responsive {{
-                    max-height: 500px;
-                    overflow-y: auto;
-                }}
-            }}
-            @media print {{
-                .table-responsive {{
-                    max-height: none !important;
-                    overflow-y: visible !important;
-                }}
-                table {{
-                    font-size: 10px !important;
-                }}
-                th, td {{
-                    padding: 4px !important;
-                    word-wrap: break-word;
-                }}
-            }}
-            .card {{
-                border: 1px solid #dee2e6;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            }}
-            .card-header {{
-                background-color: #f8f9fa;
-                border-bottom: 1px solid #dee2e6;
-                font-weight: bold;
-            }}
-            .btn-primary {{
-                background-color: #6c757d;
-                border-color: #6c757d;
-            }}
-            .btn-primary:hover {{
-                background-color: #5a6268;
-                border-color: #545b62;
-            }}
-            .btn-success {{
-                background-color: #28a745;
-                border-color: #28a745;
-            }}
-            .alert-info {{
-                background-color: #f8f9fa;
-                border-color: #dee2e6;
-                color: #495057;
-            }}
-            h1, h2, h3, h4, h5, h6 {{
-                color: #495057;
-                font-weight: bold;
-            }}
-            @media print {{
-                .no-print {{ display: none !important; }}
-                .header {{ background-color: #ffffff !important; }}
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="header">
-            <div class="container">
-                <div class="row">
-                    <div class="col-12">
-                        <h1 class="mb-0">RELATÓRIO GERENCIAL</h1>
-                        <p class="mb-0">{data_source_label}</p>
-                        <small>Data de Emissão: {datetime.now().strftime('%d/%m/%Y às %H:%M:%S')}</small>
-                    </div>
-                </div>
-            </div>
-        </div>
+        elements.append(Paragraph("FILTROS APLICADOS:", heading_style))
+        for filter_text in active_filters:
+            elements.append(Paragraph(f"• {filter_text}", styles['Normal']))
+        elements.append(Spacer(1, 15))
 
-        <div class="container mt-4">
-            
-            {filters_html}
-            
-            <!-- Resumo Estatístico -->
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="card stats-card">
-                        <div class="card-body text-center">
-                            <h3 style="color: #6c757d;">{len(df)}</h3>
-                            <p class="mb-0">Total de Registros</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card stats-card">
-                        <div class="card-body text-center">
-                            <h3 style="color: #6c757d;">{len(config.selectedFields)}</h3>
-                            <p class="mb-0">Campos Selecionados</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card stats-card">
-                        <div class="card-body text-center">
-                            <h3 style="color: #6c757d;">{len(chart_data_list)}</h3>
-                            <p class="mb-0">Visualizações</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card stats-card">
-                        <div class="card-body text-center">
-                            <h3 style="color: #6c757d;">{len(active_filters)}</h3>
-                            <p class="mb-0">Filtros Aplicados</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    # Resumo estatístico
+    elements.append(Paragraph("RESUMO ESTATÍSTICO:", heading_style))
+    stats_data = [
+        ['Métrica', 'Valor'],
+        ['Total de Registros', str(len(df))],
+        ['Campos Selecionados', str(len(config.selectedFields))],
+        ['Visualizações', str(len(chart_data_list))],
+        ['Filtros Aplicados', str(len(active_filters))]
+    ]
 
-            <!-- Gráficos -->
-            {f'<h2 class="mb-4">ANÁLISE GRÁFICA</h2><div class="row">{chart_containers}</div>' if chart_containers else ''}
+    stats_table = Table(stats_data, colWidths=[3*inch, 2*inch])
+    stats_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), HexColor('#f8f9fa')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), HexColor('#495057')),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), HexColor('#ffffff')),
+        ('GRID', (0, 0), (-1, -1), 1, HexColor('#dee2e6'))
+    ]))
+    elements.append(stats_table)
+    elements.append(Spacer(1, 20))
 
-            <!-- Tabela de Dados -->
-            <div class="mb-4">
-                <h2 class="mb-3">DADOS DETALHADOS</h2>
-                <div class="table-responsive">
-                    {table_html}
-                </div>
-            </div>
+    # Gerar gráficos
+    chart_images = []
+    if chart_data_list:
+        elements.append(Paragraph("ANÁLISE GRÁFICA:", heading_style))
 
-            <!-- Botões de Ação -->
-            <div class="row no-print mb-4">
-                <div class="col-12 text-center">
-                    <button onclick="window.print()" class="btn btn-primary me-2">
-                        Imprimir Relatório
-                    </button>
-                    <button onclick="exportToPDF()" class="btn btn-success">
-                        Exportar PDF
-                    </button>
-                </div>
-            </div>
-        </div>
+        for chart_info in chart_data_list:
+            chart_type = chart_info['type']
+            chart_data = chart_info['data']
+            chart_title = chart_info['title']
 
-        <footer class="py-3 mt-5" style="background-color: #f8f9fa; border-top: 1px solid #dee2e6;">
-            <div class="container text-center">
-                <small class="text-muted">
-                    Sistema de Contratações Públicas - Documento Oficial
-                </small>
-            </div>
-        </footer>
+            # Criar gráfico com matplotlib
+            plt.figure(figsize=(8, 6))
+            sns.set_style("whitegrid")
 
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-        <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-        
-        <script>
-            // Inicializar DataTable
-            $(document).ready(function() {{
-                $('#dataTable').DataTable({{
-                    language: {{
-                        url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json'
-                    }},
-                    pageLength: 25,
-                    responsive: true,
-                    dom: 'Bfrtip',
-                    buttons: ['copy', 'csv', 'excel', 'pdf'],
-                    // Para impressão, mostrar todos os registros
-                    'drawCallback': function() {{
-                        if (window.matchMedia('print').matches) {{
-                            this.api().page.len(-1).draw();
-                        }}
-                    }}
-                }});
+            if chart_type == 'status_distribution':
+                labels = chart_data.get('Status', [])
+                values = chart_data.get('Quantidade', [])
+                if labels and values:
+                    plt.pie(values, labels=labels, autopct='%1.1f%%', startangle=90)
+                    plt.title(chart_title, fontsize=14, fontweight='bold')
 
-                // Configurar impressão para mostrar tabela completa
-                window.addEventListener('beforeprint', function() {{
-                    var table = $('#dataTable').DataTable();
-                    table.page.len(-1).draw();
-                }});
-            }});
+            elif chart_type == 'value_timeline':
+                months = chart_data.get('Mes', [])
+                values = chart_data.get('Valor', [])
+                if months and values:
+                    plt.plot(months, values, marker='o', linewidth=2, markersize=6)
+                    plt.title(chart_title, fontsize=14, fontweight='bold')
+                    plt.xlabel('Mês')
+                    plt.ylabel('Valor (R$)')
+                    plt.xticks(rotation=45)
+                    plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'R$ {x:,.0f}'))
 
-            // Gerar gráficos
-            {charts_js}
+            elif chart_type == 'category_comparison':
+                categories = chart_data.get('Categoria', [])
+                values = chart_data.get('Valor', [])
+                if categories and values:
+                    plt.bar(categories, values, color='#16a34a', alpha=0.8)
+                    plt.title(chart_title, fontsize=14, fontweight='bold')
+                    plt.xlabel('Categoria')
+                    plt.ylabel('Valor (R$)')
+                    plt.xticks(rotation=45, ha='right')
+                    plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'R$ {x:,.0f}'))
 
-            // Função para exportar como PDF
-            function exportToPDF() {{
-                window.print();
-            }}
-        </script>
-    </body>
-    </html>
-    '''
-    
-    return html_template
+            elif chart_type == 'summary_table':
+                stats = chart_data.get('Estatistica', [])
+                values = chart_data.get('Valor', [])
+                if stats and values:
+                    colors = ['#2563eb', '#dc2626', '#16a34a', '#ca8a04']
+                    plt.bar(stats, values, color=colors[:len(stats)], alpha=0.8)
+                    plt.title(chart_title, fontsize=14, fontweight='bold')
+                    plt.xlabel('Estatística')
+                    plt.ylabel('Valor (R$)')
+                    plt.xticks(rotation=45, ha='right')
+                    plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'R$ {x:,.0f}'))
+
+            plt.tight_layout()
+
+            # Salvar gráfico em arquivo temporário
+            with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp_file:
+                plt.savefig(tmp_file.name, dpi=150, bbox_inches='tight')
+                chart_images.append(tmp_file.name)
+
+            plt.close()
+
+        # Adicionar gráficos ao PDF
+        for img_path in chart_images:
+            try:
+                img = Image(img_path, width=6*inch, height=4*inch)
+                elements.append(img)
+                elements.append(Spacer(1, 15))
+            except:
+                pass  # Se houver erro na imagem, pula
+
+    # Quebra de página antes da tabela
+    elements.append(PageBreak())
+
+    # Tabela de dados
+    elements.append(Paragraph("DADOS DETALHADOS:", heading_style))
+
+    if not df.empty:
+        # Preparar dados da tabela com formatação
+        table_data = []
+
+        # Cabeçalhos com labels legíveis
+        headers = [get_field_label(col) for col in df.columns]
+        table_data.append(headers)
+
+        # Dados formatados
+        for _, row in df.iterrows():
+            formatted_row = []
+            for col in df.columns:
+                value = row[col]
+
+                # Aplicar formatação baseada no tipo de campo
+                if col in ['valor_total', 'valor_estimado', 'valor_homologado', 'economia']:
+                    formatted_value = format_currency(value)
+                elif col in ['data_estimada_inicio', 'data_estimada_conclusao', 'data_homologacao']:
+                    formatted_value = format_date(value)
+                elif col == 'atrasada':
+                    formatted_value = format_boolean(value)
+                else:
+                    formatted_value = str(value) if value is not None else 'N/A'
+
+                # Limitar tamanho do texto para não quebrar a tabela
+                if len(formatted_value) > 30:
+                    formatted_value = formatted_value[:27] + '...'
+
+                formatted_row.append(formatted_value)
+
+            table_data.append(formatted_row)
+
+        # Calcular largura das colunas dinamicamente
+        num_cols = len(headers)
+        available_width = 10 * inch  # Largura disponível em paisagem
+        col_width = available_width / num_cols
+        col_widths = [col_width] * num_cols
+
+        # Criar tabela
+        data_table = Table(table_data, colWidths=col_widths, repeatRows=1)
+        data_table.setStyle(TableStyle([
+            # Estilo do cabeçalho
+            ('BACKGROUND', (0, 0), (-1, 0), HexColor('#f8f9fa')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), HexColor('#495057')),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+
+            # Estilo dos dados
+            ('BACKGROUND', (0, 1), (-1, -1), HexColor('#ffffff')),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('GRID', (0, 0), (-1, -1), 1, HexColor('#dee2e6')),
+
+            # Zebra striping
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [HexColor('#ffffff'), HexColor('#f8f9fa')]),
+
+            # Quebra de texto
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+
+        elements.append(data_table)
+    else:
+        elements.append(Paragraph("Nenhum dado encontrado com os filtros aplicados.", styles['Normal']))
+
+    # Rodapé
+    elements.append(Spacer(1, 30))
+    elements.append(Paragraph("Sistema de Contratações Públicas - Documento Oficial",
+                             ParagraphStyle('Footer', parent=styles['Normal'],
+                                          fontSize=10, textColor=HexColor('#6c757d'),
+                                          alignment=1)))
+
+    # Construir PDF
+    doc.build(elements)
+
+    # Limpar arquivos temporários de gráficos
+    for img_path in chart_images:
+        try:
+            os.unlink(img_path)
+        except:
+            pass
+
+    # Retornar bytes do PDF
+    buffer.seek(0)
+    return buffer.getvalue()
