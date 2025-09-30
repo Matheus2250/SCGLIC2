@@ -31,7 +31,7 @@ services:
 
 databases:
   # PostgreSQL Database
-  - name: sistema-contratacoes-db
+  - name: sistema-db
     databaseName: contratos_db
     user: contratos_user
     region: oregon
