@@ -88,7 +88,7 @@ def get_user_with_module_access(module: str):
 
         # Other users need specific module access
         module_permissions = {
-            "planejamento": [NivelAcesso.COORDENADOR, NivelAcesso.DIPLAN],
+            "planejamento": [NivelAcesso.COORDENADOR, NivelAcesso.DIPLAN, NivelAcesso.VISITANTE],
             "qualificacao": [NivelAcesso.COORDENADOR, NivelAcesso.DIQUALI],
             "licitacao": [NivelAcesso.COORDENADOR, NivelAcesso.DIPLI],
             "reports": [NivelAcesso.COORDENADOR, NivelAcesso.DIPLAN, NivelAcesso.DIQUALI, NivelAcesso.DIPLI, NivelAcesso.VISITANTE]

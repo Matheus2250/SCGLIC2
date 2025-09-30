@@ -62,7 +62,7 @@ const menuItems: MenuItem[] = [
   {
     text: 'Planejamento',
     icon: <Assignment />,
-    allowedRoles: ['COORDENADOR', 'DIPLAN'],
+    allowedRoles: ['COORDENADOR', 'DIPLAN', 'VISITANTE'],
     subItems: [
       {
         text: 'Lista de Contratações',
