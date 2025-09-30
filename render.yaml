@@ -24,7 +24,7 @@ services:
     region: oregon
     plan: free
     buildCommand: cd frontend && npm ci && npm run build
-    startCommand: cd frontend && npx serve -s build -p $PORT
+    startCommand: cd frontend && npx serve -s build -l $PORT
     envVars:
       - key: VITE_API_URL
         value: https://scglic.onrender.com
