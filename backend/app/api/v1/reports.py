@@ -22,6 +22,7 @@ class ReportFilters(BaseModel):
     status: Optional[List[str]] = None
     minValue: Optional[float] = None
     maxValue: Optional[float] = None
+    areasDemandantes: Optional[List[str]] = None
 
 class CustomReportRequest(BaseModel):
     dataSource: str
@@ -254,6 +255,41 @@ def export_economia_report(
     }
 
 
+@router.get("/areas-demandantes")
+def get_areas_demandantes(
+    data_source: str,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(deps.get_current_active_user)
+) -> Any:
+    """Retorna lista de áreas demandantes disponíveis para a fonte de dados"""
+    model_map = {
+        'pca': PCA,
+        'qualificacao': Qualificacao,
+        'licitacao': Licitacao
+    }
+
+    if data_source not in model_map:
+        raise HTTPException(status_code=400, detail="Fonte de dados inválida")
+
+    model = model_map[data_source]
+
+    # Buscar campo correto de área demandante
+    area_field = None
+    if hasattr(model, 'area_requisitante'):
+        area_field = model.area_requisitante
+    elif hasattr(model, 'area_demandante'):
+        area_field = model.area_demandante
+
+    if area_field is None:
+        return {"areas": []}
+
+    # Buscar áreas únicas
+    areas = db.query(area_field).distinct().filter(area_field.isnot(None)).all()
+    areas_list = [area[0] for area in areas if area[0]]
+
+    return {"areas": sorted(areas_list)}
+
+
 @router.post("/custom")
 def generate_custom_report(
     config: CustomReportRequest,
@@ -304,6 +340,13 @@ def generate_custom_report(
                 query = query.filter(model.status.in_(config.filters.status))
             elif hasattr(model, 'status_contratacao'):
                 query = query.filter(model.status_contratacao.in_(config.filters.status))
+
+        # Filtro por área demandante
+        if config.filters.areasDemandantes:
+            if hasattr(model, 'area_requisitante'):
+                query = query.filter(model.area_requisitante.in_(config.filters.areasDemandantes))
+            elif hasattr(model, 'area_demandante'):
+                query = query.filter(model.area_demandante.in_(config.filters.areasDemandantes))
         
         # Executar query
         records = query.all()
@@ -326,6 +369,9 @@ def generate_custom_report(
                     # Tratar valores monetários
                     elif field in ['valor_total', 'valor_estimado', 'valor_homologado', 'economia'] and value:
                         row_data[field] = float(value)
+                    # Tratar campo atrasada (boolean para texto)
+                    elif field == 'atrasada':
+                        row_data[field] = "Sim" if value else "Não"
                     else:
                         row_data[field] = value
                 else:
@@ -646,7 +692,9 @@ def generate_html_report(df: pd.DataFrame, config: CustomReportRequest, chart_da
         active_filters.append(f"Valor Máximo: R$ {config.filters.maxValue:,.2f}")
     if config.filters.status:
         active_filters.append(f"Status: {', '.join(config.filters.status)}")
-    
+    if config.filters.areasDemandantes:
+        active_filters.append(f"Áreas Demandantes: {', '.join(config.filters.areasDemandantes)}")
+
     filters_html = ""
     if active_filters:
         filters_html = f'''

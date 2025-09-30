@@ -64,6 +64,7 @@ interface ReportConfig {
     status?: string[];
     minValue?: number;
     maxValue?: number;
+    areasDemandantes?: string[];
   };
 }
 
@@ -114,6 +115,10 @@ const Relatorios: React.FC = () => {
   // Estados para autocomplete
   const [searchOptions, setSearchOptions] = useState<Array<{value: string, label: string, type: string, source: string}>>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
+
+  // Estados para áreas demandantes
+  const [areasDemandantes, setAreasDemandantes] = useState<string[]>([]);
+  const [loadingAreas, setLoadingAreas] = useState(false);
 
   // Definição dos campos disponíveis para cada fonte de dados
   const fieldOptions = {
@@ -271,6 +276,26 @@ const Relatorios: React.FC = () => {
 
   const handleBack = () => {
     setActiveStep((prev) => prev - 1);
+  };
+
+  // Carregar áreas demandantes quando dataSource muda
+  useEffect(() => {
+    if (reportConfig.dataSource) {
+      fetchAreasDemandantes();
+    }
+  }, [reportConfig.dataSource]);
+
+  const fetchAreasDemandantes = async () => {
+    try {
+      setLoadingAreas(true);
+      const response = await api.get(`/api/v1/reports/areas-demandantes?data_source=${reportConfig.dataSource}`);
+      setAreasDemandantes(response.data.areas);
+    } catch (error) {
+      console.error('Erro ao carregar áreas demandantes:', error);
+      setAreasDemandantes([]);
+    } finally {
+      setLoadingAreas(false);
+    }
   };
 
   const handleGenerateReport = async () => {
@@ -1012,6 +1037,88 @@ const Relatorios: React.FC = () => {
                     }))}
                   />
                 </Grid>
+
+                {/* Filtro de Áreas Demandantes */}
+                {(reportConfig.dataSource === 'qualificacao' || reportConfig.dataSource === 'licitacao') && (
+                  <Grid item xs={12}>
+                    <FormControl fullWidth>
+                      <InputLabel>Áreas Demandantes</InputLabel>
+                      <Select
+                        multiple
+                        value={reportConfig.filters.areasDemandantes || []}
+                        onChange={(e) => setReportConfig(prev => ({
+                          ...prev,
+                          filters: {
+                            ...prev.filters,
+                            areasDemandantes: typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
+                          }
+                        }))}
+                        renderValue={(selected) => (
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            {selected.map((value) => (
+                              <Chip key={value} label={value} size="small" />
+                            ))}
+                          </Box>
+                        )}
+                        disabled={loadingAreas}
+                      >
+                        {loadingAreas ? (
+                          <MenuItem disabled>
+                            <CircularProgress size={20} sx={{ mr: 1 }} />
+                            Carregando áreas...
+                          </MenuItem>
+                        ) : (
+                          areasDemandantes.map((area) => (
+                            <MenuItem key={area} value={area}>
+                              {area}
+                            </MenuItem>
+                          ))
+                        )}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                )}
+
+                {/* Filtro de Área Requisitante para PCA */}
+                {reportConfig.dataSource === 'pca' && (
+                  <Grid item xs={12}>
+                    <FormControl fullWidth>
+                      <InputLabel>Áreas Requisitantes</InputLabel>
+                      <Select
+                        multiple
+                        value={reportConfig.filters.areasDemandantes || []}
+                        onChange={(e) => setReportConfig(prev => ({
+                          ...prev,
+                          filters: {
+                            ...prev.filters,
+                            areasDemandantes: typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
+                          }
+                        }))}
+                        renderValue={(selected) => (
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            {selected.map((value) => (
+                              <Chip key={value} label={value} size="small" />
+                            ))}
+                          </Box>
+                        )}
+                        disabled={loadingAreas}
+                      >
+                        {loadingAreas ? (
+                          <MenuItem disabled>
+                            <CircularProgress size={20} sx={{ mr: 1 }} />
+                            Carregando áreas...
+                          </MenuItem>
+                        ) : (
+                          areasDemandantes.map((area) => (
+                            <MenuItem key={area} value={area}>
+                              {area}
+                            </MenuItem>
+                          ))
+                        )}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                )}
               </Grid>
               <Box sx={{ mb: 1, mt: 2 }}>
                 <Button
