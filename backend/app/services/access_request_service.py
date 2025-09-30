@@ -84,7 +84,7 @@ class AccessRequestService:
 
     @staticmethod
     def reject_request(db: Session, request_id: str, admin_id: str, observacoes: Optional[str] = None) -> AccessRequest:
-        """Rejeitar uma requisição de acesso"""
+        """Rejeitar uma requisição de acesso e remover o usuário do sistema"""
         access_request = AccessRequestService.get_request_by_id(db, request_id)
         if not access_request:
             raise ValueError("Requisição não encontrada")
@@ -96,6 +96,11 @@ class AccessRequestService:
         access_request.status = "REJEITADA"
         access_request.aprovado_por_id = admin_id
         access_request.observacoes_admin = observacoes
+
+        # Remover o usuário do sistema quando rejeitado
+        user = db.query(Usuario).filter(Usuario.id == access_request.user_id).first()
+        if user:
+            db.delete(user)
 
         db.commit()
         db.refresh(access_request)
