@@ -1,10 +1,13 @@
 ﻿import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Paper,
-  Table,
-  TableBody,
+
+
+  const exportColumns = [
+    { key: 'numero_contratacao', label: 'Nº Contratação' },
+    { key: 'titulo_contratacao', label: 'Título' },
+    { key: 'valor_total', label: 'Valor Total' },
+    { key: 'area_requisitante', label: 'Área Requisitante' },
+    { key: 'data_estimada_inicio', label: 'Data Início' },
+    { key: 'data_estimada_conclusao', label: 'Data Conclusão' },
   TableCell,
   TableContainer,
   TableHead,
@@ -113,7 +116,7 @@ const ContratacaoAtrasadas: React.FC = () => {
     },
     {
       key: 'dataInicio',
-      label: 'Data InÃ­cio',
+      label: 'Data Início',
       type: 'date'
     },
     {
@@ -125,12 +128,12 @@ const ContratacaoAtrasadas: React.FC = () => {
 
   // Export columns configuration
   const exportColumns = [
-    { key: 'numero_contratacao', label: 'NÂº ContrataÃ§Ã£o' },
-    { key: 'titulo_contratacao', label: 'TÃ­tulo' },
+    { key: 'numero_contratacao', label: 'Nº Contratação' },
+    { key: 'titulo_contratacao', label: 'Título' },
     { key: 'valor_total', label: 'Valor Total' },
     { key: 'area_requisitante', label: 'Ãrea Requisitante' },
-    { key: 'data_estimada_inicio', label: 'Data InÃ­cio' },
-    { key: 'data_estimada_conclusao', label: 'Data ConclusÃ£o' },
+    { key: 'data_estimada_inicio', label: 'Data Início' },
+    { key: 'data_estimada_conclusao', label: 'Data Conclusão' },
     {
       key: 'status',
       label: 'Status',
@@ -511,5 +514,6 @@ const ContratacaoAtrasadas: React.FC = () => {
 };
 
 export default ContratacaoAtrasadas;
+
 
 
