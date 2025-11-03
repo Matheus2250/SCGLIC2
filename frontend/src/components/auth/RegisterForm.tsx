@@ -1,18 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  Paper,
-  Container,
-  CircularProgress,
-  Alert,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-} from '@mui/material';
+import { Box, Button, TextField, Typography, Paper, Container, CircularProgress, Alert } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -20,6 +7,7 @@ import { authService } from '../../services/auth.service';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../store/auth.context';
 import PostRegistrationQuestionnaire from './PostRegistrationQuestionnaire';
+import BackgroundSlideshow from './BackgroundSlideshow';
 
 const schema = yup.object({
   username: yup.string().required('Username é obrigatório').min(3, 'Username deve ter pelo menos 3 caracteres'),
@@ -38,7 +26,6 @@ interface RegisterFormData {
   password: string;
   confirmPassword: string;
 }
-
 
 const RegisterForm: React.FC = () => {
   const navigate = useNavigate();
@@ -66,21 +53,18 @@ const RegisterForm: React.FC = () => {
         email: data.email,
         nome_completo: data.nome_completo,
         password: data.password,
-        nivel_acesso: 'VISITANTE', // Todos os usuários começam como VISITANTE
+        nivel_acesso: 'VISITANTE',
       };
 
       await authService.register(userData);
 
-      // Fazer login automático após registro
       const loginResponse = await authService.login({
-        username: data.email, // Usar email para login conforme testado na API
+        username: data.email,
         password: data.password
       });
       login(loginResponse.access_token);
 
       setRegisterSuccess(true);
-
-      // Mostrar questionário em vez de redirecionar diretamente
       setTimeout(() => {
         setShowQuestionnaire(true);
       }, 2000);
@@ -108,10 +92,31 @@ const RegisterForm: React.FC = () => {
 
   if (registerSuccess) {
     return (
-      <Container component="main" maxWidth="xs">
+      <Box sx={{ position: 'relative', minHeight: '100vh' }}>
+        <BackgroundSlideshow />
+        <Container component="main" maxWidth="xs" sx={{ position: 'relative', zIndex: 1 }}>
+          <Box sx={{ marginTop: 10 }}>
+            <Paper elevation={3} sx={{ p: 4, textAlign: 'center', backdropFilter: 'saturate(120%) blur(2px)', backgroundColor: 'rgba(255,255,255,0.9)' }}>
+              <Typography variant="h5" gutterBottom>
+                Conta criada com sucesso!
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Aguarde, redirecionando para o questionário...
+              </Typography>
+            </Paper>
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ position: 'relative', minHeight: '100vh' }}>
+      <BackgroundSlideshow />
+      <Container component="main" maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
         <Box
           sx={{
-            marginTop: 8,
+            marginTop: 6,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -125,140 +130,114 @@ const RegisterForm: React.FC = () => {
               flexDirection: 'column',
               alignItems: 'center',
               width: '100%',
+              backdropFilter: 'saturate(120%) blur(2px)',
+              backgroundColor: 'rgba(255,255,255,0.9)'
             }}
           >
-            <Alert severity="success" sx={{ width: '100%', mb: 2 }}>
-              Conta criada com sucesso! Redirecionando para login...
-            </Alert>
+            <Typography component="h1" variant="h4" sx={{ mb: 2, color: '#004085', textAlign: 'center' }}>
+              Sistemas de Informações CGLIC
+            </Typography>
+            
+            <Typography component="h2" variant="h5" sx={{ mb: 3 }}>
+              Criar Nova Conta
+            </Typography>
+
+            <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ width: '100%' }}>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="username"
+                label="Username"
+                autoComplete="username"
+                autoFocus
+                {...register('username')}
+                error={!!errors.username}
+                helperText={errors.username?.message}
+              />
+
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="email"
+                label="Email"
+                type="email"
+                autoComplete="email"
+                {...register('email')}
+                error={!!errors.email}
+                helperText={errors.email?.message}
+              />
+
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="nome_completo"
+                label="Nome Completo"
+                autoComplete="name"
+                {...register('nome_completo')}
+                error={!!errors.nome_completo}
+                helperText={errors.nome_completo?.message}
+              />
+
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                label="Senha"
+                type="password"
+                id="password"
+                autoComplete="new-password"
+                {...register('password')}
+                error={!!errors.password}
+                helperText={errors.password?.message}
+              />
+
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                label="Confirmar Senha"
+                type="password"
+                id="confirmPassword"
+                autoComplete="new-password"
+                {...register('confirmPassword')}
+                error={!!errors.confirmPassword}
+                helperText={errors.confirmPassword?.message}
+              />
+
+              {registerError && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                  {registerError}
+                </Alert>
+              )}
+
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2 }}
+                disabled={isLoading}
+              >
+                {isLoading ? <CircularProgress size={24} /> : 'Criar Conta'}
+              </Button>
+
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="body2">
+                  Já possui uma conta?{' '}
+                  <Link to="/login" style={{ color: '#1976d2', textDecoration: 'none' }}>
+                    Fazer Login
+                  </Link>
+                </Typography>
+              </Box>
+            </Box>
           </Paper>
         </Box>
       </Container>
-    );
-  }
-
-  return (
-    <Container component="main" maxWidth="sm">
-      <Box
-        sx={{
-          marginTop: 4,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Paper
-          elevation={3}
-          sx={{
-            padding: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: '100%',
-          }}
-        >
-          <Typography component="h1" variant="h4" sx={{ mb: 2, color: '#004085' }}>
-            Sistema de Contratações
-          </Typography>
-          
-          <Typography component="h2" variant="h5" sx={{ mb: 3 }}>
-            Criar Nova Conta
-          </Typography>
-
-          <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ width: '100%' }}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="username"
-              label="Username"
-              autoComplete="username"
-              autoFocus
-              {...register('username')}
-              error={!!errors.username}
-              helperText={errors.username?.message}
-            />
-
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email"
-              type="email"
-              autoComplete="email"
-              {...register('email')}
-              error={!!errors.email}
-              helperText={errors.email?.message}
-            />
-
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="nome_completo"
-              label="Nome Completo"
-              autoComplete="name"
-              {...register('nome_completo')}
-              error={!!errors.nome_completo}
-              helperText={errors.nome_completo?.message}
-            />
-
-
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              label="Senha"
-              type="password"
-              id="password"
-              autoComplete="new-password"
-              {...register('password')}
-              error={!!errors.password}
-              helperText={errors.password?.message}
-            />
-
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              label="Confirmar Senha"
-              type="password"
-              id="confirmPassword"
-              autoComplete="new-password"
-              {...register('confirmPassword')}
-              error={!!errors.confirmPassword}
-              helperText={errors.confirmPassword?.message}
-            />
-
-            {registerError && (
-              <Alert severity="error" sx={{ mt: 2 }}>
-                {registerError}
-              </Alert>
-            )}
-
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-              disabled={isLoading}
-            >
-              {isLoading ? <CircularProgress size={24} /> : 'Criar Conta'}
-            </Button>
-
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="body2">
-                Já possui uma conta?{' '}
-                <Link to="/login" style={{ color: '#1976d2', textDecoration: 'none' }}>
-                  Fazer Login
-                </Link>
-              </Typography>
-            </Box>
-          </Box>
-        </Paper>
-      </Box>
-    </Container>
+    </Box>
   );
 };
 
 export default RegisterForm;
+

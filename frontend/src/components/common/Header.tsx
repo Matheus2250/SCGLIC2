@@ -1,15 +1,5 @@
 import React from 'react';
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Box,
-  Avatar,
-  IconButton,
-  Menu,
-  MenuItem,
-} from '@mui/material';
+import { AppBar, Toolbar, Typography, Box, IconButton, Menu, MenuItem } from '@mui/material';
 import { AccountCircle, ExitToApp, Menu as MenuIcon } from '@mui/icons-material';
 import { useAuth } from '../../store/auth.context';
 import { useNavigate } from 'react-router-dom';
@@ -50,14 +40,14 @@ const Header: React.FC<HeaderProps> = ({ onSidebarToggle }) => {
           <MenuIcon />
         </IconButton>
         <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          Sistema de Gestão de Contratações Públicas
+          Sistemas de Informações CGLIC
         </Typography>
-        
+
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Typography variant="body2" sx={{ mr: 2 }}>
             {user?.nome_completo} ({user?.nivel_acesso})
           </Typography>
-          
+
           <IconButton
             size="large"
             aria-label="account of current user"
@@ -68,19 +58,13 @@ const Header: React.FC<HeaderProps> = ({ onSidebarToggle }) => {
           >
             <AccountCircle />
           </IconButton>
-          
+
           <Menu
             id="menu-appbar"
             anchorEl={anchorEl}
-            anchorOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
+            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
             keepMounted
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
+            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
             open={Boolean(anchorEl)}
             onClose={handleClose}
           >
@@ -96,3 +80,4 @@ const Header: React.FC<HeaderProps> = ({ onSidebarToggle }) => {
 };
 
 export default Header;
+
