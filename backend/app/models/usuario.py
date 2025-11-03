@@ -24,6 +24,7 @@ class Usuario(Base):
     password_hash = Column(String(255), nullable=False)
     nivel_acesso = Column(Enum(NivelAcesso), nullable=False, default=NivelAcesso.VISITANTE)
     nome_completo = Column(String(200), nullable=False)
+    avatar_url = Column(String(500), nullable=True)
     ativo = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

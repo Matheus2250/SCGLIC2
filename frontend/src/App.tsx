@@ -8,7 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from './store/auth.context';
 import { ConfirmProvider } from './components/common/ConfirmProvider';
 import PrivateRoute from './components/common/PrivateRoute';
-import Header from './components/common/Header';
+import Header from './components/common/HeaderNew';
 import Sidebar from './components/common/Sidebar';
 import LoginForm from './components/auth/LoginFormNew';
 import RegisterForm from './components/auth/RegisterForm';
@@ -23,6 +23,7 @@ import EstatisticasLicitacao from './pages/EstatisticasLicitacao';
 import Relatorios from './pages/Relatorios';
 import AdminUsuarios from './pages/AdminUsuarios';
 import GerenciarUsuarios from './pages/GerenciarUsuarios';
+import UserProfile from './pages/UserProfile';
 
 const theme = createTheme({
   palette: {
@@ -129,6 +130,7 @@ function App() {
                           </PrivateRoute>
                         } />
                         <Route path="/relatorios" element={<Relatorios />} />
+                        <Route path="/perfil" element={<UserProfile />} />
                         <Route path="/admin/usuarios" element={
                           <PrivateRoute allowedRoles={['COORDENADOR']}>
                             <AdminUsuarios />

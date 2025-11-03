@@ -27,6 +27,7 @@ class UsuarioUpdate(BaseModel):
 
 class Usuario(UsuarioBase):
     id: UUID
+    avatar_url: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 

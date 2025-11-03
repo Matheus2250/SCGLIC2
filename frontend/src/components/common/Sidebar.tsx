@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Collapse, Badge, Tooltip } from '@mui/material';
-import { Dashboard, Assignment, CheckCircle, Gavel, Assessment, ExpandLess, ExpandMore, ListAlt, Warning, BarChart, AdminPanelSettings, People, ManageAccounts } from '@mui/icons-material';
+import { Dashboard, Assignment, CheckCircle, Gavel, Assessment, ExpandLess, ExpandMore, ListAlt, Warning, BarChart, AdminPanelSettings, People, ManageAccounts, AccountCircle } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../store/auth.context';
 import { usePendingRequests } from '../../hooks/usePendingRequests';
@@ -155,4 +155,3 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
 };
 
 export default Sidebar;
-

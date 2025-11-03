@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import auth, planejamento, qualificacao, licitacao, reports, access_requests
 from app.core.config import settings
@@ -36,6 +37,9 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+# Static files (e.g., avatars)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 

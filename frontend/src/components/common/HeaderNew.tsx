@@ -1,6 +1,6 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, Box, IconButton, Menu, MenuItem } from '@mui/material';
-import { AccountCircle, ExitToApp, Menu as MenuIcon } from '@mui/icons-material';
+import { AppBar, Toolbar, Typography, Box, IconButton, Menu, MenuItem, ListItemIcon } from '@mui/material';
+import { AccountCircle, ExitToApp, Menu as MenuIcon, ManageAccounts } from '@mui/icons-material';
 import { useAuth } from '../../store/auth.context';
 import { useNavigate } from 'react-router-dom';
 
@@ -27,6 +27,11 @@ const Header: React.FC<HeaderProps> = ({ onSidebarToggle }) => {
     handleClose();
   };
 
+  const handleGoProfile = () => {
+    navigate('/perfil');
+    handleClose();
+  };
+
   return (
     <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
       <Toolbar>
@@ -40,7 +45,7 @@ const Header: React.FC<HeaderProps> = ({ onSidebarToggle }) => {
           <MenuIcon />
         </IconButton>
         <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          Sistemas de Informações CGLIC
+          Sistemas de InformaÃ§Ãµes CGLIC
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -68,6 +73,12 @@ const Header: React.FC<HeaderProps> = ({ onSidebarToggle }) => {
             open={Boolean(anchorEl)}
             onClose={handleClose}
           >
+            <MenuItem onClick={handleGoProfile}>
+              <ListItemIcon>
+                <ManageAccounts fontSize="small" />
+              </ListItemIcon>
+              Meu Perfil
+            </MenuItem>
             <MenuItem onClick={handleLogout}>
               <ExitToApp sx={{ mr: 1 }} />
               Sair
@@ -80,5 +91,4 @@ const Header: React.FC<HeaderProps> = ({ onSidebarToggle }) => {
 };
 
 export default Header;
-
 

@@ -3,6 +3,7 @@ export interface Usuario {
   username: string;
   email: string;
   nome_completo: string;
+  avatar_url?: string;
   nivel_acesso: 'COORDENADOR' | 'DIPLAN' | 'DIQUALI' | 'DIPLI' | 'VISITANTE';
   ativo: boolean;
   created_at: string;

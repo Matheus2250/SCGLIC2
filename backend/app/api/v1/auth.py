@@ -1,7 +1,7 @@
 from datetime import timedelta
 from typing import Any, List
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from fastapi.security import HTTPBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.api import deps
@@ -13,6 +13,9 @@ from app.services.auth_service import (
     authenticate_user, create_user, get_user_by_username, get_user_by_email,
     get_users, get_user, update_user, delete_user
 )
+from pydantic import BaseModel
+import os
+import uuid
 
 router = APIRouter()
 
@@ -61,6 +64,70 @@ def read_users_me(
     current_user: Usuario = Depends(deps.get_current_active_user)
 ) -> Any:
     return current_user
+
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+
+@router.patch("/me", response_model=Usuario)
+def update_me(
+    user_in: UsuarioUpdate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(deps.get_current_active_user),
+) -> Any:
+    # Permitir apenas atualização de nome e email pelo próprio usuário
+    allowed = {"nome_completo", "email"}
+    data = {k: v for k, v in user_in.dict(exclude_unset=True).items() if k in allowed}
+    if not data:
+        return current_user
+    updated = update_user(db, user_id=current_user.id, user_update=UsuarioUpdate(**data))
+    return updated
+
+
+@router.post("/change-password")
+def change_password(
+    payload: PasswordChange,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(deps.get_current_active_user),
+) -> Any:
+    if not security.verify_password(payload.current_password, current_user.password_hash):
+        raise HTTPException(status_code=400, detail="Senha atual incorreta")
+    current_user.password_hash = security.get_password_hash(payload.new_password)
+    db.add(current_user)
+    db.commit()
+    return {"message": "Senha atualizada com sucesso"}
+
+
+@router.post("/me/avatar")
+async def upload_avatar(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(deps.get_current_active_user),
+) -> Any:
+    # Validar tipo simples
+    filename = file.filename or "avatar"
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in {'.jpg', '.jpeg', '.png', '.webp', '.gif'}:
+        raise HTTPException(status_code=400, detail="Formato de imagem inválido")
+
+    # Garantir diretório
+    static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'static')
+    avatars_dir = os.path.join(static_dir, 'avatars')
+    os.makedirs(avatars_dir, exist_ok=True)
+
+    unique_name = f"{uuid.uuid4()}{ext}"
+    dest_path = os.path.join(avatars_dir, unique_name)
+
+    with open(dest_path, 'wb') as out:
+        out.write(await file.read())
+
+    url = f"/static/avatars/{unique_name}"
+    current_user.avatar_url = url
+    db.add(current_user)
+    db.commit()
+    return {"avatar_url": url}
 
 
 # Endpoints de administração de usuários (apenas para COORDENADOR)
