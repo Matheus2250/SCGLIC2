@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Box, Button, TextField, Typography, Paper, Container, CircularProgress, Alert } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -10,12 +10,12 @@ import PostRegistrationQuestionnaire from './PostRegistrationQuestionnaire';
 import BackgroundSlideshow from './BackgroundSlideshow';
 
 const schema = yup.object({
-  username: yup.string().required('Username é obrigatório').min(3, 'Username deve ter pelo menos 3 caracteres'),
-  email: yup.string().email('Email inválido').required('Email é obrigatório'),
-  nome_completo: yup.string().required('Nome completo é obrigatório').min(2, 'Nome deve ter pelo menos 2 caracteres'),
-  password: yup.string().required('Senha é obrigatória').min(6, 'Senha deve ter pelo menos 6 caracteres'),
+  username: yup.string().required('Username Ã© obrigatÃ³rio').min(3, 'Username deve ter pelo menos 3 caracteres'),
+  email: yup.string().email('Email invÃ¡lido').required('Email Ã© obrigatÃ³rio'),
+  nome_completo: yup.string().required('Nome completo Ã© obrigatÃ³rio').min(2, 'Nome deve ter pelo menos 2 caracteres'),
+  password: yup.string().required('Senha Ã© obrigatÃ³ria').min(6, 'Senha deve ter pelo menos 6 caracteres'),
   confirmPassword: yup.string()
-    .required('Confirmação de senha é obrigatória')
+    .required('ConfirmaÃ§Ã£o de senha Ã© obrigatÃ³ria')
     .oneOf([yup.ref('password')], 'Senhas devem ser iguais'),
 });
 
@@ -113,7 +113,7 @@ const RegisterForm: React.FC = () => {
                 Conta criada com sucesso!
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Aguarde, redirecionando para o questionário...
+                Aguarde, redirecionando para o questionÃ¡rio...
               </Typography>
             </Paper>
           </Box>
@@ -150,11 +150,11 @@ const RegisterForm: React.FC = () => {
               boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)'
             }}
           >
-            <Typography component="h1" variant="h4" sx={{ mb: 2, color: '#004085', textAlign: 'center' }}>
+            <Typography component="h1" variant="h4" sx={{ mb: 2, color: '#ffffff', textAlign: 'center' }}>
               Sistemas de Informações CGLIC
             </Typography>
             
-            <Typography component="h2" variant="h5" sx={{ mb: 3 }}>
+            <Typography component="h2" variant="h5" sx={{ mb: 3, color: '#e9ecef', fontFamily: 'Segoe UI', fontWeight: 600, letterSpacing: 0.3 }}>
               Criar Nova Conta
             </Typography>
 
@@ -233,7 +233,7 @@ const RegisterForm: React.FC = () => {
                 type="submit"
                 fullWidth
                 variant="contained"
-                sx={{ mt: 3, mb: 2 }}
+                sx={{ mt: 3, mb: 2, backgroundColor: '#ffffff', color: '#000000', '&:hover': { backgroundColor: '#f1f3f5' } }}
                 disabled={isLoading}
               >
                 {isLoading ? <CircularProgress size={24} /> : 'Criar Conta'}
@@ -241,7 +241,7 @@ const RegisterForm: React.FC = () => {
 
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="body2">
-                  Já possui uma conta?{' '}
+                  JÃ¡ possui uma conta?{' '}
                   <Link to="/login" style={{ color: '#1976d2', textDecoration: 'none' }}>
                     Fazer Login
                   </Link>
@@ -256,3 +256,4 @@ const RegisterForm: React.FC = () => {
 };
 
 export default RegisterForm;
+

@@ -10,7 +10,7 @@ import { ConfirmProvider } from './components/common/ConfirmProvider';
 import PrivateRoute from './components/common/PrivateRoute';
 import Header from './components/common/Header';
 import Sidebar from './components/common/Sidebar';
-import LoginForm from './components/auth/LoginForm';
+import LoginForm from './components/auth/LoginFormNew';
 import RegisterForm from './components/auth/RegisterForm';
 import Dashboard from './pages/Dashboard';
 import Planejamento from './pages/Planejamento';

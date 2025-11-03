@@ -17,7 +17,7 @@ interface LoginFormData {
   password: string;
 }
 
-const LoginForm: React.FC = () => {
+const LoginFormNew: React.FC = () => {
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -47,14 +47,7 @@ const LoginForm: React.FC = () => {
     <Box sx={{ position: 'relative', minHeight: '100vh' }}>
       <BackgroundSlideshow />
       <Container component="main" maxWidth="xs" sx={{ position: 'relative', zIndex: 1 }}>
-        <Box
-          sx={{
-            marginTop: 10,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
-        >
+        <Box sx={{ mt: 10, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <Paper
             elevation={0}
             sx={{
@@ -71,11 +64,11 @@ const LoginForm: React.FC = () => {
               boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)'
             }}
           >
-            <Typography component="h1" variant="h4" sx={{ mb: 3, color: '#004085', textAlign: 'center' }}>
-              Sistemas de Informações CGLIC
+            <Typography component="h1" variant="h4" sx={{ mb: 3, color: '#ffffff', textAlign: 'center' }}>
+              Sistemas de InformaÃ§Ãµes CGLIC
             </Typography>
 
-            <Typography component="h2" variant="h5" sx={{ mb: 2 }}>
+            <Typography component="h2" variant="h5" sx={{ mb: 2, color: '#e9ecef', fontFamily: `'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif`, fontWeight: 600, letterSpacing: 0.3 }}>
               Login
             </Typography>
 
@@ -116,7 +109,7 @@ const LoginForm: React.FC = () => {
                 type="submit"
                 fullWidth
                 variant="contained"
-                sx={{ mt: 3, mb: 2 }}
+                sx={{ mt: 3, mb: 2, backgroundColor: '#ffffff', color: '#000000', '&:hover': { backgroundColor: '#f1f3f5' } }}
                 disabled={isLoading}
               >
                 {isLoading ? <CircularProgress size={24} /> : 'Entrar'}
@@ -125,7 +118,7 @@ const LoginForm: React.FC = () => {
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="body2">
                   NÃ£o possui uma conta?{' '}
-                  <Link to="/register" style={{ color: '#1976d2', textDecoration: 'none' }}>
+                  <Link to="/register" style={{ color: '#e9ecef', textDecoration: 'none', fontWeight: 600 }}>
                     Criar Conta
                   </Link>
                 </Typography>
@@ -138,4 +131,5 @@ const LoginForm: React.FC = () => {
   );
 };
 
-export default LoginForm;
+export default LoginFormNew;
+
