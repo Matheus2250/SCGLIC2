@@ -35,6 +35,7 @@ import { toast } from 'react-toastify';
 import TableFilters, { FilterField, FilterValues } from '../components/common/TableFilters';
 import TableExport from '../components/common/TableExport';
 import QualificacaoDetailsModal from '../components/common/QualificacaoDetailsModal';
+import StatCards from '../components/common/StatCards';
 
 interface FormData {
   nup: string;
@@ -464,6 +465,15 @@ const QualificacaoPage: React.FC = () => {
 
   const paginatedQualificacoes = filteredQualificacoes.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
+  // Totais para StatCards
+  const totalFiltrado = filteredQualificacoes.length;
+  const totalEmAnalise = filteredQualificacoes.filter(q => q.status === 'EM ANALISE').length;
+  const totalConcluido = filteredQualificacoes.filter(q => q.status === 'CONCLUIDO').length;
+  const totalValorEstimado = filteredQualificacoes.reduce(
+    (acc, q) => acc + (typeof q.valor_estimado === 'number' ? q.valor_estimado : (q.valor_estimado ? Number(q.valor_estimado as any) : 0)),
+    0
+  );
+
   if (loading) {
     return <Typography>Carregando...</Typography>;
   }
@@ -496,6 +506,15 @@ const QualificacaoPage: React.FC = () => {
           </Button>
         </Box>
       </Box>
+
+      <StatCards
+        items={[
+          { label: 'Total filtrado', value: totalFiltrado, color: '#0d6efd' },
+          { label: 'Em análise (filtrado)', value: totalEmAnalise, color: '#ffc107' },
+          { label: 'Concluídas (filtrado)', value: totalConcluido, color: '#20c997' },
+          { label: 'Valor estimado (filtrado)', value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalValorEstimado || 0), color: '#6f42c1' },
+        ]}
+      />
 
       <TableFilters
         fields={filterFields}

@@ -4,8 +4,8 @@ import { Box } from '@mui/material';
 // Import imagens do diretório assets (na raiz do frontend)
 // Caminho relativo a partir de src/components/auth
 import img1 from '../../../assets/fachada-ministerio-da-saude.jpg';
-import img2 from '../../../assets/ministerio-da-saude.jpg';
-import img3 from '../../../assets/Noticia-aniversario-MS.jpg';
+import img2 from '../../../assets/53663734902_4a87468b1b_h.jpg';
+import img3 from '../../../assets/Minist�rio_da_Sa�de_(49702074856).jpg';
 
 interface BackgroundSlideshowProps {
   intervalMs?: number;
@@ -61,4 +61,3 @@ const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({ intervalMs = 
 };
 
 export default BackgroundSlideshow;
-

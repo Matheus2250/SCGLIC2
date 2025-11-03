@@ -37,6 +37,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import TableFilters, { FilterField, FilterValues } from '../components/common/TableFilters';
 import TableExport from '../components/common/TableExport';
+import StatCards from '../components/common/StatCards';
 
 const LicitacaoPage: React.FC = () => {
   const [licitacoes, setLicitacoes] = useState<Licitacao[]>([]);
@@ -406,6 +407,26 @@ const LicitacaoPage: React.FC = () => {
 
   const paginatedLicitacoes = filteredLicitacoes.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
+  // Totais para StatCards
+  const totalFiltrado = filteredLicitacoes.length;
+  const totalEmAndamento = filteredLicitacoes.filter(l => l.status === 'EM ANDAMENTO').length;
+  const totalHomologadas = filteredLicitacoes.filter(l => l.status === 'HOMOLOGADA').length;
+  const totalEstimado = filteredLicitacoes.reduce(
+    (acc, l) => acc + (typeof l.valor_estimado === 'number' ? l.valor_estimado : (l.valor_estimado ? Number(l.valor_estimado as any) : 0)),
+    0
+  );
+  const totalHomologado = filteredLicitacoes.reduce(
+    (acc, l) => acc + (typeof l.valor_homologado === 'number' ? l.valor_homologado : (l.valor_homologado ? Number(l.valor_homologado as any) : 0)),
+    0
+  );
+  const totalEconomia = filteredLicitacoes.reduce((acc, l) => {
+    const ecoVal = (l as any).economia;
+    if (typeof ecoVal === 'number') return acc + ecoVal;
+    const est = typeof l.valor_estimado === 'number' ? l.valor_estimado : (l.valor_estimado ? Number(l.valor_estimado as any) : 0);
+    const hom = typeof l.valor_homologado === 'number' ? l.valor_homologado : (l.valor_homologado ? Number(l.valor_homologado as any) : 0);
+    return acc + (est && hom ? Math.max(est - hom, 0) : 0);
+  }, 0);
+
   const handleViewDetails = (licitacao: Licitacao) => {
     setSelectedLicitacao(licitacao);
     setDetailsOpen(true);
@@ -452,6 +473,17 @@ const LicitacaoPage: React.FC = () => {
           </Button>
         </Box>
       </Box>
+
+      <StatCards
+        items={[
+          { label: 'Total filtrado', value: totalFiltrado, color: '#0d6efd' },
+          { label: 'Em andamento (filtrado)', value: totalEmAndamento, color: '#0dcaf0' },
+          { label: 'Homologadas (filtrado)', value: totalHomologadas, color: '#20c997' },
+          { label: 'Valor estimado (filtrado)', value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalEstimado || 0), color: '#6f42c1' },
+          { label: 'Valor homologado (filtrado)', value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalHomologado || 0), color: '#198754' },
+          { label: 'Economia (filtrado)', value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalEconomia || 0), color: '#fd7e14' },
+        ]}
+      />
 
       <TableFilters
         fields={filterFields}
