@@ -6,6 +6,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import { AuthProvider } from './store/auth.context';
+import { ConfirmProvider } from './components/common/ConfirmProvider';
 import PrivateRoute from './components/common/PrivateRoute';
 import Header from './components/common/Header';
 import Sidebar from './components/common/Sidebar';
@@ -45,6 +46,7 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
+        <ConfirmProvider>
         <Router future={{ 
           v7_startTransition: true,
           v7_relativeSplatPath: true 
@@ -140,6 +142,7 @@ function App() {
           draggable
           pauseOnHover
         />
+        </ConfirmProvider>
       </AuthProvider>
     </ThemeProvider>
   );
