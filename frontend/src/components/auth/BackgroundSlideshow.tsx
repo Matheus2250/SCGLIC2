@@ -5,7 +5,7 @@ import { Box } from '@mui/material';
 // Caminho relativo a partir de src/components/auth
 import img1 from '../../../assets/fachada-ministerio-da-saude.jpg';
 import img2 from '../../../assets/53663734902_4a87468b1b_h.jpg';
-import img3 from '../../../assets/Minist�rio_da_Sa�de_(49702074856).jpg';
+import img3 from '../../../assets/ministerio-da-saude-49702074856.jpg';
 
 interface BackgroundSlideshowProps {
   intervalMs?: number;
