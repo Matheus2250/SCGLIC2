@@ -96,7 +96,19 @@ const RegisterForm: React.FC = () => {
         <BackgroundSlideshow />
         <Container component="main" maxWidth="xs" sx={{ position: 'relative', zIndex: 1 }}>
           <Box sx={{ marginTop: 10 }}>
-            <Paper elevation={3} sx={{ p: 4, textAlign: 'center', backdropFilter: 'saturate(120%) blur(2px)', backgroundColor: 'rgba(255,255,255,0.9)' }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 4,
+              textAlign: 'center',
+              backdropFilter: 'blur(10px) saturate(140%)',
+              WebkitBackdropFilter: 'blur(10px) saturate(140%)',
+              backgroundColor: 'rgba(255,255,255,0.35)',
+              borderRadius: 2,
+              border: '1px solid rgba(255,255,255,0.25)',
+              boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)'
+            }}
+          >
               <Typography variant="h5" gutterBottom>
                 Conta criada com sucesso!
               </Typography>
@@ -123,15 +135,19 @@ const RegisterForm: React.FC = () => {
           }}
         >
           <Paper
-            elevation={3}
+            elevation={0}
             sx={{
-              padding: 4,
+              p: 4,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               width: '100%',
-              backdropFilter: 'saturate(120%) blur(2px)',
-              backgroundColor: 'rgba(255,255,255,0.9)'
+              backdropFilter: 'blur(10px) saturate(140%)',
+              WebkitBackdropFilter: 'blur(10px) saturate(140%)',
+              backgroundColor: 'rgba(255,255,255,0.35)',
+              borderRadius: 2,
+              border: '1px solid rgba(255,255,255,0.25)',
+              boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)'
             }}
           >
             <Typography component="h1" variant="h4" sx={{ mb: 2, color: '#004085', textAlign: 'center' }}>
@@ -240,4 +256,3 @@ const RegisterForm: React.FC = () => {
 };
 
 export default RegisterForm;
-
