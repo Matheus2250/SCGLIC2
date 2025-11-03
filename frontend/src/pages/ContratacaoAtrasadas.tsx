@@ -288,6 +288,7 @@ const ContratacaoAtrasadas: React.FC = () => {
 
   const filteredPCAs = getFilteredPCAs();
   const paginatedPCAs = filteredPCAs.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const totalValorFiltrado = filteredPCAs.reduce((acc, p) => acc + (typeof p.valor_total === 'number' ? p.valor_total : (p.valor_total ? Number(p.valor_total as any) : 0)), 0);
   const totalValorFiltrado = filteredPCAs.reduce((acc, p) => acc + (p.valor_total || 0), 0);
 
   const getStatusChip = (pca: PCA) => {
@@ -436,12 +437,12 @@ const ContratacaoAtrasadas: React.FC = () => {
                   <TableHead sx={{ '& .MuiTableCell-head': { fontWeight: 700 } }}>
                     <TableRow>
                       <TableCell>Status</TableCell>
-                      <TableCell>NÂº ContrataÃ§Ã£o</TableCell>
-                      <TableCell>TÃ­tulo</TableCell>
+                      <TableCell>No. Contratacao</TableCell>
+                      <TableCell>Titulo</TableCell>
                       <TableCell>Valor Total</TableCell>
-                      <TableCell>Ãrea Requisitante</TableCell>
-                      <TableCell>Data InÃ­cio</TableCell>
-                      <TableCell>Data ConclusÃ£o</TableCell>
+                      <TableCell>Area Requisitante</TableCell>
+                      <TableCell>Data Inicio</TableCell>
+                      <TableCell>Data Conclusao</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -508,3 +509,5 @@ const ContratacaoAtrasadas: React.FC = () => {
 };
 
 export default ContratacaoAtrasadas;
+
+

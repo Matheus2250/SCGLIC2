@@ -331,7 +331,7 @@ const Planejamento: React.FC = () => {
   const paginatedPCAs = filteredPCAs.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
   const totalAtrasadas = filteredPCAs.filter(p => p.atrasada).length;
   const totalNoPrazo = filteredPCAs.length - totalAtrasadas;
-  const totalValor = filteredPCAs.reduce((acc, p) => acc + (p.valor_total || 0), 0);
+  const totalValor = filteredPCAs.reduce((acc, p) => acc + (typeof p.valor_total === 'number' ? p.valor_total : (p.valor_total ? Number(p.valor_total as any) : 0)), 0);
 
   if (loading) {
     return <Typography>Carregando...</Typography>;
@@ -588,3 +588,4 @@ const Planejamento: React.FC = () => {
 };
 
 export default Planejamento;
+
