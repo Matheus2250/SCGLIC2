@@ -57,12 +57,13 @@ const LoginFormNew: React.FC = () => {
               alignItems: 'center',
               width: '100%',
               color: '#fff',
-              backdropFilter: 'blur(20px) brightness(200%)',
-              WebkitBackdropFilter: 'blur(20px) brightness(200%)',
-              backgroundColor: 'rgba(255,255,255,0.08)',
+              // Reduzir brilho para evitar "faixa" clara causada pela imagem ao fundo
+              backdropFilter: 'blur(16px) saturate(130%)',
+              WebkitBackdropFilter: 'blur(16px) saturate(130%)',
+              backgroundColor: 'rgba(255,255,255,0.18)',
               borderRadius: '20px',
-              border: '1px solid #ffffff',
-              boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)'
+              border: '1px solid rgba(255,255,255,0.5)',
+              boxShadow: '0 12px 40px rgba(0,0,0,0.25)'
             }}
           >
             <Typography component="h1" variant="h4" sx={{ mb: 3, color: '#ffffff', textAlign: 'center' }}>

@@ -12,7 +12,7 @@ interface BackgroundSlideshowProps {
   dimOpacity?: number; // 0 a 1
 }
 
-const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({ intervalMs = 7000, dimOpacity = 0.35 }) => {
+const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({ intervalMs = 7000, dimOpacity = 0.55 }) => {
   const images = useMemo(() => [img1, img2, img3], []);
   const [index, setIndex] = useState(0);
 

@@ -78,7 +78,7 @@ const RegisterForm: React.FC = () => {
         <BackgroundSlideshow />
         <Container component="main" maxWidth="xs" sx={{ position: 'relative', zIndex: 1 }}>
           <Box sx={{ marginTop: 10 }}>
-            <Paper elevation={0} sx={{ p: 4, textAlign: 'center', color: '#fff', backdropFilter: 'blur(20px) brightness(200%)', WebkitBackdropFilter: 'blur(20px) brightness(200%)', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: '20px', border: '1px solid #ffffff' }}>
+            <Paper elevation={0} sx={{ p: 4, textAlign: 'center', color: '#fff', backdropFilter: 'blur(16px) saturate(130%)', WebkitBackdropFilter: 'blur(16px) saturate(130%)', backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.5)' }}>
               <Typography variant="h5" gutterBottom>
                 Conta criada com sucesso!
               </Typography>
@@ -97,7 +97,7 @@ const RegisterForm: React.FC = () => {
       <BackgroundSlideshow />
       <Container component="main" maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
         <Box sx={{ marginTop: 6, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <Paper elevation={0} sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', color: '#fff', backdropFilter: 'blur(20px) brightness(200%)', WebkitBackdropFilter: 'blur(20px) brightness(200%)', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: '20px', border: '1px solid #ffffff', boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)' }}>
+          <Paper elevation={0} sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', color: '#fff', backdropFilter: 'blur(16px) saturate(130%)', WebkitBackdropFilter: 'blur(16px) saturate(130%)', backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.5)', boxShadow: '0 12px 40px rgba(0,0,0,0.25)' }}>
             <Typography component="h1" variant="h4" sx={{ mb: 2, color: '#ffffff', textAlign: 'center' }}>
               Sistemas de Informações CGLIC
             </Typography>
@@ -139,4 +139,3 @@ const RegisterForm: React.FC = () => {
 };
 
 export default RegisterForm;
-
