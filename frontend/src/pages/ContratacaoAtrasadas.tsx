@@ -533,12 +533,4 @@ const ContratacaoAtrasadas: React.FC = () => {
   );
 };
 
-export default ContratacaoAtrasadas;
-
-
-
-
-
-
-
-
+export default ContratacaoAtrasadas;/
