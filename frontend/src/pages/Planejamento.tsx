@@ -42,6 +42,7 @@ import { ptBR } from 'date-fns/locale';
 import TableFilters, { FilterField, FilterValues } from '../components/common/TableFilters';
 import TableExport from '../components/common/TableExport';
 import PCADetailsModal from '../components/common/PCADetailsModal';
+import ConfirmDialog from '../components/common/ConfirmDialog';
 
 const Planejamento: React.FC = () => {
   const [pcas, setPcas] = useState<PCA[]>([]);
@@ -57,6 +58,12 @@ const Planejamento: React.FC = () => {
   // Details modal states
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedPCA, setSelectedPCA] = useState<PCA | null>(null);
+  // Confirm dialog states
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTargetId, setConfirmTargetId] = useState<string | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [confirmTitle, setConfirmTitle] = useState('Confirmar exclusão');
+  const [confirmDescription, setConfirmDescription] = useState('Tem certeza que deseja excluir esta PCA?');
   
   // Filter states
   const [filters, setFilters] = useState<FilterValues>({
@@ -185,20 +192,40 @@ const Planejamento: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir esta PCA?')) {
-      try {
-        await pcaService.delete(id);
-        toast.success('PCA excluída com sucesso!');
-        fetchPCAs();
-      } catch (error: any) {
-        toast.error(error.response?.data?.detail || 'Erro ao excluir PCA');
-      }
-    }
+    setConfirmTargetId(id);
+    setConfirmTitle('Excluir PCA');
+    setConfirmDescription('Tem certeza que deseja excluir esta PCA? Essa ação não poderá ser desfeita.');
+    setConfirmOpen(true);
   };
 
+  const handleConfirmDelete = async () => {
+    if (!confirmTargetId) return;
+    setConfirmLoading(true);
+    try {
+      await pcaService.delete(confirmTargetId);
+      toast.success('PCA excluída com sucesso!');
+      fetchPCAs();
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Erro ao excluir PCA');
+    } finally {
+      setConfirmLoading(false);
+      setConfirmOpen(false);
+      setConfirmTargetId(null);
+    }
+  };
   const handleViewDetails = (pca: PCA) => {
     setSelectedPCA(pca);
     setDetailsOpen(true);
+      <ConfirmDialog
+        open={confirmOpen}
+        title={confirmTitle}
+        description={confirmDescription}
+        loading={confirmLoading}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={handleConfirmDelete}
+        onClose={() => { setConfirmOpen(false); setConfirmTargetId(null); }}
+      />
   };
 
   const handleCloseDetails = () => {

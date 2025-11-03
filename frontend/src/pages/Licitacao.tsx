@@ -27,6 +27,7 @@ import {
   TablePagination,
 } from '@mui/material';
 import { Add, Edit, Delete, Link as LinkIcon, Visibility } from '@mui/icons-material';
+import ConfirmDialog from '../components/common/ConfirmDialog';
 import { licitacaoService } from '../services/licitacao.service';
 import { qualificacaoService } from '../services/qualificacao.service';
 import { Licitacao, Qualificacao } from '../types';
@@ -49,6 +50,12 @@ const LicitacaoPage: React.FC = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedLicitacao, setSelectedLicitacao] = useState<Licitacao | null>(null);
+  // Confirm dialog states for deletion
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTargetId, setConfirmTargetId] = useState<string | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [confirmTitle, setConfirmTitle] = useState('Excluir licitação');
+  const [confirmDescription, setConfirmDescription] = useState('Tem certeza que deseja excluir esta licitação?');
   
   // Filter states
   const [filters, setFilters] = useState<FilterValues>({
@@ -217,15 +224,26 @@ const LicitacaoPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir esta licitação?')) {
-      try {
-        await licitacaoService.delete(id);
-        toast.success('Licitação excluída com sucesso!');
-        fetchLicitacoes();
-      } catch (error: any) {
-        toast.error(error.response?.data?.detail || 'Erro ao excluir licitação');
-      }
+  const handleDelete = (id: string) => {
+    setConfirmTargetId(id);
+    setConfirmTitle('Excluir licitação');
+    setConfirmDescription('Tem certeza que deseja excluir esta licitação? Esta ação não poderá ser desfeita.');
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmTargetId) return;
+    setConfirmLoading(true);
+    try {
+      await licitacaoService.delete(confirmTargetId);
+      toast.success('Licitação excluída com sucesso!');
+      fetchLicitacoes();
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Erro ao excluir licitação');
+    } finally {
+      setConfirmLoading(false);
+      setConfirmOpen(false);
+      setConfirmTargetId(null);
     }
   };
 
@@ -404,6 +422,16 @@ const LicitacaoPage: React.FC = () => {
 
   return (
     <Box>
+      <ConfirmDialog
+        open={confirmOpen}
+        title={confirmTitle}
+        description={confirmDescription}
+        loading={confirmLoading}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={handleConfirmDelete}
+        onClose={() => { setConfirmOpen(false); setConfirmTargetId(null); }}
+      />
       <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
         <Typography variant="h4">
           Licitação

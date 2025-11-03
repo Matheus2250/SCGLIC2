@@ -27,6 +27,7 @@ import {
   TablePagination,
 } from '@mui/material';
 import { Add, Edit, Delete, Visibility } from '@mui/icons-material';
+import ConfirmDialog from '../components/common/ConfirmDialog';
 import { qualificacaoService } from '../services/qualificacao.service';
 import { pcaService } from '../services/pca.service';
 import { Qualificacao, PCA } from '../types';
@@ -79,6 +80,12 @@ const QualificacaoPage: React.FC = () => {
   // Details modal states
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedQualificacao, setSelectedQualificacao] = useState<Qualificacao | null>(null);
+  // Confirm dialog states for deletion
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTargetId, setConfirmTargetId] = useState<string | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [confirmTitle, setConfirmTitle] = useState('Excluir qualificação');
+  const [confirmDescription, setConfirmDescription] = useState('Tem certeza que deseja excluir esta qualificação?');
   
   // Filter states
   const [filters, setFilters] = useState<FilterValues>({
@@ -242,10 +249,11 @@ const QualificacaoPage: React.FC = () => {
     setEditingQualificacao(null);
   };
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
+  const handleInputChange = (field: keyof FormData, value: string | number) => {
+    // aceitamos string ou number (ex: ano é number), e armazenamos coerentemente
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: value as any
     }));
   };
 
@@ -300,15 +308,26 @@ const QualificacaoPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir esta qualificação?')) {
-      try {
-        await qualificacaoService.delete(id);
-        toast.success('Qualificação excluída com sucesso!');
-        fetchQualificacoes();
-      } catch (error: any) {
-        toast.error(error.response?.data?.detail || 'Erro ao excluir qualificação');
-      }
+  const handleDelete = (id: string) => {
+    setConfirmTargetId(id);
+    setConfirmTitle('Excluir qualificação');
+    setConfirmDescription('Tem certeza que deseja excluir esta qualificação? Esta ação não poderá ser desfeita.');
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmTargetId) return;
+    setConfirmLoading(true);
+    try {
+      await qualificacaoService.delete(confirmTargetId);
+      toast.success('Qualificação excluída com sucesso!');
+      fetchQualificacoes();
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Erro ao excluir qualificação');
+    } finally {
+      setConfirmLoading(false);
+      setConfirmOpen(false);
+      setConfirmTargetId(null);
     }
   };
 
@@ -451,6 +470,16 @@ const QualificacaoPage: React.FC = () => {
 
   return (
     <Box>
+      <ConfirmDialog
+        open={confirmOpen}
+        title={confirmTitle}
+        description={confirmDescription}
+        loading={confirmLoading}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={handleConfirmDelete}
+        onClose={() => { setConfirmOpen(false); setConfirmTargetId(null); }}
+      />
       <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
         <Typography variant="h4">
           Qualificação

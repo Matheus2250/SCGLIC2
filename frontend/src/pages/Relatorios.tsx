@@ -189,9 +189,9 @@ const Relatorios: React.FC = () => {
 
       // Buscar todos os dados das três fontes
       const [pcaData, qualificacaoData, licitacaoData] = await Promise.all([
-        pcaService.getAll().catch(() => []),
-        qualificacaoService.getAll().catch(() => []),
-        licitacaoService.getAll().catch(() => [])
+        pcaService.getAll(0, 10000).catch(() => []),
+        qualificacaoService.getAll(0, 10000).catch(() => []),
+        licitacaoService.getAll(0, 10000).catch(() => [])
       ]);
 
       const options: Array<{value: string, label: string, type: string, source: string}> = [];
@@ -361,23 +361,23 @@ const Relatorios: React.FC = () => {
 
       // Primeiro, encontrar a qualificação que faz a ligação entre NUP e número da contratação
       const qualificacao = Array.isArray(qualificacaoData) ? qualificacaoData.find(q =>
-        q.nup === searchTerm || q.numero_contratacao === searchTerm
+        q?.nup?.trim() === searchTerm || q?.numero_contratacao?.trim() === searchTerm
       ) : undefined;
 
       // Encontrar a licitação baseada no NUP ou número da contratação
       const licitacao = Array.isArray(licitacaoData) ? licitacaoData.find(l =>
-        l.nup === searchTerm || l.numero_contratacao === searchTerm
+        l?.nup?.trim() === searchTerm || l?.numero_contratacao?.trim() === searchTerm
       ) : undefined;
 
       // Para encontrar o PCA, usar o número da contratação da qualificação se encontrou por NUP
       let pca = undefined;
       if (Array.isArray(pcaData)) {
         // Se pesquisou diretamente por número da contratação
-        pca = pcaData.find(p => p.numero_contratacao === searchTerm);
+        pca = pcaData.find(p => p?.numero_contratacao?.trim() === searchTerm);
 
         // Se não encontrou e tem qualificação, usar o número da contratação da qualificação
         if (!pca && qualificacao && qualificacao.numero_contratacao) {
-          pca = pcaData.find(p => p.numero_contratacao === qualificacao.numero_contratacao);
+          pca = pcaData.find(p => p?.numero_contratacao?.trim() === qualificacao.numero_contratacao?.trim());
         }
       }
 

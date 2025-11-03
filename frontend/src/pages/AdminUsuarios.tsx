@@ -28,6 +28,7 @@ import {
   FormControlLabel,
   CircularProgress,
 } from '@mui/material';
+import ConfirmDialog from '../components/common/ConfirmDialog';
 import {
   Edit,
   Delete,
@@ -45,6 +46,13 @@ const AdminUsuarios: React.FC = () => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<Usuario | null>(null);
+
+  // Confirm dialog states
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTargetUser, setConfirmTargetUser] = useState<Usuario | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [confirmTitle, setConfirmTitle] = useState('Confirmar exclusão');
+  const [confirmDescription, setConfirmDescription] = useState('Tem certeza que deseja excluir este usuário?');
 
   // Estados para modal de edição
   const [editDialog, setEditDialog] = useState(false);
@@ -123,24 +131,32 @@ const AdminUsuarios: React.FC = () => {
     }
   };
 
-  const handleDeleteUser = async (user: Usuario) => {
+  const handleDeleteUser = (user: Usuario) => {
     if (user.id === currentUser?.id) {
       toast.error('Você não pode excluir sua própria conta');
       return;
     }
+    setConfirmTargetUser(user);
+    setConfirmTitle('Excluir usuário');
+    setConfirmDescription(`Tem certeza que deseja excluir o usuário "${user.nome_completo}"? Essa ação não poderá ser desfeita.`);
+    setConfirmOpen(true);
+  };
 
-    if (window.confirm(`Tem certeza que deseja excluir o usuário "${user.nome_completo}"?`)) {
-      try {
-        console.log('Tentando excluir usuário:', user.id);
-        await userService.deleteUser(user.id);
-        console.log('Usuário excluído com sucesso');
-        toast.success('Usuário excluído com sucesso!');
-        fetchUsuarios();
-      } catch (error: any) {
-        console.error('Erro ao excluir usuário:', error);
-        const errorMessage = error.response?.data?.detail || error.message || 'Erro ao excluir usuário';
-        toast.error(errorMessage);
-      }
+  const handleConfirmDeleteUser = async () => {
+    if (!confirmTargetUser) return;
+    setConfirmLoading(true);
+    try {
+      await userService.deleteUser(confirmTargetUser.id);
+      toast.success('Usuário excluído com sucesso!');
+      fetchUsuarios();
+    } catch (error: any) {
+      console.error('Erro ao excluir usuário:', error);
+      const errorMessage = error.response?.data?.detail || error.message || 'Erro ao excluir usuário';
+      toast.error(errorMessage);
+    } finally {
+      setConfirmLoading(false);
+      setConfirmOpen(false);
+      setConfirmTargetUser(null);
     }
   };
 
