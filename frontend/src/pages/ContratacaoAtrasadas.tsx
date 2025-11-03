@@ -214,25 +214,9 @@ const ContratacaoAtrasadas: React.FC = () => {
     setPage(0);
   };
 
-  // Filter PCAs based on selected tab and filters
-  const getFilteredPCAs = () => {
-    let basePCAs: PCA[] = [];
-    switch (tabValue) {
-      case 0: // Todas (atrasadas + vencidas)
-        basePCAs = [...atrasadas, ...vencidas];
-        break;
-      case 1: // Atrasadas
-        basePCAs = atrasadas;
-        break;
-      case 2: // Vencidas
-        basePCAs = vencidas;
-        break;
-      default:
-        basePCAs = [];
-    }
-
-    // Apply filters
-    return basePCAs.filter(pca => {
+  // Apply current filters to a given list
+  const applyFilters = (list: PCA[]) => {
+    return list.filter(pca => {
       // Search filter (searches in multiple fields)
       if (filters.search) {
         const searchTerm = filters.search.toString().toLowerCase();
@@ -287,6 +271,20 @@ const ContratacaoAtrasadas: React.FC = () => {
     });
   };
 
+  // Filter PCAs based on selected tab and filters
+  const getFilteredPCAs = () => {
+    switch (tabValue) {
+      case 0: // Todas (atrasadas + vencidas)
+        return applyFilters([...atrasadas, ...vencidas]);
+      case 1: // Atrasadas
+        return applyFilters(atrasadas);
+      case 2: // Vencidas
+        return applyFilters(vencidas);
+      default:
+        return [];
+    }
+  };
+
   const filteredPCAs = getFilteredPCAs();
   const paginatedPCAs = filteredPCAs.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
@@ -332,11 +330,10 @@ const ContratacaoAtrasadas: React.FC = () => {
   };
 
   const getTabCounts = () => {
-    const totalAtrasadas = atrasadas.length;
-    const totalVencidas = vencidas.length;
-    const total = totalAtrasadas + totalVencidas;
-
-    return { total, atrasadas: totalAtrasadas, vencidas: totalVencidas };
+    const filteredAtrasadas = applyFilters(atrasadas);
+    const filteredVencidas = applyFilters(vencidas);
+    const total = filteredAtrasadas.length + filteredVencidas.length;
+    return { total, atrasadas: filteredAtrasadas.length, vencidas: filteredVencidas.length };
   };
 
   const { total, atrasadas: countAtrasadas, vencidas: countVencidas } = getTabCounts();
