@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Box, Button, TextField, Typography, Paper, Container, CircularProgress, Alert } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -10,13 +10,11 @@ import PostRegistrationQuestionnaire from './PostRegistrationQuestionnaire';
 import BackgroundSlideshow from './BackgroundSlideshow';
 
 const schema = yup.object({
-  username: yup.string().required('Username Ã© obrigatÃ³rio').min(3, 'Username deve ter pelo menos 3 caracteres'),
-  email: yup.string().email('Email invÃ¡lido').required('Email Ã© obrigatÃ³rio'),
-  nome_completo: yup.string().required('Nome completo Ã© obrigatÃ³rio').min(2, 'Nome deve ter pelo menos 2 caracteres'),
-  password: yup.string().required('Senha Ã© obrigatÃ³ria').min(6, 'Senha deve ter pelo menos 6 caracteres'),
-  confirmPassword: yup.string()
-    .required('ConfirmaÃ§Ã£o de senha Ã© obrigatÃ³ria')
-    .oneOf([yup.ref('password')], 'Senhas devem ser iguais'),
+  username: yup.string().required('Username é obrigatório').min(3, 'Username deve ter pelo menos 3 caracteres'),
+  email: yup.string().email('Email inválido').required('Email é obrigatório'),
+  nome_completo: yup.string().required('Nome completo é obrigatório').min(2, 'Nome deve ter pelo menos 2 caracteres'),
+  password: yup.string().required('Senha é obrigatória').min(6, 'Senha deve ter pelo menos 6 caracteres'),
+  confirmPassword: yup.string().required('Confirmação de senha é obrigatória').oneOf([yup.ref('password')], 'Senhas devem ser iguais'),
 });
 
 interface RegisterFormData {
@@ -27,6 +25,20 @@ interface RegisterFormData {
   confirmPassword: string;
 }
 
+const inputSx = {
+  '& .MuiOutlinedInput-root': {
+    color: '#fff',
+    backgroundColor: 'transparent',
+    '& fieldset': { borderColor: '#fff' },
+    '&:hover fieldset': { borderColor: '#fff' },
+    '&.Mui-focused': { backgroundColor: '#00000040' },
+    '&.Mui-focused fieldset': { borderColor: '#fff' },
+    '& input::placeholder': { color: '#fff', opacity: 1 },
+  },
+  '& .MuiInputLabel-root': { color: '#fff' },
+  '& .MuiInputLabel-root.Mui-focused': { color: '#fff' },
+};
+
 const RegisterForm: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -35,45 +47,20 @@ const RegisterForm: React.FC = () => {
   const [registerSuccess, setRegisterSuccess] = useState(false);
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RegisterFormData>({
-    resolver: yupResolver(schema),
-  });
+  const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({ resolver: yupResolver(schema) });
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
       setIsLoading(true);
       setRegisterError('');
-
-      const userData = {
-        username: data.username,
-        email: data.email,
-        nome_completo: data.nome_completo,
-        password: data.password,
-        nivel_acesso: 'VISITANTE',
-      };
-
+      const userData = { username: data.username, email: data.email, nome_completo: data.nome_completo, password: data.password, nivel_acesso: 'VISITANTE' };
       await authService.register(userData);
-
-      const loginResponse = await authService.login({
-        username: data.email,
-        password: data.password
-      });
+      const loginResponse = await authService.login({ username: data.email, password: data.password });
       login(loginResponse.access_token);
-
       setRegisterSuccess(true);
-      setTimeout(() => {
-        setShowQuestionnaire(true);
-      }, 2000);
-
+      setTimeout(() => setShowQuestionnaire(true), 2000);
     } catch (error: any) {
-      setRegisterError(
-        error.response?.data?.detail ||
-        'Erro ao criar conta. Tente novamente.'
-      );
+      setRegisterError(error.response?.data?.detail || 'Erro ao criar conta. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
@@ -81,12 +68,7 @@ const RegisterForm: React.FC = () => {
 
   if (registerSuccess && showQuestionnaire) {
     return (
-      <PostRegistrationQuestionnaire
-        onComplete={() => {
-          setShowQuestionnaire(false);
-          navigate('/login');
-        }}
-      />
+      <PostRegistrationQuestionnaire onComplete={() => { setShowQuestionnaire(false); navigate('/login'); }} />
     );
   }
 
@@ -96,24 +78,12 @@ const RegisterForm: React.FC = () => {
         <BackgroundSlideshow />
         <Container component="main" maxWidth="xs" sx={{ position: 'relative', zIndex: 1 }}>
           <Box sx={{ marginTop: 10 }}>
-          <Paper
-            elevation={0}
-            sx={{
-              p: 4,
-              textAlign: 'center',
-              backdropFilter: 'blur(10px) saturate(140%)',
-              WebkitBackdropFilter: 'blur(10px) saturate(140%)',
-              backgroundColor: 'rgba(255,255,255,0.35)',
-              borderRadius: 2,
-              border: '1px solid rgba(255,255,255,0.25)',
-              boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)'
-            }}
-          >
+            <Paper elevation={0} sx={{ p: 4, textAlign: 'center', color: '#fff', backdropFilter: 'blur(20px) brightness(200%)', WebkitBackdropFilter: 'blur(20px) brightness(200%)', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: '20px', border: '1px solid #ffffff' }}>
               <Typography variant="h5" gutterBottom>
                 Conta criada com sucesso!
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Aguarde, redirecionando para o questionÃ¡rio...
+              <Typography variant="body2" color="#e9ecef">
+                Aguarde, redirecionando para o questionário...
               </Typography>
             </Paper>
           </Box>
@@ -126,102 +96,21 @@ const RegisterForm: React.FC = () => {
     <Box sx={{ position: 'relative', minHeight: '100vh' }}>
       <BackgroundSlideshow />
       <Container component="main" maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
-        <Box
-          sx={{
-            marginTop: 6,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
-        >
-          <Paper
-            elevation={0}
-            sx={{
-              p: 4,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              width: '100%',
-              backdropFilter: 'blur(10px) saturate(140%)',
-              WebkitBackdropFilter: 'blur(10px) saturate(140%)',
-              backgroundColor: 'rgba(255,255,255,0.35)',
-              borderRadius: 2,
-              border: '1px solid rgba(255,255,255,0.25)',
-              boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)'
-            }}
-          >
+        <Box sx={{ marginTop: 6, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Paper elevation={0} sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', color: '#fff', backdropFilter: 'blur(20px) brightness(200%)', WebkitBackdropFilter: 'blur(20px) brightness(200%)', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: '20px', border: '1px solid #ffffff', boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)' }}>
             <Typography component="h1" variant="h4" sx={{ mb: 2, color: '#ffffff', textAlign: 'center' }}>
               Sistemas de Informações CGLIC
             </Typography>
-            
-            <Typography component="h2" variant="h5" sx={{ mb: 3, color: '#e9ecef', fontFamily: 'Segoe UI', fontWeight: 600, letterSpacing: 0.3 }}>
+            <Typography component="h2" variant="h5" sx={{ mb: 3, color: '#e9ecef', fontWeight: 700, letterSpacing: 0.3 }}>
               Criar Nova Conta
             </Typography>
 
             <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ width: '100%' }}>
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                id="username"
-                label="Username"
-                autoComplete="username"
-                autoFocus
-                {...register('username')}
-                error={!!errors.username}
-                helperText={errors.username?.message}
-              />
-
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                id="email"
-                label="Email"
-                type="email"
-                autoComplete="email"
-                {...register('email')}
-                error={!!errors.email}
-                helperText={errors.email?.message}
-              />
-
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                id="nome_completo"
-                label="Nome Completo"
-                autoComplete="name"
-                {...register('nome_completo')}
-                error={!!errors.nome_completo}
-                helperText={errors.nome_completo?.message}
-              />
-
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                label="Senha"
-                type="password"
-                id="password"
-                autoComplete="new-password"
-                {...register('password')}
-                error={!!errors.password}
-                helperText={errors.password?.message}
-              />
-
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                label="Confirmar Senha"
-                type="password"
-                id="confirmPassword"
-                autoComplete="new-password"
-                {...register('confirmPassword')}
-                error={!!errors.confirmPassword}
-                helperText={errors.confirmPassword?.message}
-              />
+              <TextField margin="normal" required fullWidth id="username" label="Username" autoComplete="username" autoFocus {...register('username')} error={!!errors.username} helperText={errors.username?.message} variant="outlined" sx={inputSx} />
+              <TextField margin="normal" required fullWidth id="email" label="Email" type="email" autoComplete="email" {...register('email')} error={!!errors.email} helperText={errors.email?.message} variant="outlined" sx={inputSx} />
+              <TextField margin="normal" required fullWidth id="nome_completo" label="Nome Completo" autoComplete="name" {...register('nome_completo')} error={!!errors.nome_completo} helperText={errors.nome_completo?.message} variant="outlined" sx={inputSx} />
+              <TextField margin="normal" required fullWidth label="Senha" type="password" id="password" autoComplete="new-password" {...register('password')} error={!!errors.password} helperText={errors.password?.message} variant="outlined" sx={inputSx} />
+              <TextField margin="normal" required fullWidth label="Confirmar Senha" type="password" id="confirmPassword" autoComplete="new-password" {...register('confirmPassword')} error={!!errors.confirmPassword} helperText={errors.confirmPassword?.message} variant="outlined" sx={inputSx} />
 
               {registerError && (
                 <Alert severity="error" sx={{ mt: 2 }}>
@@ -229,20 +118,14 @@ const RegisterForm: React.FC = () => {
                 </Alert>
               )}
 
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                sx={{ mt: 3, mb: 2, backgroundColor: '#ffffff', color: '#000000', '&:hover': { backgroundColor: '#f1f3f5' } }}
-                disabled={isLoading}
-              >
+              <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2, backgroundColor: '#ffffff', color: '#000000', '&:hover': { backgroundColor: '#f1f3f5' }, textTransform: 'uppercase', fontWeight: 'bold', fontSize: '14px', borderRadius: '8px' }} disabled={isLoading}>
                 {isLoading ? <CircularProgress size={24} /> : 'Criar Conta'}
               </Button>
 
               <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="body2">
-                  JÃ¡ possui uma conta?{' '}
-                  <Link to="/login" style={{ color: '#1976d2', textDecoration: 'none' }}>
+                <Typography variant="body2" sx={{ color: '#e9ecef' }}>
+                  Já possui uma conta?{' '}
+                  <Link to="/login" style={{ color: '#e9ecef', textDecoration: 'none', fontWeight: 600 }}>
                     Fazer Login
                   </Link>
                 </Typography>

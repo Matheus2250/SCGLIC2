@@ -56,11 +56,12 @@ const LoginFormNew: React.FC = () => {
               flexDirection: 'column',
               alignItems: 'center',
               width: '100%',
-              backdropFilter: 'blur(10px) saturate(140%)',
-              WebkitBackdropFilter: 'blur(10px) saturate(140%)',
-              backgroundColor: 'rgba(255,255,255,0.35)',
-              borderRadius: 2,
-              border: '1px solid rgba(255,255,255,0.25)',
+              color: '#fff',
+              backdropFilter: 'blur(20px) brightness(200%)',
+              WebkitBackdropFilter: 'blur(20px) brightness(200%)',
+              backgroundColor: 'rgba(255,255,255,0.08)',
+              borderRadius: '20px',
+              border: '1px solid #ffffff',
               boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)'
             }}
           >
@@ -68,7 +69,7 @@ const LoginFormNew: React.FC = () => {
               Sistemas de Informações CGLIC
             </Typography>
 
-            <Typography component="h2" variant="h5" sx={{ mb: 2, color: '#e9ecef', fontFamily: `'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif`, fontWeight: 600, letterSpacing: 0.3 }}>
+            <Typography component="h2" variant="h5" sx={{ mb: 2, color: '#e9ecef', fontWeight: 700, letterSpacing: 0.3 }}>
               Login
             </Typography>
 
@@ -85,6 +86,20 @@ const LoginFormNew: React.FC = () => {
                 {...register('email')}
                 error={!!errors.email}
                 helperText={errors.email?.message}
+                variant="outlined"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    color: '#fff',
+                    backgroundColor: 'transparent',
+                    '& fieldset': { borderColor: '#fff' },
+                    '&:hover fieldset': { borderColor: '#fff' },
+                    '&.Mui-focused': { backgroundColor: '#00000040' },
+                    '&.Mui-focused fieldset': { borderColor: '#fff' },
+                    '& input::placeholder': { color: '#fff', opacity: 1 },
+                  },
+                  '& .MuiInputLabel-root': { color: '#fff' },
+                  '& .MuiInputLabel-root.Mui-focused': { color: '#fff' },
+                }}
               />
               <TextField
                 margin="normal"
@@ -97,6 +112,20 @@ const LoginFormNew: React.FC = () => {
                 {...register('password')}
                 error={!!errors.password}
                 helperText={errors.password?.message}
+                variant="outlined"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    color: '#fff',
+                    backgroundColor: 'transparent',
+                    '& fieldset': { borderColor: '#fff' },
+                    '&:hover fieldset': { borderColor: '#fff' },
+                    '&.Mui-focused': { backgroundColor: '#00000040' },
+                    '&.Mui-focused fieldset': { borderColor: '#fff' },
+                    '& input::placeholder': { color: '#fff', opacity: 1 },
+                  },
+                  '& .MuiInputLabel-root': { color: '#fff' },
+                  '& .MuiInputLabel-root.Mui-focused': { color: '#fff' },
+                }}
               />
 
               {loginError && (
@@ -109,7 +138,17 @@ const LoginFormNew: React.FC = () => {
                 type="submit"
                 fullWidth
                 variant="contained"
-                sx={{ mt: 3, mb: 2, backgroundColor: '#ffffff', color: '#000000', '&:hover': { backgroundColor: '#f1f3f5' } }}
+                sx={{
+                  mt: 3,
+                  mb: 2,
+                  backgroundColor: '#ffffff',
+                  color: '#000000',
+                  '&:hover': { backgroundColor: '#f1f3f5' },
+                  textTransform: 'uppercase',
+                  fontWeight: 'bold',
+                  fontSize: '14px',
+                  borderRadius: '8px',
+                }}
                 disabled={isLoading}
               >
                 {isLoading ? <CircularProgress size={24} /> : 'Entrar'}
@@ -132,4 +171,3 @@ const LoginFormNew: React.FC = () => {
 };
 
 export default LoginFormNew;
-
