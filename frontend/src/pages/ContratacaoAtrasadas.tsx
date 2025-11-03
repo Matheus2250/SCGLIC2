@@ -1,13 +1,24 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿const exportColumns = [
+  { key: 'numero_contratacao', label: 'Nº Contratação' },
+  { key: 'titulo_contratacao', label: 'Título' },
+  { key: 'valor_total', label: 'Valor Total' },
+  { key: 'area_requisitante', label: 'Área Requisitante' },
+  { key: 'data_estimada_inicio', label: 'Data Início' },
+  { key: 'data_estimada_conclusao', label: 'Data Conclusão' },
+  {
+    key: 'status',
+    label: 'Status',
+    formatter: (value: any) => value || 'No Prazo',
+  },
+];
 
-
-  const exportColumns = [
-    { key: 'numero_contratacao', label: 'Nº Contratação' },
-    { key: 'titulo_contratacao', label: 'Título' },
-    { key: 'valor_total', label: 'Valor Total' },
-    { key: 'area_requisitante', label: 'Área Requisitante' },
-    { key: 'data_estimada_inicio', label: 'Data Início' },
-    { key: 'data_estimada_conclusao', label: 'Data Conclusão' },
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
   TableCell,
   TableContainer,
   TableHead,
@@ -18,7 +29,7 @@
   Tabs,
   Tab,
   CircularProgress,
-from '@mui/material';
+} from '@mui/material';
 import {
   Warning,
   Schedule,
@@ -32,7 +43,6 @@ import { ptBR } from 'date-fns/locale';
 import TableExport from '../components/common/TableExport';
 import StatCards from '../components/common/StatCards';
 import TableFilters, { FilterField, FilterValues } from '../components/common/TableFilters';
-
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
@@ -89,7 +99,7 @@ const ContratacaoAtrasadas: React.FC = () => {
   const filterFields: FilterField[] = [
     {
       key: 'area_requisitante',
-      label: 'Ãrea Requisitante',
+      label: 'Área Requisitante',
       type: 'select',
       options: getUniqueAreas()
     },
@@ -104,13 +114,13 @@ const ContratacaoAtrasadas: React.FC = () => {
     },
     {
       key: 'valorMin',
-      label: 'Valor MÃ­nimo',
+      label: 'Valor Mínimo',
       type: 'number',
       placeholder: '0,00'
     },
     {
       key: 'valorMax',
-      label: 'Valor MÃ¡ximo',
+      label: 'Valor Máximo',
       type: 'number',
       placeholder: '0,00'
     },
@@ -127,22 +137,32 @@ const ContratacaoAtrasadas: React.FC = () => {
   ];
 
   // Export columns configuration
-  const exportColumns = [
+  const exportColumnsPT = [
     { key: 'numero_contratacao', label: 'Nº Contratação' },
     { key: 'titulo_contratacao', label: 'Título' },
     { key: 'valor_total', label: 'Valor Total' },
-    { key: 'area_requisitante', label: 'Ãrea Requisitante' },
+    { key: 'area_requisitante', label: 'Área Requisitante' },
     { key: 'data_estimada_inicio', label: 'Data Início' },
     { key: 'data_estimada_conclusao', label: 'Data Conclusão' },
     {
       key: 'status',
       label: 'Status',
-      formatter: (value: any) => {
-        // Status serÃ¡ definido durante a exportaÃ§Ã£o
-        return value || 'No Prazo';
-      }
+      formatter: (value: any) => value || 'No Prazo',
     },
   ];
+/* const exportColumns = [
+  { key: 'numero_contratacao', label: 'Nº Contratação' },
+  { key: 'titulo_contratacao', label: 'Título' },
+  { key: 'valor_total', label: 'Valor Total' },
+  { key: 'area_requisitante', label: 'Área Requisitante' },
+  { key: 'data_estimada_inicio', label: 'Data Início' },
+  { key: 'data_estimada_conclusao', label: 'Data Conclusão' },
+  {
+    key: 'status',
+    label: 'Status',
+    formatter: (value: any) => value || 'No Prazo',
+  },
+];
 
   useEffect(() => {
     fetchPCAs();
@@ -152,7 +172,7 @@ const ContratacaoAtrasadas: React.FC = () => {
     try {
       setLoading(true);
 
-      // Buscar contrataÃ§Ãµes especÃ­ficas usando endpoints SQL
+      // Buscar contratações específicas usando endpoints SQL
       const [atrasadasData, vencidasData] = await Promise.all([
         pcaService.getAtrasadas(),
         pcaService.getVencidas()
@@ -163,7 +183,7 @@ const ContratacaoAtrasadas: React.FC = () => {
       setVencidas(Array.isArray(vencidasData) ? vencidasData : []);
 
     } catch (error) {
-      toast.error('Erro ao carregar contrataÃ§Ãµes');
+      toast.error('Erro ao carregar contratações');
       console.error(error);
       setAtrasadas([]);
       setVencidas([]);
@@ -297,7 +317,7 @@ const ContratacaoAtrasadas: React.FC = () => {
   );
 
   const getStatusChip = (pca: PCA) => {
-    // Determinar status baseado na lista onde a contrataÃ§Ã£o aparece
+    // Determinar status baseado na lista onde a contratação aparece
     const isVencida = vencidas.some(v => v.id === pca.id);
     const isAtrasada = atrasadas.some(a => a.id === pca.id);
 
@@ -351,7 +371,7 @@ const ContratacaoAtrasadas: React.FC = () => {
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress />
         <Typography variant="h6" sx={{ ml: 2 }}>
-          Carregando contrataÃ§Ãµes...
+          Carregando contratações...
         </Typography>
       </Box>
     );
@@ -361,13 +381,13 @@ const ContratacaoAtrasadas: React.FC = () => {
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
         <Typography variant="h4">
-          ContrataÃ§Ãµes Atrasadas e Vencidas
+          Contratações Atrasadas e Vencidas
         </Typography>
         <TableExport
           data={filteredPCAs}
-          columns={exportColumns}
+          columns={exportColumnsPT}
           filename={`contratacoes_${tabValue === 0 ? 'atrasadas_vencidas' : tabValue === 1 ? 'atrasadas' : 'vencidas'}`}
-          title={`RelatÃ³rio de ContrataÃ§Ãµes ${tabValue === 0 ? 'Atrasadas e Vencidas' : tabValue === 1 ? 'Atrasadas' : 'Vencidas'}`}
+          title={`Relatório de Contratações ${tabValue === 0 ? 'Atrasadas e Vencidas' : tabValue === 1 ? 'Atrasadas' : 'Vencidas'}`}
         />
       </Box>
 
@@ -382,11 +402,11 @@ const ContratacaoAtrasadas: React.FC = () => {
 
       {total === 0 ? (
         <Alert severity="success" sx={{ mb: 3 }}>
-          ParabÃ©ns! NÃ£o hÃ¡ contrataÃ§Ãµes atrasadas ou vencidas no momento.
+          Parabéns! Não há contratações atrasadas ou vencidas no momento.
         </Alert>
       ) : (
         <Alert severity="warning" sx={{ mb: 3 }}>
-          Foram encontradas {total} contrataÃ§Ã£o(Ãµes) que requerem atenÃ§Ã£o:
+          Foram encontradas {total} contratação(ões) que requerem atenção:
           {countAtrasadas > 0 && ` ${countAtrasadas} atrasada(s)`}
           {countAtrasadas > 0 && countVencidas > 0 && ' e'}
           {countVencidas > 0 && ` ${countVencidas} vencida(s)`}.
@@ -398,7 +418,7 @@ const ContratacaoAtrasadas: React.FC = () => {
         values={filters}
         onChange={handleFilterChange}
         onClear={handleClearFilters}
-        searchPlaceholder="Pesquisar por nÃºmero, tÃ­tulo ou Ã¡rea..."
+        searchPlaceholder="Pesquisar por número, título ou área..."
       />
 
       <Paper>
@@ -430,9 +450,9 @@ const ContratacaoAtrasadas: React.FC = () => {
           {filteredPCAs.length === 0 ? (
             <Box textAlign="center" py={4}>
               <Typography color="textSecondary">
-                {tabValue === 0 && 'Nenhuma contrataÃ§Ã£o atrasada ou vencida encontrada.'}
-                {tabValue === 1 && 'Nenhuma contrataÃ§Ã£o atrasada encontrada.'}
-                {tabValue === 2 && 'Nenhuma contrataÃ§Ã£o vencida encontrada.'}
+                {tabValue === 0 && 'Nenhuma contratação atrasada ou vencida encontrada.'}
+                {tabValue === 1 && 'Nenhuma contratação atrasada encontrada.'}
+                {tabValue === 2 && 'Nenhuma contratação vencida encontrada.'}
               </Typography>
             </Box>
           ) : (
@@ -442,12 +462,12 @@ const ContratacaoAtrasadas: React.FC = () => {
                   <TableHead sx={{ '& .MuiTableCell-head': { fontWeight: 700 } }}>
                     <TableRow>
                       <TableCell>Status</TableCell>
-                      <TableCell>No. Contratacao</TableCell>
-                      <TableCell>Titulo</TableCell>
+                      <TableCell>Nº Contratação</TableCell>
+                      <TableCell>Título</TableCell>
                       <TableCell>Valor Total</TableCell>
-                      <TableCell>Area Requisitante</TableCell>
-                      <TableCell>Data Inicio</TableCell>
-                      <TableCell>Data Conclusao</TableCell>
+                      <TableCell>Área Requisitante</TableCell>
+                      <TableCell>Data Início</TableCell>
+                      <TableCell>Data Conclusão</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -500,7 +520,7 @@ const ContratacaoAtrasadas: React.FC = () => {
                 page={page}
                 onPageChange={handleChangePage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
-                labelRowsPerPage="Linhas por pÃ¡gina:"
+                labelRowsPerPage="Linhas por página:"
                 labelDisplayedRows={({ from, to, count }) =>
                   `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
                 }
@@ -514,6 +534,11 @@ const ContratacaoAtrasadas: React.FC = () => {
 };
 
 export default ContratacaoAtrasadas;
+
+
+
+
+
 
 
 

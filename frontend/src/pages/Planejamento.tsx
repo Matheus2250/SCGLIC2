@@ -63,7 +63,7 @@ const Planejamento: React.FC = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmTargetId, setConfirmTargetId] = useState<string | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const [confirmTitle, setConfirmTitle] = useState('Confirmar exclusÃ£o');
+  const [confirmTitle, setConfirmTitle] = useState('Confirmar exclusão');
   const [confirmDescription, setConfirmDescription] = useState('Tem certeza que deseja excluir esta PCA?');
   
   // Filter states
@@ -96,7 +96,7 @@ const Planejamento: React.FC = () => {
   const filterFields: FilterField[] = [
     {
       key: 'area_requisitante',
-      label: 'Ãrea Requisitante',
+      label: 'Área Requisitante',
       type: 'select',
       options: getUniqueAreas()
     },
@@ -111,19 +111,19 @@ const Planejamento: React.FC = () => {
     },
     {
       key: 'valorMin',
-      label: 'Valor MÃ­nimo',
+      label: 'Valor Mínimo',
       type: 'number',
       placeholder: '0,00'
     },
     {
       key: 'valorMax',
-      label: 'Valor MÃ¡ximo',
+      label: 'Valor Máximo',
       type: 'number',
       placeholder: '0,00'
     },
     {
       key: 'dataInicio',
-      label: 'Data InÃ­cio',
+      label: 'Data Início',
       type: 'date'
     },
     {
@@ -135,11 +135,11 @@ const Planejamento: React.FC = () => {
 
   // Export columns configuration
   const exportColumns = [
-    { key: 'numero_contratacao', label: 'NÂº ContrataÃ§Ã£o' },
-    { key: 'titulo_contratacao', label: 'TÃ­tulo' },
+    { key: 'numero_contratacao', label: 'Nº Contratação' },
+    { key: 'titulo_contratacao', label: 'Título' },
     { key: 'valor_total', label: 'Valor Total' },
-    { key: 'area_requisitante', label: 'Ãrea Requisitante' },
-    { key: 'data_estimada_conclusao', label: 'Data ConclusÃ£o' },
+    { key: 'area_requisitante', label: 'Área Requisitante' },
+    { key: 'data_estimada_conclusao', label: 'Data Conclusão' },
     { 
       key: 'atrasada', 
       label: 'Status',
@@ -195,7 +195,7 @@ const Planejamento: React.FC = () => {
   const handleDelete = async (id: string) => {
     setConfirmTargetId(id);
     setConfirmTitle('Excluir PCA');
-    setConfirmDescription('Tem certeza que deseja excluir esta PCA? Essa aÃ§Ã£o nÃ£o poderÃ¡ ser desfeita.');
+    setConfirmDescription('Tem certeza que deseja excluir esta PCA? Essa ação não poderá ser desfeita.');
     setConfirmOpen(true);
   };
 
@@ -204,7 +204,7 @@ const Planejamento: React.FC = () => {
     setConfirmLoading(true);
     try {
       await pcaService.delete(confirmTargetId);
-      toast.success('PCA excluÃ­da com sucesso!');
+      toast.success('PCA excluída com sucesso!');
       fetchPCAs();
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Erro ao excluir PCA');
@@ -376,7 +376,7 @@ const Planejamento: React.FC = () => {
             data={filteredPCAs}
             columns={exportColumns}
             filename={`planejamento_pca_${selectedYear}`}
-            title={`RelatÃ³rio de Planejamento - PCA ${selectedYear}`}
+            title={`Relatório de Planejamento - PCA ${selectedYear}`}
           />
           <Button
             variant="outlined"
@@ -402,18 +402,18 @@ const Planejamento: React.FC = () => {
         values={filters}
         onChange={handleFilterChange}
         onClear={handleClearFilters}
-        searchPlaceholder="Pesquisar por nÃºmero, tÃ­tulo ou Ã¡rea..."
+        searchPlaceholder="Pesquisar por número, título ou área..."
       />
 
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>NÂº ContrataÃ§Ã£o</TableCell>
-              <TableCell>TÃ­tulo</TableCell>
+              <TableCell>Nº Contratação</TableCell>
+              <TableCell>Título</TableCell>
               <TableCell>Valor Total</TableCell>
-              <TableCell>Ãrea Requisitante</TableCell>
-              <TableCell align="center">AÃ§Ãµes</TableCell>
+              <TableCell>Área Requisitante</TableCell>
+              <TableCell align="center">Ações</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -444,7 +444,7 @@ const Planejamento: React.FC = () => {
               <TableRow>
                 <TableCell colSpan={5} align="center">
                   <Typography color="textSecondary">
-                    {loading ? 'Carregando...' : 'Nenhuma PCA encontrada. Importe um arquivo Excel para comeÃ§ar.'}
+                    {loading ? 'Carregando...' : 'Nenhuma PCA encontrada. Importe um arquivo Excel para começar.'}
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -459,7 +459,7 @@ const Planejamento: React.FC = () => {
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Linhas por pÃ¡gina:"
+          labelRowsPerPage="Linhas por página:"
           labelDisplayedRows={({ from, to, count }) =>
             `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
           }
@@ -471,7 +471,7 @@ const Planejamento: React.FC = () => {
         <DialogTitle>Importar PCAs</DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2 }}>
-            {/* SeleÃ§Ã£o do tipo de arquivo */}
+            {/* Seleção do tipo de arquivo */}
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
               Tipo de arquivo:
             </Typography>
@@ -496,7 +496,7 @@ const Planejamento: React.FC = () => {
 
             <Divider sx={{ my: 2 }} />
 
-            {/* InformaÃ§Ãµes sobre o tipo selecionado */}
+            {/* Informações sobre o tipo selecionado */}
             {importType === 'excel' ? (
               <Alert severity="info" sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
@@ -504,16 +504,16 @@ const Planejamento: React.FC = () => {
                 </Typography>
                 <Typography variant="body2" component="div">
                   O arquivo deve conter exatamente estas colunas na primeira linha:
-                  <br />â€¢ <strong>NÃºmero da ContrataÃ§Ã£o</strong> - Ex: 1/2025, 2/2025
-                  <br />â€¢ <strong>Status da ContrataÃ§Ã£o</strong> - Ex: Planejada, Em andamento
-                  <br />â€¢ <strong>SituaÃ§Ã£o da ExecuÃ§Ã£o</strong> - Ex: NÃ£o iniciada, Em execuÃ§Ã£o
-                  <br />â€¢ <strong>TÃ­tulo da ContrataÃ§Ã£o</strong> - DescriÃ§Ã£o completa
-                  <br />â€¢ <strong>Categoria da ContrataÃ§Ã£o</strong> - Ex: ServiÃ§os, Obras
+                  <br />• <strong>Número da Contratação</strong> - Ex: 1/2025, 2/2025
+                  <br />• <strong>Status da Contratação</strong> - Ex: Planejada, Em andamento
+                  <br />• <strong>Situação da Execução</strong> - Ex: Não iniciada, Em execução
+                  <br />• <strong>Título da Contratação</strong> - Descrição completa
+                  <br />• <strong>Categoria da Contratação</strong> - Ex: Serviços, Obras
                   <br />â€¢ <strong>Valor Total</strong> - Formato: 1.000.000,00 ou 1000000.00
-                  <br />â€¢ <strong>Ãrea Requisitante</strong> - Setor responsÃ¡vel
-                  <br />â€¢ <strong>NÃºmero DFD</strong> - NÃºmero do documento
-                  <br />â€¢ <strong>Data Estimada de InÃ­cio</strong> - Formato: DD/MM/AAAA
-                  <br />â€¢ <strong>Data Estimada de ConclusÃ£o</strong> - Formato: DD/MM/AAAA
+                  <br />• <strong>Área Requisitante</strong> - Setor responsável
+                  <br />• <strong>Número DFD</strong> - Número do documento
+                  <br />• <strong>Data Estimada de Início</strong> - Formato: DD/MM/AAAA
+                  <br />• <strong>Data Estimada de Conclusão</strong> - Formato: DD/MM/AAAA
                   <br /><br />
                   <em>Dica: Use o arquivo CSV original e converta para Excel mantendo estes nomes de colunas.</em>
                 </Typography>
@@ -521,19 +521,19 @@ const Planejamento: React.FC = () => {
             ) : (
               <Alert severity="info" sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
-                  Arquivo CSV Original do PCA - Sem FormataÃ§Ã£o NecessÃ¡ria:
+                  Arquivo CSV Original do PCA - Sem Formatação Necessária:
                 </Typography>
                 <Typography variant="body2">
-                  <strong>Simplesmente faÃ§a o upload do arquivo CSV original baixado do sistema PCA!</strong>
+                  <strong>Simplesmente faça o upload do arquivo CSV original baixado do sistema PCA!</strong>
                   <br /><br />
                   <strong>O que o sistema faz automaticamente:</strong>
                   <br />â€¢ Detecta o encoding correto (Windows-1252, UTF-8, etc.)
-                  <br />â€¢ Mapeia as colunas automaticamente por posiÃ§Ã£o
+                  <br />• Mapeia as colunas automaticamente por posição
                   <br />â€¢ Limpa caracteres especiais corrompidos
-                  <br />â€¢ Formata datas e valores monetÃ¡rios
+                  <br />• Formata datas e valores monetários
                   <br />â€¢ Evita duplicatas (atualiza registros existentes)
                   <br /><br />
-                  <em>NÃ£o precisa converter, formatar ou alterar o arquivo CSV original!</em>
+                  <em>Não precisa converter, formatar ou alterar o arquivo CSV original!</em>
                 </Typography>
               </Alert>
             )}
