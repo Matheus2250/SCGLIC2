@@ -162,7 +162,7 @@ const ContratacaoAtrasadas: React.FC = () => {
     label: 'Status',
     formatter: (value: any) => value || 'No Prazo',
   },
-];
+]; */
 
   useEffect(() => {
     fetchPCAs();
@@ -533,4 +533,4 @@ const ContratacaoAtrasadas: React.FC = () => {
   );
 };
 
-export default ContratacaoAtrasadas;/
+export default ContratacaoAtrasadas;

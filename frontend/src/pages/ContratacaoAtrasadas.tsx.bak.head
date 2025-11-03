@@ -1,0 +1,5 @@
+const exportColumns = [
+  { key: 'numero_contratacao', label: 'Nº Contratação' },
+  { key: 'titulo_contratacao', label: 'Título' },
+  { key: 'valor_total', label: 'Valor Total' },
+  { key: 'area_requisitante', label:
