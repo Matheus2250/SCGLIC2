@@ -26,11 +26,27 @@ import GerenciarUsuarios from './pages/GerenciarUsuarios';
 
 const theme = createTheme({
   palette: {
-    primary: {
-      main: '#004085',
+    primary: { main: '#004085' },
+    secondary: { main: '#28a745' },
+  },
+  components: {
+    MuiTableCell: {
+      styleOverrides: {
+        head: {
+          fontWeight: 700,
+        },
+      },
     },
-    secondary: {
-      main: '#28a745',
+    MuiListItemButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          marginInline: 6,
+          '&.Mui-selected': {
+            backgroundColor: 'rgba(0, 64, 133, 0.12)',
+          },
+        },
+      },
     },
   },
 });
