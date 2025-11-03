@@ -18,7 +18,7 @@
   Tabs,
   Tab,
   CircularProgress,
-} from '@mui/material';
+from '@mui/material';
 import {
   Warning,
   Schedule,
