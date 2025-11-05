@@ -5,6 +5,7 @@ import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, LineChart, Lin
 import { Responsive, WidthProvider, Layouts, Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import { useAuth } from '../../store/auth.context';
 
 export type ChartType = 'pie' | 'bar' | 'line';
 
@@ -81,8 +82,10 @@ const DashboardBuilder: React.FC<DashboardBuilderProps> = ({ storageKey, dataset
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<WidgetConfig | null>(null);
 
-  const LAYOUT_KEY = `${storageKey}:layouts`;
-  const WIDGETS_KEY = `${storageKey}:widgets`;
+  const { user } = useAuth();
+  const KEY_BASE = `${storageKey}:u:${user?.id || 'anon'}`;
+  const LAYOUT_KEY = `${KEY_BASE}:layouts`;
+  const WIDGETS_KEY = `${KEY_BASE}:widgets`;
 
   useEffect(() => {
     try {
@@ -158,9 +161,9 @@ const DashboardBuilder: React.FC<DashboardBuilderProps> = ({ storageKey, dataset
             <Paper sx={{ p:2, height: '100%' }}>
               <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb:1 }}>
                 <Typography variant="subtitle1">{w.title}</Typography>
-                <Box>
-                  <Tooltip title="Editar"><IconButton size="small" onClick={() => handleEdit(w)}><Edit fontSize="small" /></IconButton></Tooltip>
-                  <Tooltip title="Excluir"><IconButton size="small" onClick={() => handleDelete(w.id)}><Delete fontSize="small" /></IconButton></Tooltip>
+                <Box sx={{ position: 'relative', zIndex: 2 }}>
+                  <Tooltip title="Editar"><IconButton size="small" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); handleEdit(w); }}><Edit fontSize="small" /></IconButton></Tooltip>
+                  <Tooltip title="Excluir"><IconButton size="small" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); handleDelete(w.id); }}><Delete fontSize="small" /></IconButton></Tooltip>
                 </Box>
               </Box>
               <Box sx={{ height: 320 }}>

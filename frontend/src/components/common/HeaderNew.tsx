@@ -55,7 +55,7 @@ const Header: React.FC<HeaderProps> = ({ onSidebarToggle }) => {
           Sistemas de Informações CGLIC
         </Typography>
 
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ display: 'none' }}>
           <Typography variant="body2" sx={{ mr: 2 }}>
             {user?.nome_completo} ({user?.nivel_acesso})
           </Typography>

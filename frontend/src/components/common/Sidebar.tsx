@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Collapse, Badge, Tooltip, Box, Avatar, Typography, Divider, Menu, MenuItem, ListItemAvatar } from '@mui/material';
-import { Dashboard, Assignment, CheckCircle, Gavel, Assessment, ExpandLess, ExpandMore, ListAlt, Warning, BarChart, AdminPanelSettings, People, ManageAccounts, AccountCircle } from '@mui/icons-material';
+import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Collapse, Badge, Tooltip, Box, Avatar, Typography, Divider } from '@mui/material';
+import { Dashboard, Assignment, CheckCircle, Gavel, Assessment, ExpandLess, ExpandMore, ListAlt, Warning, BarChart, AdminPanelSettings, People, ManageAccounts, Logout } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../store/auth.context';
 import { usePendingRequests } from '../../hooks/usePendingRequests';
@@ -74,7 +74,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
   const { user, logout } = useAuth();
   const { pendingCount } = usePendingRequests();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const [profileAnchor, setProfileAnchor] = useState<null | HTMLElement>(null);
+  
 
   const toAbsolute = (url?: string | null) => {
     if (!url) return undefined;
@@ -101,12 +101,14 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
           boxSizing: 'border-box',
           transition: (theme) => theme.transitions.create('width', { easing: theme.transitions.easing.sharp, duration: theme.transitions.duration.enteringScreen }),
           overflowX: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
         },
       }}
     >
       <Toolbar />
       {/* Perfil no topo */}
-      <Box sx={{ px: open ? 2 : 0.5, py: 2, display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }} onClick={(e) => setProfileAnchor(e.currentTarget)}>
+      <Box sx={{ px: open ? 2 : 0.5, py: 2, display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }} onClick={() => navigate('/perfil')}>
         <Avatar src={toAbsolute(user?.avatar_url)} sx={{ width: 40, height: 40 }} />
         {open && (
           <Box sx={{ overflow: 'hidden' }}>
@@ -115,24 +117,15 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
           </Box>
         )}
       </Box>
-      <Menu
-        anchorEl={profileAnchor}
-        open={Boolean(profileAnchor)}
-        onClose={() => setProfileAnchor(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-      >
-        <MenuItem onClick={() => { setProfileAnchor(null); navigate('/perfil'); }}>Meu Perfil</MenuItem>
-        <MenuItem onClick={() => { setProfileAnchor(null); logout(); navigate('/login'); }}>Sair</MenuItem>
-      </Menu>
       <Divider sx={{ mb: 1 }} />
+      <Box sx={{ flex: 1, overflowY: 'auto' }}>
       <List>
         {filteredMenuItems.map((item) => (
           <React.Fragment key={item.text}>
             <ListItem disablePadding>
               <Tooltip title={!open ? item.text : ''} placement="right">
                 <ListItemButton
-                  selected={item.path ? location.pathname === item.path : false}
+                  selected={item.path ? location.pathname.startsWith(item.path) : false}
                   onClick={() => {
                     if (item.subItems) {
                       handleToggleExpand(item.text);
@@ -184,8 +177,33 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
           </React.Fragment>
         ))}
       </List>
+      </Box>
+      <Divider />
+      <List>
+        <ListItem disablePadding>
+          <Tooltip title={!open ? 'Sair' : ''} placement='right'>
+            <ListItemButton onClick={() => { logout(); navigate('/login'); }}>
+              <ListItemIcon sx={{ minWidth: open ? 56 : 'auto', mr: open ? 3 : 'auto' }}>
+                <Logout />
+              </ListItemIcon>
+              {open && <ListItemText primary='Sair' />}
+            </ListItemButton>
+          </Tooltip>
+        </ListItem>
+      </List>
     </Drawer>
   );
 };
 
 export default Sidebar;
+
+
+
+
+
+
+
+
+
+
+

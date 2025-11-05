@@ -68,13 +68,12 @@ export interface Licitacao {
   created_at: string;
   updated_at?: string;
   created_by: string;
-}
-
-export interface AuthContextType {
+}\r\n\r\nexport interface AuthContextType {
   user: Usuario | null;
   token: string | null;
   login: (emailOrToken: string, password?: string) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   isLoading: boolean;
 }
 

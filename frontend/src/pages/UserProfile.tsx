@@ -15,7 +15,7 @@ const levels = [
 ];
 
 const UserProfile: React.FC = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
@@ -50,7 +50,7 @@ const UserProfile: React.FC = () => {
       setSavingProfile(true);
       // Tenta endpoint de perfil; se falhar com 404/405, tenta admin PUT como fallback
       try {
-        await profileService.updateMe({ nome_completo: nome.trim(), email: email.trim() });
+        await profileService.updateMe({ nome_completo: nome.trim(), email: email.trim() }); await refreshUser();
       } catch (err: any) {
         if (user?.id) {
           await userService.updateUser(user.id, { nome_completo: nome.trim(), email: email.trim() });
@@ -108,7 +108,7 @@ const UserProfile: React.FC = () => {
     }
     try {
       setUploadingAvatar(true);
-      const res = await profileService.uploadAvatar(avatarFile);
+      const res = await profileService.uploadAvatar(avatarFile); await refreshUser();
       if (res?.avatar_url) {
         const abs = toAbsolute(res.avatar_url);
         setAvatarPreview(abs || null);

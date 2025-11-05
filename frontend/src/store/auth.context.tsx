@@ -86,12 +86,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     toast.info('Logout realizado com sucesso!');
   };
 
+  const refreshUser = async () => {
+    try {
+      const userData = await authService.getMe();
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+    } catch (error) {
+      console.error('Erro ao atualizar dados do usuário:', error);
+    }
+  };
+
   const value: AuthContextType = {
     user,
     token,
     login,
     logout,
     isLoading,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
