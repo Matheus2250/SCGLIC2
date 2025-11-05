@@ -85,6 +85,7 @@ function App() {
                         bgcolor: 'background.default',
                         p: 3,
                         mt: 8, // Account for AppBar height
+                        overflowX: 'hidden',
                         transition: (theme) => theme.transitions.create(['margin'], {
                           easing: theme.transitions.easing.sharp,
                           duration: theme.transitions.duration.leavingScreen,

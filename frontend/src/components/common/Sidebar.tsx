@@ -133,9 +133,9 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
                       navigate(item.path);
                     }
                   }}
-                  sx={{ pr: open ? 1 : 0, '& .MuiListItemText-root': { mr: 2 } }}
+                  sx={{ px: 1.25, mx: 0 }}
                 >
-                  <ListItemIcon sx={{ minWidth: open ? 56 : 'auto', mr: open ? 3 : 'auto' }}>
+                  <ListItemIcon sx={{ minWidth: 36, mr: open ? 1.5 : 0 }}>
                     {item.text.startsWith('Admin') && pendingCount > 0 ? (
                       <Badge badgeContent={pendingCount} color="error">{item.icon}</Badge>
                     ) : (
@@ -143,9 +143,13 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
                     )}
                   </ListItemIcon>
                   {open && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
-                      <ListItemText primary={item.text} />
-                      {item.subItems && (expandedItems.includes(item.text) ? <ExpandLess /> : <ExpandMore />)}
+                    <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                      <ListItemText primary={item.text} primaryTypographyProps={{ noWrap: true }} />
+                      {item.subItems && (
+                        <Box sx={{ width: 20, ml: 1, display: 'flex', justifyContent: 'center' }}>
+                          {expandedItems.includes(item.text) ? <ExpandLess /> : <ExpandMore />}
+                        </Box>
+                      )}
                     </Box>
                   )}
                 </ListItemButton>
@@ -158,8 +162,8 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
                   {item.subItems.map((subItem) => (
                     <ListItem key={subItem.text} disablePadding>
                       <Tooltip title={!open ? subItem.text : ''} placement="right">
-                        <ListItemButton sx={{ pl: open ? 4 : 2 }} selected={location.pathname === subItem.path} onClick={() => navigate(subItem.path)}>
-                          <ListItemIcon sx={{ minWidth: open ? 56 : 'auto', mr: open ? 3 : 'auto' }}>
+                        <ListItemButton sx={{ pl: open ? 3.5 : 2, mx: 0 }} selected={location.pathname === subItem.path} onClick={() => navigate(subItem.path)}>
+                          <ListItemIcon sx={{ minWidth: 32, mr: open ? 1.25 : 0 }}>
                             {subItem.text.includes('Requisição') && pendingCount > 0 ? (
                               <Badge badgeContent={pendingCount} color="error">{subItem.icon}</Badge>
                             ) : (
