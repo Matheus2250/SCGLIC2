@@ -15,7 +15,7 @@ import RegisterForm from './components/auth/RegisterForm';
 import Dashboard from './pages/Dashboard';
 import Planejamento from './pages/Planejamento';
 import ContratacaoAtrasadas from './pages/ContratacaoAtrasadas';
-import EstatisticasPlanejamento from './pages/EstatisticasPlanejamento';
+import EstatisticasPlanejamento from './pages/EstatisticasPlanejamentoNew';
 import Qualificacao from './pages/Qualificacao';
 import EstatisticasQualificacao from './pages/EstatisticasQualificacao';
 import Licitacao from './pages/Licitacao';
@@ -167,3 +167,4 @@ function App() {
 }
 
 export default App;
+
