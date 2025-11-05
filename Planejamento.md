@@ -1,18 +1,18 @@
 # Plano de Melhorias do Sistema
  
 ## Correções
-- [ ] Corrigir o erro do PCA não aparecendo em relatórios  
+- [X] Corrigir o erro do PCA não aparecendo em relatórios  
 - [ ] Corrigir o problema que impede de deletar usuários  
-- [ ] Corrigir os detalhes na página de contratações atrasadas (tabbers não refletem a filtragem)
+- [X] Corrigir os detalhes na página de contratações atrasadas (tabbers não refletem a filtragem)
  
 ---
  
 ## Funcionalidades e Ajustes
-- [ ] Substituir o `confirm()` do navegador por um confirm do sistema personalizado  
-- [ ] Adicionar possibilidade de mudar a senha do usuário  
+- [X] Substituir o `confirm()` do navegador por um confirm do sistema personalizado  
+- [X] Adicionar possibilidade de mudar a senha do usuário  
 - [ ] Criar relatórios pré-prontos para servir à SAA  
 - [ ] Adicionar funções na página de estatística para personalização (quais gráficos exibir, tamanho, etc)  
-- [ ] Criar página de usuário com:
+- [X] Criar página de usuário com:
   - Alteração de nome, senha e e-mail  
   - Requisição de alteração de cargo  
   - Adição de foto de perfil  
@@ -20,12 +20,12 @@
 ---
  
 ## Interface e Navegação
-- [ ] Melhorar a página inicial para guiar melhor o usuário  
-- [ ] Melhorar visualização nas tabelas (títulos em negrito)  
-- [ ] Adicionar stat pads nas páginas para refletir os filtros e melhorar a visualização  
-- [ ] Melhorar a visualização da barra lateral (clareza e navegação)  
-- [ ] Adicionar mais cores e ícones coloridos para facilitar a identificação  
-- [ ] Melhorar a tela de login e registro:
+- [X] Melhorar a página inicial para guiar melhor o usuário  
+- [X] Melhorar visualização nas tabelas (títulos em negrito)  
+- [X] Adicionar stat pads nas páginas para refletir os filtros e melhorar a visualização  
+- [X] Melhorar a visualização da barra lateral (clareza e navegação)  
+- [X] Adicionar mais cores e ícones coloridos para facilitar a identificação  
+- [X] Melhorar a tela de login e registro:
   - Adicionar logos da CGLIC e SAA  
   - Adicionar fundo personalizado  
  

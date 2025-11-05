@@ -23,7 +23,7 @@ services:
     env: node
     region: oregon
     plan: free
-    buildCommand: cd frontend && npm ci && npm run build
+    buildCommand: cd frontend && npm install && npm run build
     startCommand: cd frontend && npx serve -s dist -l $PORT
     envVars:
       - key: VITE_API_URL
