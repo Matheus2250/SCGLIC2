@@ -12,8 +12,9 @@ def run_migrations():
         print("Iniciando migrations...")
 
         # Rodar upgrade do alembic
+        # Use "heads" to suportar múltiplos ramos sem exigir merge manual
         result = subprocess.run([
-            "alembic", "upgrade", "head"
+            "alembic", "upgrade", "heads"
         ], capture_output=True, text=True, cwd=os.getcwd())
 
         if result.returncode == 0:
@@ -22,6 +23,8 @@ def run_migrations():
         else:
             print("Erro nas migrations:")
             print(result.stderr)
+            # Tentar novamente exibindo os heads existentes para diagnóstico
+            subprocess.run(["alembic", "heads"], cwd=os.getcwd())
             sys.exit(1)
 
     except Exception as e:
