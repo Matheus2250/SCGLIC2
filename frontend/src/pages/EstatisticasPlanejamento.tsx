@@ -17,6 +17,7 @@ import {
 import { pcaService } from '../services/pca.service';
 import { DashboardStats } from '../types';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import DashboardBuilder from '../components/common/DashboardBuilder';
 
 const EstatisticasPlanejamento: React.FC = () => {
   const [pcaStats, setPcaStats] = useState<DashboardStats | null>(null);
@@ -38,8 +39,8 @@ const EstatisticasPlanejamento: React.FC = () => {
         setPcaStats(pcaData && typeof pcaData === 'object' ? pcaData : null);
         setPcaCharts(pcaChartsData && typeof pcaChartsData === 'object' ? pcaChartsData : null);
       } catch (err) {
-        console.error('Erro ao carregar estatísticas do planejamento:', err);
-        setError('Erro ao carregar estatísticas do planejamento');
+        console.error('Erro ao carregar Estat�sticas do Planejamento:', err);
+        setError('Erro ao carregar Estat�sticas do Planejamento');
         setPcaStats(null);
         setPcaCharts(null);
       } finally {
@@ -64,6 +65,22 @@ const EstatisticasPlanejamento: React.FC = () => {
     { name: 'Vencidas', value: pcaStats.pcas_vencidas, color: '#dc3545' },
   ] : [];
 
+  const datasets: any = {
+    'Status (pizza)': pieData,
+    'Situação da Execução': pcaCharts?.situacao_execucao || [],
+    'Categorias': pcaCharts?.categoria || [],
+    'Valores por Categoria': pcaCharts?.valor_por_categoria || [],
+    'Status da Contratação': pcaCharts?.status_contratacao || [],
+  };
+
+  const defaults = [
+    { id: 'w1', title: 'Status das Contrata��es', type: 'pie' as const, dataset: 'Status (pizza)', md: 6 },
+    { id: 'w2', title: 'Situação da Execução', type: 'bar' as const, dataset: 'Situação da Execução', xKey: 'name', yKey: 'value', color: '#004085', md: 6 },
+    { id: 'w3', title: 'Contrata��es por Categoria', type: 'bar' as const, dataset: 'Categorias', xKey: 'name', yKey: 'value', color: '#28a745', md: 6 },
+    { id: 'w4', title: 'Valores por Categoria', type: 'bar' as const, dataset: 'Valores por Categoria', xKey: 'name', yKey: 'value', color: '#ffc107', md: 6 },
+    { id: 'w5', title: 'Status da Contratação', type: 'bar' as const, dataset: 'Status da Contratação', xKey: 'name', yKey: 'value', color: '#dc3545', md: 12 },
+  ];
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -74,7 +91,7 @@ const EstatisticasPlanejamento: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" sx={{ mb: 3 }}>
-        Estatísticas do Planejamento
+        Estat�sticas do Planejamento
       </Typography>
 
       {/* Cards de Estatísticas */}
@@ -86,7 +103,7 @@ const EstatisticasPlanejamento: React.FC = () => {
               <Box>
                 <Typography variant="h4">{pcaStats?.total_pcas || 0}</Typography>
                 <Typography variant="body2" color="textSecondary">
-                  Total de Contratações
+                  Total de Contrata��es
                 </Typography>
               </Box>
             </CardContent>
@@ -138,11 +155,11 @@ const EstatisticasPlanejamento: React.FC = () => {
 
       {/* Gráficos */}
       <Grid container spacing={3}>
-        {/* Gráfico de Pizza - Status das Contratações */}
+        {/* Gráfico de Pizza - Status das Contrata��es */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3, height: 400 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
-              Status das Contratações
+              Status das Contrata��es
             </Typography>
             <ResponsiveContainer width="100%" height="90%">
               <PieChart>
@@ -189,7 +206,7 @@ const EstatisticasPlanejamento: React.FC = () => {
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3, height: 400 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
-              Contratações por Categoria
+              Contrata��es por Categoria
             </Typography>
             <ResponsiveContainer width="100%" height="90%">
               <BarChart data={pcaCharts?.categoria || []}>
@@ -227,7 +244,7 @@ const EstatisticasPlanejamento: React.FC = () => {
         <Grid item xs={12}>
           <Paper sx={{ p: 3, height: 400 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
-              Status das Contratações
+              Status das Contrata��es
             </Typography>
             <ResponsiveContainer width="100%" height="90%">
               <BarChart data={pcaCharts?.status_contratacao || []}>
@@ -247,3 +264,4 @@ const EstatisticasPlanejamento: React.FC = () => {
 };
 
 export default EstatisticasPlanejamento;
+
