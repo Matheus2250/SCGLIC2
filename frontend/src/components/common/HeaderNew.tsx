@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, Box, IconButton, Menu, MenuItem, ListItemIcon } from '@mui/material';
+import { AppBar, Toolbar, Typography, Box, IconButton, Menu, MenuItem, ListItemIcon, Avatar } from '@mui/material';
 import { AccountCircle, ExitToApp, Menu as MenuIcon, ManageAccounts } from '@mui/icons-material';
 import { useAuth } from '../../store/auth.context';
 import { useNavigate } from 'react-router-dom';
@@ -32,6 +32,13 @@ const Header: React.FC<HeaderProps> = ({ onSidebarToggle }) => {
     handleClose();
   };
 
+  const toAbsolute = (url?: string | null) => {
+    if (!url) return undefined;
+    if (/^https?:\/\//i.test(url)) return url as string;
+    const base = import.meta.env.VITE_API_URL || '';
+    return `${base}${(url as string).startsWith('/') ? url : `/${url}`}`;
+  };
+
   return (
     <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
       <Toolbar>
@@ -61,7 +68,11 @@ const Header: React.FC<HeaderProps> = ({ onSidebarToggle }) => {
             onClick={handleMenu}
             color="inherit"
           >
-            <AccountCircle />
+            {user?.avatar_url ? (
+              <Avatar src={toAbsolute(user.avatar_url)} sx={{ width: 32, height: 32 }} />
+            ) : (
+              <AccountCircle />
+            )}
           </IconButton>
 
           <Menu
@@ -91,4 +102,3 @@ const Header: React.FC<HeaderProps> = ({ onSidebarToggle }) => {
 };
 
 export default Header;
-

@@ -94,6 +94,13 @@ const UserProfile: React.FC = () => {
     setAvatarPreview(url);
   };
 
+  const toAbsolute = (url?: string | null) => {
+    if (!url) return undefined;
+    if (/^https?:\/\//i.test(url)) return url as string;
+    const base = import.meta.env.VITE_API_URL || '';
+    return `${base}${(url as string).startsWith('/') ? url : `/${url}`}`;
+  };
+
   const handleUploadAvatar = async () => {
     if (!avatarFile) {
       toast.error('Selecione uma imagem');
@@ -103,6 +110,16 @@ const UserProfile: React.FC = () => {
       setUploadingAvatar(true);
       const res = await profileService.uploadAvatar(avatarFile);
       if (res?.avatar_url) {
+        const abs = toAbsolute(res.avatar_url);
+        setAvatarPreview(abs || null);
+        try {
+          const stored = localStorage.getItem('user');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            parsed.avatar_url = res.avatar_url; // manter relativo
+            localStorage.setItem('user', JSON.stringify(parsed));
+          }
+        } catch { /* ignore */ }
         toast.success('Foto atualizada');
       } else {
         toast.success('Upload realizado');
@@ -146,7 +163,7 @@ const UserProfile: React.FC = () => {
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>Foto de Perfil</Typography>
             <Box display="flex" alignItems="center" gap={2}>
-              <Avatar src={avatarPreview || undefined} sx={{ width: 80, height: 80, fontSize: 28 }}>
+              <Avatar src={avatarPreview || (user?.avatar_url ? (toAbsolute(user.avatar_url)) : undefined)} sx={{ width: 80, height: 80, fontSize: 28 }}>
                 {initials}
               </Avatar>
               <Box>
@@ -241,4 +258,3 @@ const UserProfile: React.FC = () => {
 };
 
 export default UserProfile;
-
