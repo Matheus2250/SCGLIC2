@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Collapse, Badge, Tooltip } from '@mui/material';
+import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Collapse, Badge, Tooltip, Box, Avatar, Typography, Divider, Menu, MenuItem, ListItemAvatar } from '@mui/material';
 import { Dashboard, Assignment, CheckCircle, Gavel, Assessment, ExpandLess, ExpandMore, ListAlt, Warning, BarChart, AdminPanelSettings, People, ManageAccounts, AccountCircle } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../store/auth.context';
@@ -71,9 +71,17 @@ const menuItems: MenuItem[] = [
 const Sidebar: React.FC<SidebarProps> = ({ open }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { pendingCount } = usePendingRequests();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [profileAnchor, setProfileAnchor] = useState<null | HTMLElement>(null);
+
+  const toAbsolute = (url?: string | null) => {
+    if (!url) return undefined;
+    if (/^https?:\/\//i.test(url)) return url as string;
+    const base = import.meta.env.VITE_API_URL || '';
+    return `${base}${(url as string).startsWith('/') ? url : `/${url}`}`;
+  };
 
   const handleToggleExpand = (itemText: string) => {
     setExpandedItems(prev => (prev.includes(itemText) ? prev.filter(i => i !== itemText) : [...prev, itemText]));
@@ -97,6 +105,27 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
       }}
     >
       <Toolbar />
+      {/* Perfil no topo */}
+      <Box sx={{ px: open ? 2 : 0.5, py: 2, display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }} onClick={(e) => setProfileAnchor(e.currentTarget)}>
+        <Avatar src={toAbsolute(user?.avatar_url)} sx={{ width: 40, height: 40 }} />
+        {open && (
+          <Box sx={{ overflow: 'hidden' }}>
+            <Typography variant="subtitle2" noWrap>{user?.nome_completo || 'Usuário'}</Typography>
+            <Typography variant="caption" color="text.secondary" noWrap>{user?.nivel_acesso || ''}</Typography>
+          </Box>
+        )}
+      </Box>
+      <Menu
+        anchorEl={profileAnchor}
+        open={Boolean(profileAnchor)}
+        onClose={() => setProfileAnchor(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+      >
+        <MenuItem onClick={() => { setProfileAnchor(null); navigate('/perfil'); }}>Meu Perfil</MenuItem>
+        <MenuItem onClick={() => { setProfileAnchor(null); logout(); navigate('/login'); }}>Sair</MenuItem>
+      </Menu>
+      <Divider sx={{ mb: 1 }} />
       <List>
         {filteredMenuItems.map((item) => (
           <React.Fragment key={item.text}>
@@ -111,6 +140,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
                       navigate(item.path);
                     }
                   }}
+                  sx={{ pr: open ? 1 : 0, '& .MuiListItemText-root': { mr: 2 } }}
                 >
                   <ListItemIcon sx={{ minWidth: open ? 56 : 'auto', mr: open ? 3 : 'auto' }}>
                     {item.text.startsWith('Admin') && pendingCount > 0 ? (
@@ -119,8 +149,12 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
                       item.icon
                     )}
                   </ListItemIcon>
-                  {open && <ListItemText primary={item.text} />}
-                  {open && item.subItems && (expandedItems.includes(item.text) ? <ExpandLess /> : <ExpandMore />)}
+                  {open && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
+                      <ListItemText primary={item.text} />
+                      {item.subItems && (expandedItems.includes(item.text) ? <ExpandLess /> : <ExpandMore />)}
+                    </Box>
+                  )}
                 </ListItemButton>
               </Tooltip>
             </ListItem>
