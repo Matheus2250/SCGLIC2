@@ -11,10 +11,17 @@ app = FastAPI(
 )
 
 # CONFIGURAÇÃO CORS MAIS PERMISSIVA PARA RENDER
+# CORS — explicitar o domínio do frontend de produção e ambientes locais
+allowed_origins = [
+    "https://sistemacglic.onrender.com",
+    "http://localhost:5173",
+    "http://localhost:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"]
