@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿﻿import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Paper, Typography, IconButton, Button, MenuItem, Select, FormControl, InputLabel, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Tooltip } from '@mui/material';
 import { Add, Delete, Edit, Save } from '@mui/icons-material';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, Legend } from 'recharts';
@@ -19,6 +19,7 @@ export interface WidgetConfig {
   xKey?: string;   // for bar/line
   yKey?: string;   // for bar/line
   color?: string;
+  palette?: 'default' | 'categorical' | 'pastel' | 'vibrant' | 'mui';
   md?: 6 | 12 | 4 | 8; // grid size
 }
 
@@ -28,15 +29,31 @@ interface DashboardBuilderProps {
   defaults: WidgetConfig[];  // default widgets if no saved
 }
 
+const getPalette = (name: WidgetConfig['palette']): string[] => {
+  switch (name) {
+    case 'categorical':
+      return ['#1f77b4','#ff7f0e','#2ca02c','#d62728','#9467bd','#8c564b','#e377c2','#7f7f7f','#bcbd22','#17becf'];
+    case 'pastel':
+      return ['#a6cee3','#b2df8a','#fb9a99','#fdbf6f','#cab2d6','#ffff99','#1f78b4','#33a02c','#e31a1c','#ff7f00'];
+    case 'vibrant':
+      return ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999'];
+    case 'mui':
+      return ['#1976d2','#9c27b0','#2e7d32','#ed6c02','#d32f2f','#0288d1','#6a1b9a','#43a047','#ff9800','#c2185b'];
+    default:
+      return ['#0d6efd','#6610f2','#198754','#dc3545','#fd7e14','#20c997','#6f42c1'];
+  }
+};
+
 const ChartRenderer: React.FC<{ cfg: WidgetConfig; data: any[] }> = ({ cfg, data }) => {
   const color = cfg.color || '#0d6efd';
+  const colors = getPalette(cfg.palette);
   if (cfg.type === 'pie') {
     return (
       <ResponsiveContainer width="100%" height="90%">
         <PieChart>
           <Pie data={data} dataKey={cfg.yKey || 'value'} nameKey={cfg.xKey || 'name'} cx="50%" cy="50%" outerRadius={80}>
             {data.map((d, idx) => (
-              <Cell key={idx} fill={d.color || color} />
+              <Cell key={idx} fill={d.color || colors[idx % colors.length]} />
             ))}
           </Pie>
           <RTooltip />
@@ -54,7 +71,7 @@ const ChartRenderer: React.FC<{ cfg: WidgetConfig; data: any[] }> = ({ cfg, data
           <YAxis />
           <RTooltip />
           <Legend />
-          <Line type="monotone" dataKey={cfg.yKey || 'value'} stroke={color} />
+          <Line type="monotone" dataKey={cfg.yKey || 'value'} stroke={colors[0] || color} />
         </LineChart>
       </ResponsiveContainer>
     );
@@ -68,7 +85,11 @@ const ChartRenderer: React.FC<{ cfg: WidgetConfig; data: any[] }> = ({ cfg, data
         <YAxis />
         <RTooltip />
         <Legend />
-        <Bar dataKey={cfg.yKey || 'value'} fill={color} />
+        <Bar dataKey={cfg.yKey || 'value'}>
+          {data.map((_, idx) => (
+            <Cell key={idx} fill={colors[idx % colors.length]} />
+          ))}
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );
@@ -111,7 +132,7 @@ const DashboardBuilder: React.FC<DashboardBuilderProps> = ({ storageKey, dataset
 
   const handleAdd = () => {
     const id = crypto.randomUUID();
-    setEditing({ id, title: 'Novo Gráfico', type: 'bar', dataset: Object.keys(datasets)[0], xKey: 'name', yKey: 'value', color: '#0d6efd', md: 6 });
+    setEditing({ id, title: 'Novo Gr�fico', type: 'bar', dataset: Object.keys(datasets)[0], xKey: 'name', yKey: 'value', palette: 'categorical', md: 6 });
     setOpen(true);
   };
 
@@ -138,7 +159,7 @@ const DashboardBuilder: React.FC<DashboardBuilderProps> = ({ storageKey, dataset
     setOpen(false);
   };
 
-  const mdOptions: (4|6|8|12)[] = [4,6,8,12];
+  const mdOptions: (4|6|8|12)[] = [4,6,8,12];\n  const sample = useMemo(() => (editing && datasets[editing.dataset] && datasets[editing.dataset][0]) || null, [editing, datasets]);\n  const xOptions = useMemo(() => sample ? Object.keys(sample).filter(k => typeof (sample as any)[k] === 'string') : ['name'], [sample]);\n  const yOptions = useMemo(() => sample ? Object.keys(sample).filter(k => typeof (sample as any)[k] === 'number') : ['value'], [sample]);\n  const paletteOptions: NonNullable<WidgetConfig['palette']>[] = ['categorical','pastel','vibrant','mui','default'];\n  const sample = useMemo(() => (editing && datasets[editing.dataset] && datasets[editing.dataset][0]) || null, [editing, datasets]);\n  const xOptions = useMemo(() => sample ? Object.keys(sample).filter(k => typeof (sample as any)[k] === 'string') : ['name'], [sample]);\n  const yOptions = useMemo(() => sample ? Object.keys(sample).filter(k => typeof (sample as any)[k] === 'number') : ['value'], [sample]);\n  const paletteOptions: NonNullable<WidgetConfig['palette']>[] = ['categorical','pastel','vibrant','mui','default'];
 
   return (
     <Box>
@@ -194,13 +215,24 @@ const DashboardBuilder: React.FC<DashboardBuilderProps> = ({ storageKey, dataset
                   {Object.keys(datasets).map(k => (<MenuItem key={k} value={k}>{k}</MenuItem>))}
                 </Select>
               </FormControl>
-              {editing.type !== 'pie' && (
-                <>
-                  <TextField label="Campo X (nome)" value={editing.xKey || 'name'} onChange={(e) => setEditing({ ...editing, xKey: e.target.value })} fullWidth />
-                  <TextField label="Campo Y (valor)" value={editing.yKey || 'value'} onChange={(e) => setEditing({ ...editing, yKey: e.target.value })} fullWidth />
-                </>
-              )}
-              <TextField label="Cor" value={editing.color || ''} onChange={(e) => setEditing({ ...editing, color: e.target.value })} placeholder="#0d6efd" fullWidth />
+                            <FormControl fullWidth>
+                <InputLabel>Campo X</InputLabel>
+                <Select label="Campo X" value={editing.xKey || xOptions[0] || 'name'} onChange={(e) => setEditing({ ...editing, xKey: e.target.value as string })}>
+                  {xOptions.map(k => (<MenuItem key={k} value={k}>{k}</MenuItem>))}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth>
+                <InputLabel>Campo Y</InputLabel>
+                <Select label="Campo Y" value={editing.yKey || yOptions[0] || 'value'} onChange={(e) => setEditing({ ...editing, yKey: e.target.value as string })}>
+                  {yOptions.map(k => (<MenuItem key={k} value={k}>{k}</MenuItem>))}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth>
+                <InputLabel>Paleta de cores</InputLabel>
+                <Select label="Paleta de cores" value={editing.palette || 'categorical'} onChange={(e) => setEditing({ ...editing, palette: e.target.value as any })}>
+                  {['categorical','pastel','vibrant','mui','default'].map(p => (<MenuItem key={p} value={p}>{p}</MenuItem>))}
+                </Select>
+              </FormControl>TextField label="Cor" value={editing.color || ''} onChange={(e) => setEditing({ ...editing, color: e.target.value })} placeholder="#0d6efd" fullWidth />
               <FormControl fullWidth>
                 <InputLabel>Largura</InputLabel>
                 <Select label="Largura" value={(editing.md || 6) as any} onChange={(e) => setEditing({ ...editing, md: Number(e.target.value) as any })}>
