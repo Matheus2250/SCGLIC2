@@ -108,8 +108,8 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
     >
       <Toolbar />
       {/* Perfil no topo */}
-      <Box sx={{ px: open ? 2 : 0.5, py: 2, display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }} onClick={() => navigate('/perfil')}>
-        <Avatar src={toAbsolute(user?.avatar_url)} sx={{ width: 40, height: 40 }} />
+      <Box sx={{ px: open ? 2 : 0.5, py: 2, display: 'flex', alignItems: 'center', justifyContent: open ? 'flex-start' : 'center', gap: open ? 1.5 : 0, cursor: 'pointer', width: '100%' }} onClick={() => navigate('/perfil')}>
+        <Avatar src={toAbsolute(user?.avatar_url)} sx={{ width: 40, height: 40, mx: open ? 0 : 'auto' }} />
         {open && (
           <Box sx={{ overflow: 'hidden' }}>
             <Typography variant="subtitle2" noWrap>{user?.nome_completo || 'Usuário'}</Typography>
@@ -133,9 +133,9 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
                       navigate(item.path);
                     }
                   }}
-                  sx={{ px: 1.25, mx: 0 }}
+                  sx={{ px: open ? 1.25 : 0, mx: 0, justifyContent: open ? 'flex-start' : 'center' }}
                 >
-                  <ListItemIcon sx={{ minWidth: 36, mr: open ? 1.5 : 0 }}>
+                  <ListItemIcon sx={{ minWidth: open ? 36 : 0, mr: open ? 1.5 : 0, justifyContent: 'center' }}>
                     {item.text.startsWith('Admin') && pendingCount > 0 ? (
                       <Badge badgeContent={pendingCount} color="error">{item.icon}</Badge>
                     ) : (
@@ -162,8 +162,8 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
                   {item.subItems.map((subItem) => (
                     <ListItem key={subItem.text} disablePadding>
                       <Tooltip title={!open ? subItem.text : ''} placement="right">
-                        <ListItemButton sx={{ pl: open ? 3.5 : 2, mx: 0 }} selected={location.pathname === subItem.path} onClick={() => navigate(subItem.path)}>
-                          <ListItemIcon sx={{ minWidth: 32, mr: open ? 1.25 : 0 }}>
+                        <ListItemButton sx={{ pl: open ? 3.5 : 0, mx: 0, justifyContent: open ? 'flex-start' : 'center' }} selected={location.pathname === subItem.path} onClick={() => navigate(subItem.path)}>
+                          <ListItemIcon sx={{ minWidth: open ? 32 : 0, mr: open ? 1.25 : 0, justifyContent: 'center' }}>
                             {subItem.text.includes('Requisição') && pendingCount > 0 ? (
                               <Badge badgeContent={pendingCount} color="error">{subItem.icon}</Badge>
                             ) : (
@@ -186,8 +186,8 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
       <List>
         <ListItem disablePadding>
           <Tooltip title={!open ? 'Sair' : ''} placement='right'>
-            <ListItemButton onClick={() => { logout(); navigate('/login'); }}>
-              <ListItemIcon sx={{ minWidth: open ? 56 : 'auto', mr: open ? 3 : 'auto' }}>
+            <ListItemButton onClick={() => { logout(); navigate('/login'); }} sx={{ justifyContent: open ? 'flex-start' : 'center' }}>
+              <ListItemIcon sx={{ minWidth: open ? 56 : 0, mr: open ? 3 : 0, justifyContent: 'center' }}>
                 <Logout />
               </ListItemIcon>
               {open && <ListItemText primary='Sair' />}
