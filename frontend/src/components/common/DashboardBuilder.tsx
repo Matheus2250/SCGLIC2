@@ -159,9 +159,15 @@ const DashboardBuilder: React.FC<DashboardBuilderProps> = ({ storageKey, dataset
     setOpen(false);
   };
 
-  const mdOptions: (4|6|8|12)[] = [4,6,8,12];\n  const sample = useMemo(() => (editing && datasets[editing.dataset] && datasets[editing.dataset][0]) || null, [editing, datasets]);\n  const xOptions = useMemo(() => sample ? Object.keys(sample).filter(k => typeof (sample as any)[k] === 'string') : ['name'], [sample]);\n  const yOptions = useMemo(() => sample ? Object.keys(sample).filter(k => typeof (sample as any)[k] === 'number') : ['value'], [sample]);\n  const paletteOptions: NonNullable<WidgetConfig['palette']>[] = ['categorical','pastel','vibrant','mui','default'];\n  const sample = useMemo(() => (editing && datasets[editing.dataset] && datasets[editing.dataset][0]) || null, [editing, datasets]);\n  const xOptions = useMemo(() => sample ? Object.keys(sample).filter(k => typeof (sample as any)[k] === 'string') : ['name'], [sample]);\n  const yOptions = useMemo(() => sample ? Object.keys(sample).filter(k => typeof (sample as any)[k] === 'number') : ['value'], [sample]);\n  const paletteOptions: NonNullable<WidgetConfig['palette']>[] = ['categorical','pastel','vibrant','mui','default'];
+  
+const mdOptions: (4|6|8|12)[] = [4,6,8,12];
+const sample = useMemo(() => (editing && datasets[editing.dataset] && datasets[editing.dataset][0]) || null, [editing, datasets]);
+const xOptions = useMemo(() => sample ? Object.keys(sample).filter(k => typeof (sample as any)[k] === 'string') : ['name'], [sample]);
+const yOptions = useMemo(() => sample ? Object.keys(sample).filter(k => typeof (sample as any)[k] === 'number') : ['value'], [sample]);
+const paletteOptions: NonNullable<WidgetConfig['palette']>[] = ['categorical','pastel','vibrant','mui','default'];
 
   return (
+
     <Box>
       <Box sx={{ display:'flex', justifyContent:'space-between', alignItems:'center', mb:2 }}>
         <Typography variant="h6">Seu painel</Typography>
@@ -232,7 +238,7 @@ const DashboardBuilder: React.FC<DashboardBuilderProps> = ({ storageKey, dataset
                 <Select label="Paleta de cores" value={editing.palette || 'categorical'} onChange={(e) => setEditing({ ...editing, palette: e.target.value as any })}>
                   {['categorical','pastel','vibrant','mui','default'].map(p => (<MenuItem key={p} value={p}>{p}</MenuItem>))}
                 </Select>
-              </FormControl>TextField label="Cor" value={editing.color || ''} onChange={(e) => setEditing({ ...editing, color: e.target.value })} placeholder="#0d6efd" fullWidth />
+              </FormControl>
               <FormControl fullWidth>
                 <InputLabel>Largura</InputLabel>
                 <Select label="Largura" value={(editing.md || 6) as any} onChange={(e) => setEditing({ ...editing, md: Number(e.target.value) as any })}>

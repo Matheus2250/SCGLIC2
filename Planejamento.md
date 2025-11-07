@@ -11,7 +11,7 @@
 - [X] Substituir o `confirm()` do navegador por um confirm do sistema personalizado  
 - [X] Adicionar possibilidade de mudar a senha do usuário  
 - [ ] Criar relatórios pré-prontos para servir à SAA  
-- [ ] Adicionar funções na página de estatística para personalização (quais gráficos exibir, tamanho, etc)  
+- [X] Adicionar funções na página de estatística para personalização (quais gráficos exibir, tamanho, etc)  
 - [X] Criar página de usuário com:
   - Alteração de nome, senha e e-mail  
   - Requisição de alteração de cargo  
