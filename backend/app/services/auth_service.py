@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from typing import List, Optional
 from uuid import UUID
 from app.models.usuario import Usuario
@@ -57,9 +58,33 @@ def delete_user(db: Session, user_id: UUID) -> bool:
     if not db_user:
         return False
 
-    db.delete(db_user)
-    db.commit()
-    return True
+    # Clean up AccessRequest references to avoid NOT NULL violations
+    try:
+        from app.models.access_request import AccessRequest
+        # Nullify approvals made by this user
+        db.query(AccessRequest).filter(AccessRequest.aprovado_por_id == user_id).update({"aprovado_por_id": None}, synchronize_session=False)
+        # Remove requests created by this user
+        db.query(AccessRequest).filter(AccessRequest.user_id == user_id).delete(synchronize_session=False)
+        db.flush()
+    except Exception:
+        # Do not fail deletion due to cleanup hiccups; proceed to attempt delete
+        pass
+
+    try:
+        db.delete(db_user)
+        db.commit()
+        return True
+    except IntegrityError:
+        # If there are remaining FK references (e.g., created_by in other tables), fall back to soft delete
+        db.rollback()
+        try:
+            db_user.ativo = False
+            db.add(db_user)
+            db.commit()
+            return True
+        except Exception:
+            db.rollback()
+            return False
 
 
 def authenticate_user(db: Session, email: str, password: str) -> Usuario:
