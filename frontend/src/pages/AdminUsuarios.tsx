@@ -448,6 +448,18 @@ const AdminUsuarios: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Confirmação de Exclusão */}
+      <ConfirmDialog
+        open={confirmOpen}
+        title={confirmTitle}
+        description={confirmDescription}
+        loading={confirmLoading}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={handleConfirmDeleteUser}
+        onClose={() => setConfirmOpen(false)}
+      />
     </Box>
   );
 };
