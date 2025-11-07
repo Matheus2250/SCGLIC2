@@ -36,20 +36,22 @@ const RecentActivities: React.FC = () => {
           {[...Array(5)].map((_, i) => (<Skeleton key={i} height={36} />))}
         </Box>
       ) : (
-        <List dense>
-          {items.length === 0 && (
-            <Typography variant="body2" color="text.secondary">Nenhuma atividade encontrada.</Typography>
-          )}
-          {items.map((it, idx) => (
-            <ListItem key={idx} disableGutters>
-              <ListItemIcon sx={{ minWidth: 36 }}>{iconFor(it.module)}</ListItemIcon>
-              <ListItemText
-                primary={`${it.user} ${it.action === 'created' ? 'criou' : 'atualizou'} ${it.module}: ${it.title}`}
-                secondary={formatDistanceToNow(new Date(it.at), { addSuffix: true, locale: ptBR })}
-              />
-            </ListItem>
-          ))}
-        </List>
+        <Box sx={{ maxHeight: 320, overflowY: 'auto', pr: 1 }}>
+          <List dense disablePadding>
+            {items.length === 0 && (
+              <Typography variant="body2" color="text.secondary">Nenhuma atividade encontrada.</Typography>
+            )}
+            {items.map((it, idx) => (
+              <ListItem key={idx} disableGutters>
+                <ListItemIcon sx={{ minWidth: 36 }}>{iconFor(it.module)}</ListItemIcon>
+                <ListItemText
+                  primary={`${it.user} ${it.action === 'created' ? 'criou' : 'atualizou'} ${it.module}: ${it.title}`}
+                  secondary={formatDistanceToNow(new Date(it.at), { addSuffix: true, locale: ptBR })}
+                />
+              </ListItem>
+            ))}
+          </List>
+        </Box>
       )}
     </Paper>
   );
