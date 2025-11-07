@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Grid,
@@ -15,7 +15,8 @@ import {
   Assignment,
 } from '@mui/icons-material';
 import { qualificacaoService } from '../services/qualificacao.service';
-import { Qualificacao } from '../types';\nimport DashboardBuilderQualificacao from '../components/common/DashboardBuilderQualificacao';
+import { Qualificacao } from '../types';
+import DashboardBuilderQualificacao from '../components/common/DashboardBuilderQualificacao';
 
 const EstatisticasQualificacao: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -56,7 +57,10 @@ const EstatisticasQualificacao: React.FC = () => {
     total: qualificacoes.length,
     concluidas: qualificacoes.filter(q => q.status === 'CONCLUIDO').length,
     em_analise: qualificacoes.filter(q => q.status === 'EM ANALISE').length,
-  };\n\n  return (\n    <Box>
+  };
+
+  return (
+    <Box>
       <Typography variant="h4" sx={{ mb: 3 }}>
         EstatÃ­sticas da QualificaÃ§Ã£o
       </Typography>
@@ -106,7 +110,12 @@ const EstatisticasQualificacao: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Dados detalhados das qualificaÃ§Ãµes */}
+      {/* Painel personalizável */}
+      <Box sx={{ mt: 2, mb: 4 }}>
+        <DashboardBuilderQualificacao storageKey={'dash:qualificacao'} />
+      </Box>
+
+      {/* Dados detalhados das qualificações */}
       {qualificacoes.length > 0 ? (
         <Paper sx={{ p: 4 }}>
           <Typography variant="h6" sx={{ mb: 2 }}>
