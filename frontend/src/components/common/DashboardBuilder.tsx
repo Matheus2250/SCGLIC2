@@ -32,7 +32,9 @@ const fieldLabels: { label: string; key: keyof PCA | string }[] = [
   { label: 'Área Requisitante', key: 'area_requisitante' },
   { label: 'Área Demandante', key: 'area_demandante' },
   { label: 'Status da Contratação', key: 'status_contratacao' },
-  { label: 'Número da Contratação', key: 'numero_contratacao' },
+  // Em vez de listar cada número (polui com centenas de categorias),
+  // oferecemos a opção de total de contratações como dimensão única
+  { label: 'Total de Contratações', key: '__total__' },
   { label: 'Ano do PCA', key: 'ano_pca' },
 ];
 
@@ -55,6 +57,25 @@ type SeriesResult = { data: any[]; seriesKeys?: string[] };
 
 const aggregateData = (items: PCA[], xField: string, metric: 'count'|'value', yField?: string): SeriesResult => {
   const safe = (v: any) => (v === null || v === undefined || v === '') ? '—' : v;
+  // Caso especial: dimensão "Total de Contratações" (ou número da contratação)
+  // - Sem Y: retorna um único ponto "Total"
+  // - Com Y: agrupa apenas por Y
+  if (xField === '__total__' || xField === 'numero_contratacao') {
+    if (!yField) {
+      const value = metric === 'count'
+        ? items.length
+        : items.reduce((acc, it: any) => acc + Number(it?.valor_total || 0), 0);
+      return { data: [{ name: 'Total', value }] };
+    }
+    // Agrupar por Y somente
+    const map = new Map<string, number>();
+    for (const it of items) {
+      const yv = String(safe((it as any)[yField]));
+      const add = metric === 'count' ? 1 : Number((it as any)['valor_total'] || 0);
+      map.set(yv, (map.get(yv) || 0) + add);
+    }
+    return { data: Array.from(map, ([name, value]) => ({ name, value })) };
+  }
   if (!yField) {
     const map = new Map<string, number>();
     for (const it of items) {
