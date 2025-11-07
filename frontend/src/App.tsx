@@ -29,6 +29,9 @@ const theme = createTheme({
   palette: {
     primary: { main: '#004085' },
     secondary: { main: '#28a745' },
+    background: {
+      default: '#f5f6fa',
+    },
   },
   components: {
     MuiTableCell: {
