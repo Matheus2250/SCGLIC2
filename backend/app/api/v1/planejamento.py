@@ -226,6 +226,8 @@ def update_pca(
     update_data = pca_in.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(pca, field, value)
+    # Track updater
+    pca.updated_by = current_user.id
 
     db.commit()
     db.refresh(pca)
@@ -560,6 +562,7 @@ async def import_pca_csv(
                     # Atualizar registro existente
                     for key, value in record.items():
                         setattr(existing_pca, key, value)
+                    existing_pca.updated_by = current_user.id
                     updated += 1
                 else:
                     # Criar novo registro

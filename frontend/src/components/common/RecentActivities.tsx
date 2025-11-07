@@ -1,4 +1,4 @@
-ï»¿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Paper, Typography, List, ListItem, ListItemText, ListItemIcon, Avatar, Box, Skeleton } from '@mui/material';
 import { Assignment, Gavel, CheckCircle, Update } from '@mui/icons-material';
 import { activityService, ActivityItem } from '../../services/activity.service';
@@ -22,7 +22,7 @@ const RecentActivities: React.FC = () => {
         const data = await activityService.recent(20);
         setItems(data);
       } catch (e) {
-        setError('NÃ£o foi possÃ­vel carregar atividades');
+        setError('Não foi possível carregar atividades');
         setItems([]);
       }
     })();
@@ -58,3 +58,4 @@ const RecentActivities: React.FC = () => {
 };
 
 export default RecentActivities;
+

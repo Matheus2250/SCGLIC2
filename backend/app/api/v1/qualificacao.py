@@ -88,7 +88,9 @@ def update_qualificacao(
     update_data = qualificacao_in.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(qualificacao, field, value)
-    
+    # Track updater
+    qualificacao.updated_by = current_user.id
+
     db.commit()
     db.refresh(qualificacao)
     return qualificacao

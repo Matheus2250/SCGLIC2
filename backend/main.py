@@ -1,3 +1,8 @@
+"""
+pyright: reportMissingImports=false
+FastAPI and related packages must be installed in the backend virtualenv
+for your editor to resolve imports.
+"""
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -49,4 +54,3 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-

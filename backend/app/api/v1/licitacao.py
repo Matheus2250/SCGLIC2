@@ -91,11 +91,13 @@ def update_licitacao(
     update_data = licitacao_in.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(licitacao, field, value)
-    
+
     # Recalculate economy
     if licitacao.valor_estimado and licitacao.valor_homologado:
         licitacao.economia = licitacao.valor_estimado - licitacao.valor_homologado
-    
+    # Track updater
+    licitacao.updated_by = current_user.id
+
     db.commit()
     db.refresh(licitacao)
     return licitacao

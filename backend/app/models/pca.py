@@ -1,3 +1,8 @@
+"""
+pyright: reportMissingImports=false
+This module depends on SQLAlchemy at runtime. If your editor flags imports,
+point it to the backend virtualenv with dependencies installed.
+"""
 import uuid
 from datetime import datetime, date
 from sqlalchemy import Column, String, Text, DECIMAL, Boolean, DateTime, Date, ForeignKey, Integer, UniqueConstraint
@@ -25,9 +30,11 @@ class PCA(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     created_by = Column(UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=False)
+    updated_by = Column(UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True)
 
     # Relationships
-    creator = relationship("Usuario")
+    creator = relationship("Usuario", foreign_keys=[created_by])
+    updater = relationship("Usuario", foreign_keys=[updated_by])
     qualificacoes = relationship("Qualificacao", back_populates="pca_ref")
 
     @property
