@@ -1,4 +1,4 @@
-﻿﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Paper, Typography, IconButton, Button, MenuItem, Select, FormControl, InputLabel, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Tooltip } from '@mui/material';
 import { Add, Delete, Edit, Save } from '@mui/icons-material';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, Legend } from 'recharts';
@@ -132,7 +132,7 @@ const DashboardBuilder: React.FC<DashboardBuilderProps> = ({ storageKey, dataset
 
   const handleAdd = () => {
     const id = crypto.randomUUID();
-    setEditing({ id, title: 'Novo Gr�fico', type: 'bar', dataset: Object.keys(datasets)[0], xKey: 'name', yKey: 'value', palette: 'categorical', md: 6 });
+    setEditing({ id, title: 'Novo gráfico', type: 'bar', dataset: Object.keys(datasets)[0], xKey: 'name', yKey: 'value', palette: 'categorical', md: 6 });
     setOpen(true);
   };
 
@@ -162,7 +162,7 @@ const DashboardBuilder: React.FC<DashboardBuilderProps> = ({ storageKey, dataset
   
 const mdOptions: (4|6|8|12)[] = [4,6,8,12];
 const sample = useMemo(() => (editing && datasets[editing.dataset] && datasets[editing.dataset][0]) || null, [editing, datasets]);
-const xOptions = useMemo(() => sample ? Object.keys(sample).filter(k => typeof (sample as any)[k] === 'string') : ['name'], [sample]);
+const xOptions = useMemo(() => sample ? Object.keys(sample).filter(k => typeof (sample as any)[k] === 'string' && !['color','cor','hex','palette'].includes(k.toLowerCase())) : ['name'], [sample]);
 const yOptions = useMemo(() => sample ? Object.keys(sample).filter(k => typeof (sample as any)[k] === 'number') : ['value'], [sample]);
 const paletteOptions: NonNullable<WidgetConfig['palette']>[] = ['categorical','pastel','vibrant','mui','default'];
 
@@ -258,3 +258,5 @@ const paletteOptions: NonNullable<WidgetConfig['palette']>[] = ['categorical','p
 };
 
 export default DashboardBuilder;
+
+
