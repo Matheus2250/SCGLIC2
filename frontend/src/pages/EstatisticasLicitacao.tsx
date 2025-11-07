@@ -16,6 +16,7 @@ import {
 } from '@mui/icons-material';
 import { licitacaoService } from '../services/licitacao.service';
 import { LicitacaoStats } from '../types';
+import DashboardBuilderLicitacao from '../components/common/DashboardBuilderLicitacao';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const EstatisticasLicitacao: React.FC = () => {
@@ -32,8 +33,8 @@ const EstatisticasLicitacao: React.FC = () => {
         const licitacaoData = await licitacaoService.getDashboardStats();
         setLicitacaoStats(licitacaoData && typeof licitacaoData === 'object' ? licitacaoData : null);
       } catch (err) {
-        console.error('Erro ao carregar estatísticas da licitação:', err);
-        setError('Erro ao carregar estatísticas da licitação');
+        console.error('Erro ao carregar estatÃ­sticas da licitaÃ§Ã£o:', err);
+        setError('Erro ao carregar estatÃ­sticas da licitaÃ§Ã£o');
         setLicitacaoStats(null);
       } finally {
         setLoading(false);
@@ -44,7 +45,7 @@ const EstatisticasLicitacao: React.FC = () => {
   }, []);
 
   if (loading) {
-    return <Typography>Carregando estatísticas...</Typography>;
+    return <Typography>Carregando estatÃ­sticas...</Typography>;
   }
 
   if (error) {
@@ -69,10 +70,10 @@ const EstatisticasLicitacao: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" sx={{ mb: 3 }}>
-        Estatísticas da Licitação
+        EstatÃ­sticas da LicitaÃ§Ã£o
       </Typography>
 
-      {/* Cards de Estatísticas */}
+      {/* Cards de EstatÃ­sticas */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
           <Card>
@@ -81,7 +82,7 @@ const EstatisticasLicitacao: React.FC = () => {
               <Box>
                 <Typography variant="h4">{total}</Typography>
                 <Typography variant="body2" color="textSecondary">
-                  Total de Licitações
+                  Total de LicitaÃ§Ãµes
                 </Typography>
               </Box>
             </CardContent>
@@ -131,80 +132,10 @@ const EstatisticasLicitacao: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Gráficos */}
-      <Grid container spacing={3}>
-        {/* Gráfico de Pizza - Status das Licitações */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3, height: 400 }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-              Status das Licitações
-            </Typography>
-            {pieData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="90%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`}
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '90%' }}>
-                <Typography color="textSecondary">Nenhum dado disponível</Typography>
-              </Box>
-            )}
-          </Paper>
-        </Grid>
-
-        {/* Gráfico de Barras - Status das Licitações */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3, height: 400 }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-              Comparativo de Status
-            </Typography>
-            {barData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="90%">
-                <BarChart data={barData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="value" fill="#004085" />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '90%' }}>
-                <Typography color="textSecondary">Nenhum dado disponível</Typography>
-              </Box>
-            )}
-          </Paper>
-        </Grid>
-
-        {/* Informações Adicionais */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 4, textAlign: 'center' }}>
-            <Typography variant="h6" color="textSecondary">
-              Relatórios Detalhados
-            </Typography>
-            <Typography variant="body1" color="textSecondary" sx={{ mt: 2 }}>
-              Para análises mais detalhadas das licitações, utilize a seção de Relatórios.
-              Lá você pode gerar relatórios personalizados e exportar dados específicos.
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
+      {/* GrÃ¡ficos */}
+            <Box sx={{ mt: 2, mb: 4 }}>
+        <DashboardBuilderLicitacao storageKey={'dash:licitacao'} />
+      </Box>
     </Box>
   );
 };

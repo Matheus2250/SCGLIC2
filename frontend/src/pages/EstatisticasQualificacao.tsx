@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import {
   Box,
   Grid,
@@ -15,7 +15,7 @@ import {
   Assignment,
 } from '@mui/icons-material';
 import { qualificacaoService } from '../services/qualificacao.service';
-import { Qualificacao } from '../types';
+import { Qualificacao } from '../types';\nimport DashboardBuilderQualificacao from '../components/common/DashboardBuilderQualificacao';
 
 const EstatisticasQualificacao: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -29,8 +29,8 @@ const EstatisticasQualificacao: React.FC = () => {
         const data = await qualificacaoService.getAll(0, 1000);
         setQualificacoes(data);
       } catch (err) {
-        setError('Erro ao carregar dados das qualificações');
-        console.error('Erro ao buscar qualificações:', err);
+        setError('Erro ao carregar dados das qualificaÃ§Ãµes');
+        console.error('Erro ao buscar qualificaÃ§Ãµes:', err);
       } finally {
         setLoading(false);
       }
@@ -51,20 +51,17 @@ const EstatisticasQualificacao: React.FC = () => {
     return <Alert severity="error">{error}</Alert>;
   }
 
-  // Calcular estatísticas reais dos dados
+  // Calcular estatÃ­sticas reais dos dados
   const stats = {
     total: qualificacoes.length,
     concluidas: qualificacoes.filter(q => q.status === 'CONCLUIDO').length,
     em_analise: qualificacoes.filter(q => q.status === 'EM ANALISE').length,
-  };
-
-  return (
-    <Box>
+  };\n\n  return (\n    <Box>
       <Typography variant="h4" sx={{ mb: 3 }}>
-        Estatísticas da Qualificação
+        EstatÃ­sticas da QualificaÃ§Ã£o
       </Typography>
 
-      {/* Cards de Estatísticas */}
+      {/* Cards de EstatÃ­sticas */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
           <Card>
@@ -73,7 +70,7 @@ const EstatisticasQualificacao: React.FC = () => {
               <Box>
                 <Typography variant="h4">{stats.total}</Typography>
                 <Typography variant="body2" color="textSecondary">
-                  Total de Qualificações
+                  Total de QualificaÃ§Ãµes
                 </Typography>
               </Box>
             </CardContent>
@@ -87,7 +84,7 @@ const EstatisticasQualificacao: React.FC = () => {
               <Box>
                 <Typography variant="h4">{stats.concluidas}</Typography>
                 <Typography variant="body2" color="textSecondary">
-                  Concluídas
+                  ConcluÃ­das
                 </Typography>
               </Box>
             </CardContent>
@@ -101,7 +98,7 @@ const EstatisticasQualificacao: React.FC = () => {
               <Box>
                 <Typography variant="h4">{stats.em_analise}</Typography>
                 <Typography variant="body2" color="textSecondary">
-                  Em Análise
+                  Em AnÃ¡lise
                 </Typography>
               </Box>
             </CardContent>
@@ -109,26 +106,26 @@ const EstatisticasQualificacao: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Dados detalhados das qualificações */}
+      {/* Dados detalhados das qualificaÃ§Ãµes */}
       {qualificacoes.length > 0 ? (
         <Paper sx={{ p: 4 }}>
           <Typography variant="h6" sx={{ mb: 2 }}>
-            Resumo das Qualificações
+            Resumo das QualificaÃ§Ãµes
           </Typography>
           <Typography variant="body1" color="textSecondary">
-            Total de {stats.total} qualificações cadastradas no sistema, sendo {stats.concluidas} concluídas
-            ({stats.total > 0 ? Math.round((stats.concluidas / stats.total) * 100) : 0}%) e {stats.em_analise} em análise
+            Total de {stats.total} qualificaÃ§Ãµes cadastradas no sistema, sendo {stats.concluidas} concluÃ­das
+            ({stats.total > 0 ? Math.round((stats.concluidas / stats.total) * 100) : 0}%) e {stats.em_analise} em anÃ¡lise
             ({stats.total > 0 ? Math.round((stats.em_analise / stats.total) * 100) : 0}%).
           </Typography>
         </Paper>
       ) : (
         <Paper sx={{ p: 4, textAlign: 'center' }}>
           <Typography variant="h6" color="textSecondary">
-            Estatísticas da Qualificação
+            EstatÃ­sticas da QualificaÃ§Ã£o
           </Typography>
           <Typography variant="body1" color="textSecondary" sx={{ mt: 2 }}>
-            Nenhuma qualificação encontrada no sistema.
-            As estatísticas aparecerão quando qualificações forem cadastradas.
+            Nenhuma qualificaÃ§Ã£o encontrada no sistema.
+            As estatÃ­sticas aparecerÃ£o quando qualificaÃ§Ãµes forem cadastradas.
           </Typography>
         </Paper>
       )}
