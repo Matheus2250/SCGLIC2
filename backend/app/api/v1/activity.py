@@ -7,6 +7,7 @@ virtualenv with these packages installed.
 """
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List, Optional
 from datetime import datetime
 
@@ -30,8 +31,13 @@ def recent_activities(limit: int = 20, db: Session = Depends(get_db)) -> List[di
     limit = max(1, min(limit, 100))
     items: List[dict] = []
 
-    # PCA
-    pcas = db.query(PCA).order_by(PCA.created_at.desc()).limit(limit).all()
+    # PCA (order by most recent activity: updated_at or created_at)
+    pcas = (
+        db.query(PCA)
+        .order_by(func.coalesce(PCA.updated_at, PCA.created_at).desc())
+        .limit(limit)
+        .all()
+    )
     for p in pcas:
         items.append({
             "module": "PCA",
@@ -45,12 +51,17 @@ def recent_activities(limit: int = 20, db: Session = Depends(get_db)) -> List[di
                 "module": "PCA",
                 "action": "updated",
                 "title": f"{p.numero_contratacao} - {p.titulo_contratacao or ''}",
-                "user": _user_name(getattr(p, "updater", None)),
+                "user": _user_name(getattr(p, "updater", None) or getattr(p, "creator", None)),
                 "at": p.updated_at,
             })
 
     # Qualificação
-    quals = db.query(Qualificacao).order_by(Qualificacao.created_at.desc()).limit(limit).all()
+    quals = (
+        db.query(Qualificacao)
+        .order_by(func.coalesce(Qualificacao.updated_at, Qualificacao.created_at).desc())
+        .limit(limit)
+        .all()
+    )
     for q in quals:
         items.append({
             "module": "Qualificação",
@@ -64,12 +75,17 @@ def recent_activities(limit: int = 20, db: Session = Depends(get_db)) -> List[di
                 "module": "Qualificação",
                 "action": "updated",
                 "title": f"{q.nup} - {q.objeto or ''}",
-                "user": _user_name(getattr(q, "updater", None)),
+                "user": _user_name(getattr(q, "updater", None) or getattr(q, "creator", None)),
                 "at": q.updated_at,
             })
 
     # Licitação
-    licits = db.query(Licitacao).order_by(Licitacao.created_at.desc()).limit(limit).all()
+    licits = (
+        db.query(Licitacao)
+        .order_by(func.coalesce(Licitacao.updated_at, Licitacao.created_at).desc())
+        .limit(limit)
+        .all()
+    )
     for l in licits:
         items.append({
             "module": "Licitação",
@@ -83,7 +99,7 @@ def recent_activities(limit: int = 20, db: Session = Depends(get_db)) -> List[di
                 "module": "Licitação",
                 "action": "updated",
                 "title": f"{l.nup} - {l.status}",
-                "user": _user_name(getattr(l, "updater", None)),
+                "user": _user_name(getattr(l, "updater", None) or getattr(l, "creator", None)),
                 "at": l.updated_at,
             })
 
