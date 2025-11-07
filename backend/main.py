@@ -1,17 +1,14 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1 import auth, planejamento, qualificacao, licitacao, reports, access_requests
-from app.core.config import settings
+from app.api.v1 import auth, planejamento, qualificacao, licitacao, reports, access_requests, activity
 
 app = FastAPI(
     title="Sistema de Gestão de Contratações Públicas",
     description="API para gerenciamento completo do ciclo de contratações públicas",
-    version="1.0.0"
+    version="1.0.0",
 )
 
-# CONFIGURAÇÃO CORS MAIS PERMISSIVA PARA RENDER
-# CORS — explicitar o domínio do frontend de produção e ambientes locais
 allowed_origins = [
     "https://sistemacglic.onrender.com",
     "http://localhost:5173",
@@ -21,7 +18,7 @@ allowed_origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_credentials=False,  # JWT via header: não usar credenciais
+    allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
 )
@@ -33,6 +30,7 @@ app.include_router(qualificacao.router, prefix="/api/v1/qualificacao", tags=["qu
 app.include_router(licitacao.router, prefix="/api/v1/licitacao", tags=["licitacao"])
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["reports"])
 app.include_router(access_requests.router, prefix="/api/v1/access-requests", tags=["access-requests"])
+app.include_router(activity.router, prefix="/api/v1/activity", tags=["activity"])
 
 
 @app.get("/")
@@ -48,8 +46,7 @@ async def health_check():
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
-
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+

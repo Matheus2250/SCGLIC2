@@ -1,4 +1,5 @@
 import React from 'react';
+import RecentActivities from '../components/common/RecentActivities';
 import { Box, Typography, Paper, Grid, Button } from '@mui/material';
 import { Assignment, CheckCircle, Gavel, Assessment } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -22,37 +23,40 @@ const Dashboard: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" sx={{ mb: 1, fontWeight: 700 }}>
-        Página Inicial
+        PÃ¡gina Inicial
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Bem-vindo. Selecione abaixo uma área para começar ou use o menu lateral.
+        Bem-vindo. Selecione abaixo uma Ã¡rea para comeÃ§ar ou use o menu lateral.
       </Typography>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} md={6} lg={3}>
-          <QuickCard title="Planejamento (PCA)" description="Gerencie contratações planejadas e atrasos" icon={<Assignment />} color="#0d6efd" onClick={() => navigate('/planejamento')} />
+          <QuickCard title="Planejamento (PCA)" description="Gerencie contrataÃ§Ãµes planejadas e atrasos" icon={<Assignment />} color="#0d6efd" onClick={() => navigate('/planejamento')} />
         </Grid>
         <Grid item xs={12} md={6} lg={3}>
-          <QuickCard title="Qualificação" description="Acompanhe instruções e status" icon={<CheckCircle />} color="#198754" onClick={() => navigate('/qualificacao')} />
+          <QuickCard title="QualificaÃ§Ã£o" description="Acompanhe instruÃ§Ãµes e status" icon={<CheckCircle />} color="#198754" onClick={() => navigate('/qualificacao')} />
         </Grid>
         <Grid item xs={12} md={6} lg={3}>
-          <QuickCard title="Licitação" description="Registre e acompanhe pregões" icon={<Gavel />} color="#fd7e14" onClick={() => navigate('/licitacao')} />
+          <QuickCard title="LicitaÃ§Ã£o" description="Registre e acompanhe pregÃµes" icon={<Gavel />} color="#fd7e14" onClick={() => navigate('/licitacao')} />
         </Grid>
         <Grid item xs={12} md={6} lg={3}>
-          <QuickCard title="Relatórios" description="Gere relatórios unificados e customizados" icon={<Assessment />} color="#6f42c1" onClick={() => navigate('/relatorios')} />
+          <QuickCard title="RelatÃ³rios" description="Gere relatÃ³rios unificados e customizados" icon={<Assessment />} color="#6f42c1" onClick={() => navigate('/relatorios')} />
         </Grid>
       </Grid>
 
       <Paper sx={{ p: 3 }}>
         <Typography variant="h6" sx={{ mb: 1, fontWeight: 700 }}>
-          Dicas rápidas
+          Dicas rÃ¡pidas
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          • Use os atalhos acima para ir direto ao módulo desejado.
-          <br />• Nos módulos, filtre as tabelas e exporte os resultados.
+          â€¢ Use os atalhos acima para ir direto ao mÃ³dulo desejado.
+          <br />â€¢ Nos mÃ³dulos, filtre as tabelas e exporte os resultados.
         </Typography>
-        <Button variant="outlined" onClick={() => navigate('/planejamento/atrasadas')}>Ver contratações atrasadas</Button>
+        <Button variant="outlined" onClick={() => navigate('/planejamento/atrasadas')}>Ver contrataÃ§Ãµes atrasadas</Button>
       </Paper>
+
+      {/* Atividades Recentes */}
+      <RecentActivities />
     </Box>
   );
 };
