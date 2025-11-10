@@ -1,7 +1,7 @@
 from datetime import timedelta
-from typing import Any, List
+from typing import Any, List, Optional
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Response, Header
 from fastapi.security import HTTPBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.api import deps
@@ -16,6 +16,7 @@ from app.services.auth_service import (
 from pydantic import BaseModel
 import os
 import uuid
+import hashlib
 
 router = APIRouter()
 
@@ -106,28 +107,55 @@ async def upload_avatar(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(deps.get_current_active_user),
 ) -> Any:
-    # Validar tipo simples
+    # Configurações
+    max_bytes = int(os.getenv("AVATAR_MAX_BYTES", "2000000"))  # 2 MB
+    allowed_exts = {'.jpg', '.jpeg', '.png', '.webp', '.gif'}
+    mime_by_ext = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.webp': 'image/webp',
+        '.gif': 'image/gif',
+    }
+
     filename = file.filename or "avatar"
     ext = os.path.splitext(filename)[1].lower()
-    if ext not in {'.jpg', '.jpeg', '.png', '.webp', '.gif'}:
+    content_type = (getattr(file, 'content_type', None) or mime_by_ext.get(ext) or '').lower()
+    if ext not in allowed_exts and content_type not in mime_by_ext.values():
         raise HTTPException(status_code=400, detail="Formato de imagem inválido")
 
-    # Garantir diretório
-    static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'static')
-    avatars_dir = os.path.join(static_dir, 'avatars')
-    os.makedirs(avatars_dir, exist_ok=True)
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="Arquivo vazio")
+    if len(data) > max_bytes:
+        raise HTTPException(status_code=400, detail="Imagem excede o tamanho máximo permitido")
 
-    unique_name = f"{uuid.uuid4()}{ext}"
-    dest_path = os.path.join(avatars_dir, unique_name)
-
-    with open(dest_path, 'wb') as out:
-        out.write(await file.read())
-
-    url = f"/static/avatars/{unique_name}"
-    current_user.avatar_url = url
+    current_user.avatar_blob = data
+    current_user.avatar_mime = content_type or mime_by_ext.get(ext) or 'application/octet-stream'
+    current_user.avatar_url = f"/api/v1/auth/avatar/{current_user.id}"
     db.add(current_user)
     db.commit()
-    return {"avatar_url": url}
+    return {"avatar_url": current_user.avatar_url}
+
+
+@router.get("/avatar/{user_id}")
+def get_avatar(
+    user_id: UUID,
+    db: Session = Depends(get_db),
+    if_none_match: Optional[str] = Header(default=None, convert_underscores=False),
+) -> Response:
+    user = get_user(db, user_id=str(user_id))
+    if not user or not getattr(user, 'avatar_blob', None):
+        raise HTTPException(status_code=404, detail="Avatar não encontrado")
+
+    blob: bytes = user.avatar_blob
+    mime: str = (user.avatar_mime or 'application/octet-stream')
+    etag = 'W/"' + hashlib.sha1(blob).hexdigest() + '"'
+    if if_none_match and if_none_match == etag:
+        return Response(status_code=304)
+    resp = Response(content=blob, media_type=mime)
+    resp.headers['ETag'] = etag
+    return resp
 
 
 # Endpoints de administração de usuários (apenas para COORDENADOR)
@@ -211,3 +239,4 @@ def delete_user_by_id(
             status_code=500,
             detail=f"Internal server error: {str(e)}"
         )
+

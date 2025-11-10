@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Boolean, DateTime, Enum
+from sqlalchemy import Column, String, Boolean, DateTime, Enum, LargeBinary
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -25,6 +25,8 @@ class Usuario(Base):
     nivel_acesso = Column(Enum(NivelAcesso), nullable=False, default=NivelAcesso.VISITANTE)
     nome_completo = Column(String(200), nullable=False)
     avatar_url = Column(String(500), nullable=True)
+    avatar_blob = Column(LargeBinary, nullable=True)
+    avatar_mime = Column(String(100), nullable=True)
     ativo = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
