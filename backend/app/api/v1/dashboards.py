@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 from app.api import deps
 from app.core.database import get_db
 from app.schemas.usuario import Usuario
@@ -25,16 +26,20 @@ class DashboardOut(BaseModel):
 @router.get("/{scope}", response_model=DashboardOut)
 def get_dashboard(scope: str, db: Session = Depends(get_db), current_user: Usuario = Depends(deps.get_current_active_user)) -> Any:
     try:
-        row = db.execute(
+        sel = (
             text(
                 """
                 SELECT widgets_json, layouts_json, updated_at
                 FROM user_dashboards
-                WHERE user_id = :uid::uuid AND scope = :scope
+                WHERE user_id = :uid AND scope = :scope
                 """
-            ),
-            {"uid": str(current_user.id), "scope": scope},
-        ).fetchone()
+            )
+            .bindparams(
+                bindparam("uid", type_=PGUUID(as_uuid=True)),
+                bindparam("scope")
+            )
+        )
+        row = db.execute(sel, {"uid": current_user.id, "scope": scope}).fetchone()
     except Exception:
         # Se tabela nao existir ou erro inesperado, retorna vazio para nao quebrar a UI
         return DashboardOut(scope=scope, widgets=[], layouts={}, updated_at=None)
@@ -60,38 +65,51 @@ def put_dashboard(scope: str, payload: DashboardPayload, db: Session = Depends(g
         raise HTTPException(status_code=400, detail="payload invalido")
 
     # Persistir com SELECT -> UPDATE/INSERT e cast para JSONB
-    import json as _json
-    widgets_json = _json.dumps(widgets_obj)
-    layouts_json = _json.dumps(layouts_obj)
-    params = {"uid": str(current_user.id), "scope": scope, "widgets": widgets_json, "layouts": layouts_json}
+    params = {"uid": current_user.id, "scope": scope, "widgets": widgets_obj, "layouts": layouts_obj}
     try:
-        exists = db.execute(
-            text("SELECT 1 FROM user_dashboards WHERE user_id = :uid::uuid AND scope = :scope"),
-            params,
-        ).fetchone()
+        q_exists = (
+            text("SELECT 1 FROM user_dashboards WHERE user_id = :uid AND scope = :scope")
+            .bindparams(
+                bindparam("uid", type_=PGUUID(as_uuid=True)),
+                bindparam("scope")
+            )
+        )
+        exists = db.execute(q_exists, params).fetchone()
         if exists:
-            db.execute(
+            upd = (
                 text(
                     """
                     UPDATE user_dashboards
-                    SET widgets_json = :widgets::jsonb,
-                        layouts_json = :layouts::jsonb,
+                    SET widgets_json = :widgets,
+                        layouts_json = :layouts,
                         updated_at = now()
-                    WHERE user_id = :uid::uuid AND scope = :scope
+                    WHERE user_id = :uid AND scope = :scope
                     """
-                ),
-                params,
+                )
+                .bindparams(
+                    bindparam("widgets", type_=JSONB),
+                    bindparam("layouts", type_=JSONB),
+                    bindparam("uid", type_=PGUUID(as_uuid=True)),
+                    bindparam("scope")
+                )
             )
+            db.execute(upd, params)
         else:
-            db.execute(
+            ins = (
                 text(
                     """
                     INSERT INTO user_dashboards (user_id, scope, widgets_json, layouts_json)
-                    VALUES (:uid::uuid, :scope, :widgets::jsonb, :layouts::jsonb)
+                    VALUES (:uid, :scope, :widgets, :layouts)
                     """
-                ),
-                params,
+                )
+                .bindparams(
+                    bindparam("widgets", type_=JSONB),
+                    bindparam("layouts", type_=JSONB),
+                    bindparam("uid", type_=PGUUID(as_uuid=True)),
+                    bindparam("scope")
+                )
             )
+            db.execute(ins, params)
         db.commit()
     except Exception as e:
         msg = str(e)
