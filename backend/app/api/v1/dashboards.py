@@ -1,4 +1,5 @@
 from typing import Any, Dict, List, Optional
+import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text, bindparam
@@ -47,7 +48,6 @@ def get_dashboard(scope: str, db: Session = Depends(get_db), current_user: Usuar
             print("[DASHBOARD GET ERROR]", traceback.format_exc())
         except Exception:
             pass
-        # Se tabela nao existir ou erro inesperado, retorna vazio para nao quebrar a UI
         return DashboardOut(scope=scope, widgets=[], layouts={}, updated_at=None)
     if not row:
         return DashboardOut(scope=scope, widgets=[], layouts={}, updated_at=None)
@@ -57,7 +57,7 @@ def get_dashboard(scope: str, db: Session = Depends(get_db), current_user: Usuar
 
 @router.put("/{scope}", response_model=DashboardOut)
 def put_dashboard(scope: str, payload: DashboardPayload, db: Session = Depends(get_db), current_user: Usuario = Depends(deps.get_current_active_user)) -> Any:
-    # Validacoes simples
+    # Validações simples
     try:
         import json
         widgets_obj = payload.widgets or []
@@ -68,9 +68,9 @@ def put_dashboard(scope: str, payload: DashboardPayload, db: Session = Depends(g
         if isinstance(widgets_obj, list) and len(widgets_obj) > 30:
             raise HTTPException(status_code=400, detail="limite de widgets excedido")
     except Exception:
-        raise HTTPException(status_code=400, detail="payload invalido")
+        raise HTTPException(status_code=400, detail="payload inválido")
 
-    # Persistir com SELECT -> UPDATE/INSERT e cast para JSONB
+    # Persistir com SELECT -> UPDATE/INSERT, tipando parâmetros (UUID/JSONB)
     params = {"uid": current_user.id, "scope": scope, "widgets": widgets_obj, "layouts": layouts_obj}
     try:
         q_exists = (
@@ -104,18 +104,21 @@ def put_dashboard(scope: str, payload: DashboardPayload, db: Session = Depends(g
             ins = (
                 text(
                     """
-                    INSERT INTO user_dashboards (user_id, scope, widgets_json, layouts_json)
-                    VALUES (:uid, :scope, :widgets, :layouts)
+                    INSERT INTO user_dashboards (id, user_id, scope, widgets_json, layouts_json)
+                    VALUES (:id, :uid, :scope, :widgets, :layouts)
                     """
                 )
                 .bindparams(
+                    bindparam("id", type_=PGUUID(as_uuid=True)),
                     bindparam("widgets", type_=JSONB),
                     bindparam("layouts", type_=JSONB),
                     bindparam("uid", type_=PGUUID(as_uuid=True)),
                     bindparam("scope")
                 )
             )
-            db.execute(ins, params)
+            insert_params = dict(params)
+            insert_params["id"] = uuid.uuid4()
+            db.execute(ins, insert_params)
         db.commit()
     except Exception as e:
         # Log detalhado para diagnóstico no Render
@@ -131,5 +134,4 @@ def put_dashboard(scope: str, payload: DashboardPayload, db: Session = Depends(g
         raise HTTPException(status_code=500, detail="Erro ao salvar dashboard")
 
     return get_dashboard(scope, db, current_user)
-
 
