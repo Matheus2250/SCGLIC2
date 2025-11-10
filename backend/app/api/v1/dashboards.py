@@ -30,7 +30,7 @@ def get_dashboard(scope: str, db: Session = Depends(get_db), current_user: Usuar
                 """
                 SELECT widgets_json, layouts_json, updated_at
                 FROM user_dashboards
-                WHERE user_id = :uid AND scope = :scope
+                WHERE user_id = :uid::uuid AND scope = :scope
                 """
             ),
             {"uid": str(current_user.id), "scope": scope},
@@ -66,7 +66,7 @@ def put_dashboard(scope: str, payload: DashboardPayload, db: Session = Depends(g
     params = {"uid": str(current_user.id), "scope": scope, "widgets": widgets_json, "layouts": layouts_json}
     try:
         exists = db.execute(
-            text("SELECT 1 FROM user_dashboards WHERE user_id = :uid AND scope = :scope"),
+            text("SELECT 1 FROM user_dashboards WHERE user_id = :uid::uuid AND scope = :scope"),
             params,
         ).fetchone()
         if exists:
@@ -77,7 +77,7 @@ def put_dashboard(scope: str, payload: DashboardPayload, db: Session = Depends(g
                     SET widgets_json = :widgets::jsonb,
                         layouts_json = :layouts::jsonb,
                         updated_at = now()
-                    WHERE user_id = :uid AND scope = :scope
+                    WHERE user_id = :uid::uuid AND scope = :scope
                     """
                 ),
                 params,
@@ -87,7 +87,7 @@ def put_dashboard(scope: str, payload: DashboardPayload, db: Session = Depends(g
                 text(
                     """
                     INSERT INTO user_dashboards (user_id, scope, widgets_json, layouts_json)
-                    VALUES (:uid, :scope, :widgets::jsonb, :layouts::jsonb)
+                    VALUES (:uid::uuid, :scope, :widgets::jsonb, :layouts::jsonb)
                     """
                 ),
                 params,
@@ -100,4 +100,5 @@ def put_dashboard(scope: str, payload: DashboardPayload, db: Session = Depends(g
         raise HTTPException(status_code=500, detail="Erro ao salvar dashboard")
 
     return get_dashboard(scope, db, current_user)
+
 
