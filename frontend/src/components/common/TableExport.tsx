@@ -32,12 +32,15 @@ interface TableExportProps {
   title?: string;
 }
 
-// Extend jsPDF type to include autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
+// Compat: função que chama autoTable tanto no modo plugin (doc.autoTable)
+// quanto no modo função (autoTable(doc, options))
+const callAutoTable = (doc: jsPDF, options: any) => {
+  const anyDoc = doc as any;
+  if (anyDoc && typeof anyDoc.autoTable === 'function') {
+    return anyDoc.autoTable(options);
   }
-}
+  return autoTable(doc, options as any);
+};
 
 const TableExport: React.FC<TableExportProps> = ({
   data,
@@ -136,7 +139,7 @@ const TableExport: React.FC<TableExportProps> = ({
       (columns || []).map(col => row[col.label] || 'N/A')
     );
 
-    autoTable(doc, {
+    callAutoTable(doc, {
       head: [tableColumns],
       body: tableRows,
       startY: 35,
