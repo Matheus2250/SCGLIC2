@@ -15,7 +15,7 @@ import {
 } from '@mui/icons-material';
 import { utils, writeFileXLSX } from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -136,7 +136,7 @@ const TableExport: React.FC<TableExportProps> = ({
       (columns || []).map(col => row[col.label] || 'N/A')
     );
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [tableColumns],
       body: tableRows,
       startY: 35,
@@ -254,3 +254,4 @@ const TableExport: React.FC<TableExportProps> = ({
 };
 
 export default TableExport;
+
