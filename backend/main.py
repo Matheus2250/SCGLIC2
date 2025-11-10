@@ -6,7 +6,7 @@ for your editor to resolve imports.
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1 import auth, planejamento, qualificacao, licitacao, reports, access_requests, activity
+from app.api.v1 import auth, planejamento, qualificacao, licitacao, reports, access_requests, activity, dashboards
 
 app = FastAPI(
     title="Sistema de Gestão de Contratações Públicas",
@@ -36,6 +36,7 @@ app.include_router(licitacao.router, prefix="/api/v1/licitacao", tags=["licitaca
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["reports"])
 app.include_router(access_requests.router, prefix="/api/v1/access-requests", tags=["access-requests"])
 app.include_router(activity.router, prefix="/api/v1/activity", tags=["activity"])
+app.include_router(dashboards.router, prefix="/api/v1/dashboards", tags=["dashboards"])
 
 
 @app.get("/")

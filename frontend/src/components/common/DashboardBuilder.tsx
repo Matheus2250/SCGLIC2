@@ -7,6 +7,7 @@ import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { useAuth } from '../../store/auth.context';
 import { pcaService } from '../../services/pca.service';
+import { dashboardService } from '../../services/dashboard.service';
 import { PCA } from '../../types';
 
 export type ChartType = 'pie' | 'bar' | 'line';
@@ -162,11 +163,13 @@ const DashboardBuilder: React.FC<DashboardBuilderProps> = ({ storageKey }) => {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<WidgetConfig | null>(null);
   const [pca, setPca] = useState<PCA[]>([]);
+  const saveTimer = React.useRef<any>(null);
 
   const { user } = useAuth();
   const KEY_BASE = `${storageKey}:u:${user?.id || 'anon'}`;
   const LAYOUT_KEY = `${KEY_BASE}:layouts`;
   const WIDGETS_KEY = `${KEY_BASE}:widgets`;
+  const scope = React.useMemo(() => (storageKey.includes(':') ? storageKey.split(':').pop() as string : storageKey), [storageKey]);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -184,6 +187,27 @@ const DashboardBuilder: React.FC<DashboardBuilderProps> = ({ storageKey }) => {
     fetchAll();
   }, []);
 
+  // Carregar do servidor (se disponível); fallback ao localStorage
+  useEffect(() => {
+    const loadServer = async () => {
+      try {
+        const data = await dashboardService.get(scope);
+        if (data && (Array.isArray(data.widgets) || Object.keys(data.layouts || {}).length)) {
+          setWidgets(data.widgets || []);
+          setLayouts((data.layouts && Object.keys(data.layouts).length) ? data.layouts : { lg: [] });
+          // Sincronizar cache local
+          try {
+            localStorage.setItem(WIDGETS_KEY, JSON.stringify(data.widgets || []));
+            localStorage.setItem(LAYOUT_KEY, JSON.stringify((data.layouts && Object.keys(data.layouts).length) ? data.layouts : { lg: [] }));
+          } catch {}
+        }
+      } catch {
+        // Ignorar: ficará com localStorage
+      }
+    };
+    loadServer();
+  }, [scope, WIDGETS_KEY, LAYOUT_KEY]);
+
   useEffect(() => {
     try {
       const w = localStorage.getItem(WIDGETS_KEY);
@@ -199,6 +223,14 @@ const DashboardBuilder: React.FC<DashboardBuilderProps> = ({ storageKey }) => {
     try {
       localStorage.setItem(WIDGETS_KEY, JSON.stringify(nextWidgets));
       localStorage.setItem(LAYOUT_KEY, JSON.stringify(L));
+    } catch {}
+    // Debounced save to server
+    try {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      const payload = { widgets: nextWidgets, layouts: L } as any;
+      saveTimer.current = setTimeout(() => {
+        dashboardService.save(scope, payload).catch(() => {});
+      }, 600);
     } catch {}
   };
 
