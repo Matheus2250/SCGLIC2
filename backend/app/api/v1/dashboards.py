@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy import text, bindparam
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 from app.api import deps
 from app.core.database import get_db
@@ -41,6 +41,12 @@ def get_dashboard(scope: str, db: Session = Depends(get_db), current_user: Usuar
         )
         row = db.execute(sel, {"uid": current_user.id, "scope": scope}).fetchone()
     except Exception:
+        # Logar stack para diagnóstico e retornar vazio
+        try:
+            import traceback
+            print("[DASHBOARD GET ERROR]", traceback.format_exc())
+        except Exception:
+            pass
         # Se tabela nao existir ou erro inesperado, retorna vazio para nao quebrar a UI
         return DashboardOut(scope=scope, widgets=[], layouts={}, updated_at=None)
     if not row:
@@ -112,6 +118,13 @@ def put_dashboard(scope: str, payload: DashboardPayload, db: Session = Depends(g
             db.execute(ins, params)
         db.commit()
     except Exception as e:
+        # Log detalhado para diagnóstico no Render
+        try:
+            import traceback
+            print(f"[DASHBOARD PUT ERROR] scope={scope} user={current_user.id}")
+            print(traceback.format_exc())
+        except Exception:
+            pass
         msg = str(e)
         if 'user_dashboards' in msg and 'does not exist' in msg:
             raise HTTPException(status_code=400, detail="Tabela de dashboards nao encontrada. Execute as migrations.")
