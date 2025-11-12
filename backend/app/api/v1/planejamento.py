@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from app.api import deps
@@ -124,10 +124,21 @@ def _extract_year_from_num(numero: str):
 def read_pcas(
     skip: int = 0,
     limit: int = 1000,
+    ano: Optional[int] = None,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(deps.get_current_active_user)
 ) -> Any:
-    pcas = db.query(PCA).offset(skip).limit(limit).all()
+    query = db.query(PCA)
+    if ano is not None:
+        try:
+            year = int(ano)
+            if 2000 <= year <= 2100:
+                query = query.filter(PCA.ano_pca == year)
+            else:
+                raise ValueError()
+        except Exception:
+            raise HTTPException(status_code=400, detail="Parâmetro 'ano' inválido")
+    pcas = query.offset(skip).limit(limit).all()
     return pcas
 
 

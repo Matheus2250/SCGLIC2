@@ -2,8 +2,9 @@ import { api } from './api';
 import { PCA, DashboardStats } from '../types';
 
 export const pcaService = {
-  async getAll(skip = 0, limit = 100): Promise<PCA[]> {
-    const response = await api.get<PCA[]>(`/api/v1/pca?skip=${skip}&limit=${limit}`);
+  async getAll(skip = 0, limit = 100, ano?: number): Promise<PCA[]> {
+    const anoParam = ano && ano >= 2000 && ano <= 2100 ? `&ano=${ano}` : '';
+    const response = await api.get<PCA[]>(`/api/v1/pca?skip=${skip}&limit=${limit}${anoParam}`);
     return response.data;
   },
 

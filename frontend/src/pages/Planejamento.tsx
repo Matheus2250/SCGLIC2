@@ -149,12 +149,12 @@ const Planejamento: React.FC = () => {
 
   useEffect(() => {
     fetchPCAs();
-  }, []);
+  }, [selectedYear]);
 
   const fetchPCAs = async () => {
     try {
       setLoading(true);
-      const data = await pcaService.getAll(0, 10000);
+      const data = await pcaService.getAll(0, 10000, selectedYear);
       // IMPORTANTE: Garantir que sempre seja um array
       setPcas(Array.isArray(data) ? data : []);
     } catch (error) {
