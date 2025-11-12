@@ -1,6 +1,7 @@
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
+from sqlalchemy import text as sql_text
 from app.api import deps
 from app.core.database import get_db
 from app.models.usuario import Usuario
@@ -119,6 +120,100 @@ def _extract_year_from_num(numero: str):
         return None
     except Exception:
         return None
+
+# --- Ciclos do Plano (pca_cycles) ---
+from sqlalchemy import text as sql_text
+
+def _ensure_cycle_open(db: Session, ano: int) -> str:
+    row = db.execute(sql_text("SELECT status FROM pca_cycles WHERE ano = :ano"), {"ano": ano}).fetchone()
+    if row:
+        return row[0]
+    db.execute(sql_text("INSERT INTO pca_cycles (ano, status) VALUES (:ano, 'ABERTO')"), {"ano": ano})
+    db.commit()
+    return 'ABERTO'
+
+def _get_cycle(db: Session, ano: int):
+    row = db.execute(sql_text("SELECT ano, status, closed_at, closed_by FROM pca_cycles WHERE ano = :ano"), {"ano": ano}).fetchone()
+    if not row:
+        return None
+    return {"ano": row[0], "status": row[1], "closed_at": row[2], "closed_by": row[3]}
+
+def _get_current_open_cycle(db: Session):
+    row = db.execute(sql_text("SELECT MAX(ano) FROM pca_cycles WHERE status = 'ABERTO'")) .fetchone()
+    if row and row[0] is not None:
+        return int(row[0])
+    return None
+
+@router.post("/cycles/{ano}/close")
+def close_pca_cycle(
+    ano: int,
+    db: Session = Depends(get_db),
+    admin_user: Usuario = Depends(deps.get_admin_user),
+) -> Any:
+    try:
+        y = int(ano)
+        if y < 2000 or y > 2100:
+            raise ValueError()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Parâmetro 'ano' inválido")
+
+    row = db.execute(sql_text("SELECT status FROM pca_cycles WHERE ano = :ano"), {"ano": y}).fetchone()
+    if row and row[0] == 'ENCERRADO':
+        cur = db.execute(sql_text("SELECT ano, status, closed_at, closed_by FROM pca_cycles WHERE ano = :ano"), {"ano": y}).fetchone()
+        return {"ano": cur[0], "status": cur[1], "closed_at": str(cur[2]) if cur[2] else None, "closed_by": str(cur[3]) if cur[3] else None}
+    if not row:
+        db.execute(sql_text("INSERT INTO pca_cycles (ano, status) VALUES (:ano, 'ABERTO')"), {"ano": y})
+    db.execute(sql_text("UPDATE pca_cycles SET status='ENCERRADO', closed_at=now(), closed_by=:uid WHERE ano=:ano"), {"ano": y, "uid": str(admin_user.id)})
+    db.commit()
+    cur = db.execute(sql_text("SELECT ano, status, closed_at, closed_by FROM pca_cycles WHERE ano = :ano"), {"ano": y}).fetchone()
+    return {"ano": cur[0], "status": cur[1], "closed_at": str(cur[2]) if cur[2] else None, "closed_by": str(cur[3]) if cur[3] else None}
+
+@router.get("/cycles/{ano}")
+def get_pca_cycle(
+    ano: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(deps.get_current_active_user),
+) -> Any:
+    try:
+        y = int(ano)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Parâmetro 'ano' inválido")
+    c = _get_cycle(db, y)
+    if not c:
+        status = _ensure_cycle_open(db, y)
+        return {"ano": y, "status": status, "closed_at": None, "closed_by": None}
+    return {"ano": c["ano"], "status": c["status"], "closed_at": str(c["closed_at"]) if c["closed_at"] else None, "closed_by": str(c["closed_by"]) if c["closed_by"] else None}
+
+@router.get("/cycles/current")
+def get_current_cycle(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(deps.get_current_active_user),
+) -> Any:
+    y = _get_current_open_cycle(db)
+    return {"ano": y}
+
+
+def _ensure_cycle_open(db: Session, ano: int) -> str:
+    row = db.execute(sql_text("SELECT status FROM pca_cycles WHERE ano = :ano"), {"ano": ano}).fetchone()
+    if row:
+        return row[0]
+    db.execute(sql_text("INSERT INTO pca_cycles (ano, status) VALUES (:ano, 'ABERTO')"), {"ano": ano})
+    db.commit()
+    return 'ABERTO'
+
+
+def _get_cycle(db: Session, ano: int):
+    row = db.execute(sql_text("SELECT ano, status, closed_at, closed_by FROM pca_cycles WHERE ano = :ano"), {"ano": ano}).fetchone()
+    if not row:
+        return None
+    return {"ano": row[0], "status": row[1], "closed_at": row[2], "closed_by": row[3]}
+
+
+def _get_current_open_cycle(db: Session):
+    row = db.execute(sql_text("SELECT MAX(ano) FROM pca_cycles WHERE status = 'ABERTO'")) .fetchone()
+    if row and row[0] is not None:
+        return int(row[0])
+    return None
 
 @router.get("/", response_model=List[PCASchema])
 def read_pcas(
