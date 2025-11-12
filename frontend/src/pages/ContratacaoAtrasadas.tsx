@@ -1,18 +1,4 @@
-﻿const exportColumns = [
-  { key: 'numero_contratacao', label: 'Nº Contratação' },
-  { key: 'titulo_contratacao', label: 'Título' },
-  { key: 'valor_total', label: 'Valor Total' },
-  { key: 'area_requisitante', label: 'Área Requisitante' },
-  { key: 'data_estimada_inicio', label: 'Data Início' },
-  { key: 'data_estimada_conclusao', label: 'Data Conclusão' },
-  {
-    key: 'status',
-    label: 'Status',
-    formatter: (value: any) => value || 'No Prazo',
-  },
-];
-
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Typography,
@@ -29,12 +15,12 @@ import {
   Tabs,
   Tab,
   CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
-import {
-  Warning,
-  Schedule,
-  Error,
-} from '@mui/icons-material';
+import { Warning, Schedule, Error } from '@mui/icons-material';
 import { pcaService } from '../services/pca.service';
 import { PCA } from '../types';
 import { toast } from 'react-toastify';
@@ -43,6 +29,17 @@ import { ptBR } from 'date-fns/locale';
 import TableExport from '../components/common/TableExport';
 import StatCards from '../components/common/StatCards';
 import TableFilters, { FilterField, FilterValues } from '../components/common/TableFilters';
+
+const exportColumns = [
+  { key: 'numero_contratacao', label: 'Nº Contratação' },
+  { key: 'titulo_contratacao', label: 'Título' },
+  { key: 'valor_total', label: 'Valor Total' },
+  { key: 'area_requisitante', label: 'Área Requisitante' },
+  { key: 'data_estimada_inicio', label: 'Data Início' },
+  { key: 'data_estimada_conclusao', label: 'Data Conclusão' },
+  { key: 'status', label: 'Status', formatter: (value: any) => value || 'No Prazo' },
+];
+
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
@@ -52,13 +49,7 @@ interface TabPanelProps {
 function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
   return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      {...other}
-    >
+    <div role="tabpanel" hidden={value !== index} id={`simple-tabpanel-${index}`} aria-labelledby={`simple-tab-${index}`} {...other}>
       {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
     </div>
   );
@@ -71,8 +62,9 @@ const ContratacaoAtrasadas: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [tabValue, setTabValue] = useState(0);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
-  // Filter states
+  // Filtros
   const [filters, setFilters] = useState<FilterValues>({
     search: '',
     area_requisitante: '',
@@ -83,121 +75,62 @@ const ContratacaoAtrasadas: React.FC = () => {
     dataFim: '',
   });
 
-  // Get unique areas from combined data
-  const getUniqueAreas = () => {
-    const allPCAs = [...atrasadas, ...vencidas];
-    const areas = allPCAs
-      .map(pca => pca.area_requisitante)
-      .filter(area => area && area.trim() !== '')
-      .filter((area, index, self) => self.indexOf(area) === index)
-      .sort();
-
-    return areas.map(area => ({ value: area, label: area }));
+  const generateYearOptions = () => {
+    const currentYear = new Date().getFullYear();
+    const years: number[] = [];
+    for (let i = currentYear - 3; i <= currentYear + 3; i++) years.push(i);
+    return years;
   };
+  const yearOptions = useMemo(generateYearOptions, []);
 
-  // Filter configuration
-  const filterFields: FilterField[] = [
-    {
-      key: 'area_requisitante',
-      label: 'Área Requisitante',
-      type: 'select',
-      options: getUniqueAreas()
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      type: 'select',
-      options: [
-        { value: 'atrasada', label: 'Atrasada' },
-        { value: 'vencida', label: 'Vencida' }
-      ]
-    },
-    {
-      key: 'valorMin',
-      label: 'Valor Mínimo',
-      type: 'number',
-      placeholder: '0,00'
-    },
-    {
-      key: 'valorMax',
-      label: 'Valor Máximo',
-      type: 'number',
-      placeholder: '0,00'
-    },
-    {
-      key: 'dataInicio',
-      label: 'Data Início',
-      type: 'date'
-    },
-    {
-      key: 'dataFim',
-      label: 'Data Fim',
-      type: 'date'
-    },
-  ];
-
-  // Export columns configuration
-  const exportColumnsPT = [
-    { key: 'numero_contratacao', label: 'Nº Contratação' },
-    { key: 'titulo_contratacao', label: 'Título' },
-    { key: 'valor_total', label: 'Valor Total' },
-    { key: 'area_requisitante', label: 'Área Requisitante' },
-    { key: 'data_estimada_inicio', label: 'Data Início' },
-    { key: 'data_estimada_conclusao', label: 'Data Conclusão' },
-    {
-      key: 'status',
-      label: 'Status',
-      formatter: (value: any) => value || 'No Prazo',
-    },
-  ];
-/* const exportColumns = [
-  { key: 'numero_contratacao', label: 'Nº Contratação' },
-  { key: 'titulo_contratacao', label: 'Título' },
-  { key: 'valor_total', label: 'Valor Total' },
-  { key: 'area_requisitante', label: 'Área Requisitante' },
-  { key: 'data_estimada_inicio', label: 'Data Início' },
-  { key: 'data_estimada_conclusao', label: 'Data Conclusão' },
-  {
-    key: 'status',
-    label: 'Status',
-    formatter: (value: any) => value || 'No Prazo',
-  },
-]; */
-
-  useEffect(() => {
-    fetchPCAs();
-  }, []);
-
-  const fetchPCAs = async () => {
+  const extractYear = (pca: PCA): number | null => {
     try {
-      setLoading(true);
-
-      // Buscar contratações específicas usando endpoints SQL
-      const [atrasadasData, vencidasData] = await Promise.all([
-        pcaService.getAtrasadas(),
-        pcaService.getVencidas()
-      ]);
-
-      // Definir dados baseados nos resultados dos endpoints SQL
-      setAtrasadas(Array.isArray(atrasadasData) ? atrasadasData : []);
-      setVencidas(Array.isArray(vencidasData) ? vencidasData : []);
-
-    } catch (error) {
-      toast.error('Erro ao carregar contratações');
-      console.error(error);
-      setAtrasadas([]);
-      setVencidas([]);
-    } finally {
-      setLoading(false);
+      if (pca?.numero_contratacao) {
+        const m = /([0-9]{4})$/.exec(String(pca.numero_contratacao).trim());
+        if (m) {
+          const y = parseInt(m[1], 10);
+          if (y >= 2000 && y <= 2100) return y;
+        }
+      }
+      if (pca?.data_estimada_inicio) {
+        const y = new Date(pca.data_estimada_inicio).getFullYear();
+        if (!Number.isNaN(y)) return y;
+      }
+      if (pca?.data_estimada_conclusao) {
+        const y = new Date(pca.data_estimada_conclusao).getFullYear();
+        if (!Number.isNaN(y)) return y;
+      }
+      return null;
+    } catch {
+      return null;
     }
   };
 
+  useEffect(() => {
+    const fetchPCAs = async () => {
+      try {
+        setLoading(true);
+        const [atrasadasData, vencidasData] = await Promise.all([
+          pcaService.getAtrasadas(),
+          pcaService.getVencidas(),
+        ]);
+        setAtrasadas(Array.isArray(atrasadasData) ? atrasadasData : []);
+        setVencidas(Array.isArray(vencidasData) ? vencidasData : []);
+      } catch (error) {
+        toast.error('Erro ao carregar contratações');
+        console.error(error);
+        setAtrasadas([]);
+        setVencidas([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPCAs();
+  }, []);
+
   const formatCurrency = (value: number | undefined) => {
     if (!value) return 'N/A';
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   };
 
   const formatDate = (dateString: string | undefined) => {
@@ -205,24 +138,10 @@ const ContratacaoAtrasadas: React.FC = () => {
     return format(new Date(dateString), 'dd/MM/yyyy', { locale: ptBR });
   };
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-    setPage(0); // Reset pagination when changing tabs
-  };
-
-  // Filter functions
+  // Filtros
   const handleFilterChange = (key: string, value: string | number | null) => {
     setFilters(prev => ({ ...prev, [key]: value }));
-    setPage(0); // Reset to first page when filtering
+    setPage(0);
   };
 
   const handleClearFilters = () => {
@@ -238,10 +157,34 @@ const ContratacaoAtrasadas: React.FC = () => {
     setPage(0);
   };
 
-  // Apply current filters to a given list
+  const getUniqueAreas = () => {
+    const allPCAs = [...atrasadas, ...vencidas];
+    const areas = allPCAs
+      .map(pca => pca.area_requisitante)
+      .filter(area => area && area.trim() !== '')
+      .filter((area, index, self) => self.indexOf(area) === index)
+      .sort();
+    return areas.map(area => ({ value: area, label: area }));
+  };
+
+  const filterFields: FilterField[] = [
+    { key: 'area_requisitante', label: 'Área Requisitante', type: 'select', options: getUniqueAreas() },
+    { key: 'status', label: 'Status', type: 'select', options: [ { value: 'atrasada', label: 'Atrasada' }, { value: 'vencida', label: 'Vencida' } ] },
+    { key: 'valorMin', label: 'Valor Mínimo', type: 'number', placeholder: '0,00' },
+    { key: 'valorMax', label: 'Valor Máximo', type: 'number', placeholder: '0,00' },
+    { key: 'dataInicio', label: 'Data Início', type: 'date' },
+    { key: 'dataFim', label: 'Data Fim', type: 'date' },
+  ];
+
   const applyFilters = (list: PCA[]) => {
     return list.filter(pca => {
-      // Search filter (searches in multiple fields)
+      // Filtro por ano (a partir do número da contratação ou datas)
+      if (selectedYear) {
+        const y = extractYear(pca);
+        if (y !== selectedYear) return false;
+      }
+
+      // Busca textual
       if (filters.search) {
         const searchTerm = filters.search.toString().toLowerCase();
         const searchableFields = [
@@ -249,37 +192,27 @@ const ContratacaoAtrasadas: React.FC = () => {
           pca.titulo_contratacao,
           pca.area_requisitante,
         ].join(' ').toLowerCase();
-
-        if (!searchableFields.includes(searchTerm)) {
-          return false;
-        }
+        if (!searchableFields.includes(searchTerm)) return false;
       }
 
-      // Area filter
+      // Área
       if (filters.area_requisitante && pca.area_requisitante) {
-        if (pca.area_requisitante !== filters.area_requisitante) {
-          return false;
-        }
+        if (pca.area_requisitante !== filters.area_requisitante) return false;
       }
 
-      // Status filter
+      // Status (derivado das listas)
       if (filters.status) {
         const isVencida = vencidas.some(v => v.id === pca.id);
         const isAtrasada = atrasadas.some(a => a.id === pca.id);
-
         if (filters.status === 'atrasada' && !isAtrasada) return false;
         if (filters.status === 'vencida' && !isVencida) return false;
       }
 
-      // Value range filter
-      if (filters.valorMin && pca.valor_total && pca.valor_total < Number(filters.valorMin)) {
-        return false;
-      }
-      if (filters.valorMax && pca.valor_total && pca.valor_total > Number(filters.valorMax)) {
-        return false;
-      }
+      // Faixa de valores
+      if (filters.valorMin && pca.valor_total && pca.valor_total < Number(filters.valorMin)) return false;
+      if (filters.valorMax && pca.valor_total && pca.valor_total > Number(filters.valorMax)) return false;
 
-      // Date range filter
+      // Intervalo de datas (usa data_estimada_conclusao)
       if (filters.dataInicio && pca.data_estimada_conclusao) {
         const pcaDate = new Date(pca.data_estimada_conclusao);
         const startDate = new Date(filters.dataInicio.toString());
@@ -295,14 +228,13 @@ const ContratacaoAtrasadas: React.FC = () => {
     });
   };
 
-  // Filter PCAs based on selected tab and filters
   const getFilteredPCAs = () => {
     switch (tabValue) {
-      case 0: // Todas (atrasadas + vencidas)
+      case 0:
         return applyFilters([...atrasadas, ...vencidas]);
-      case 1: // Atrasadas
+      case 1:
         return applyFilters(atrasadas);
-      case 2: // Vencidas
+      case 2:
         return applyFilters(vencidas);
       default:
         return [];
@@ -311,49 +243,22 @@ const ContratacaoAtrasadas: React.FC = () => {
 
   const filteredPCAs = getFilteredPCAs();
   const paginatedPCAs = filteredPCAs.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-  const totalValorFiltrado = filteredPCAs.reduce(
-    (acc, p) => acc + (typeof p.valor_total === 'number' ? p.valor_total : (p.valor_total ? Number(p.valor_total as any) : 0)),
-    0
-  );
+  const totalValorFiltrado = filteredPCAs.reduce((acc, p) => acc + (typeof p.valor_total === 'number' ? p.valor_total : (p.valor_total ? Number(p.valor_total as any) : 0)), 0);
 
   const getStatusChip = (pca: PCA) => {
-    // Determinar status baseado na lista onde a contratação aparece
     const isVencida = vencidas.some(v => v.id === pca.id);
     const isAtrasada = atrasadas.some(a => a.id === pca.id);
-
-    if (isVencida) {
-      return (
-        <Chip
-          icon={<Error />}
-          label="Vencida"
-          color="error"
-          size="small"
-        />
-      );
-    }
-    if (isAtrasada) {
-      return (
-        <Chip
-          icon={<Schedule />}
-          label="Atrasada"
-          color="warning"
-          size="small"
-        />
-      );
-    }
+    if (isVencida) return <Chip icon={<Error />} label="Vencida" color="error" size="small" />;
+    if (isAtrasada) return <Chip icon={<Schedule />} label="Atrasada" color="warning" size="small" />;
     return null;
   };
 
   const getTabIcon = (index: number) => {
     switch (index) {
-      case 0:
-        return <Warning />;
-      case 1:
-        return <Schedule />;
-      case 2:
-        return <Error />;
-      default:
-        return <Warning />;
+      case 0: return <Warning />;
+      case 1: return <Schedule />;
+      case 2: return <Error />;
+      default: return <Warning />;
     }
   };
 
@@ -370,22 +275,32 @@ const ContratacaoAtrasadas: React.FC = () => {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress />
-        <Typography variant="h6" sx={{ ml: 2 }}>
-          Carregando contratações...
-        </Typography>
+        <Typography variant="h6" sx={{ ml: 2 }}>Carregando contratações...</Typography>
       </Box>
     );
   }
 
+  const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
+  const handleChangeRowsPerPage = (e: React.ChangeEvent<HTMLInputElement>) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); };
+  const handleTabChange = (_: any, value: number) => setTabValue(value);
+
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Typography variant="h4">
-          Contratações Atrasadas e Vencidas
-        </Typography>
+        <Box display="flex" alignItems="center" gap={3}>
+          <Typography variant="h4">Contratações Atrasadas e Vencidas</Typography>
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Ano</InputLabel>
+            <Select value={selectedYear} label="Ano" onChange={(e) => setSelectedYear(Number((e.target as any).value))}>
+              {yearOptions.map((year) => (
+                <MenuItem key={year} value={year}>{year}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
         <TableExport
           data={filteredPCAs}
-          columns={exportColumnsPT}
+          columns={exportColumns}
           filename={`contratacoes_${tabValue === 0 ? 'atrasadas_vencidas' : tabValue === 1 ? 'atrasadas' : 'vencidas'}`}
           title={`Relatório de Contratações ${tabValue === 0 ? 'Atrasadas e Vencidas' : tabValue === 1 ? 'Atrasadas' : 'Vencidas'}`}
         />
@@ -400,19 +315,6 @@ const ContratacaoAtrasadas: React.FC = () => {
         ]}
       />
 
-      {total === 0 ? (
-        <Alert severity="success" sx={{ mb: 3 }}>
-          Parabéns! Não há contratações atrasadas ou vencidas no momento.
-        </Alert>
-      ) : (
-        <Alert severity="warning" sx={{ mb: 3 }}>
-          Foram encontradas {total} contratação(ões) que requerem atenção:
-          {countAtrasadas > 0 && ` ${countAtrasadas} atrasada(s)`}
-          {countAtrasadas > 0 && countVencidas > 0 && ' e'}
-          {countVencidas > 0 && ` ${countVencidas} vencida(s)`}.
-        </Alert>
-      )}
-
       <TableFilters
         fields={filterFields}
         values={filters}
@@ -422,28 +324,10 @@ const ContratacaoAtrasadas: React.FC = () => {
       />
 
       <Paper>
-        <Tabs
-          value={tabValue}
-          onChange={handleTabChange}
-          indicatorColor="primary"
-          textColor="primary"
-          variant="fullWidth"
-        >
-          <Tab
-            icon={getTabIcon(0)}
-            label={`Todas (${total})`}
-            iconPosition="start"
-          />
-          <Tab
-            icon={getTabIcon(1)}
-            label={`Atrasadas (${countAtrasadas})`}
-            iconPosition="start"
-          />
-          <Tab
-            icon={getTabIcon(2)}
-            label={`Vencidas (${countVencidas})`}
-            iconPosition="start"
-          />
+        <Tabs value={tabValue} onChange={handleTabChange} indicatorColor="primary" textColor="primary" variant="fullWidth">
+          <Tab icon={getTabIcon(0)} label={`Todas (${total})`} iconPosition="start" />
+          <Tab icon={getTabIcon(1)} label={`Atrasadas (${countAtrasadas})`} iconPosition="start" />
+          <Tab icon={getTabIcon(2)} label={`Vencidas (${countVencidas})`} iconPosition="start" />
         </Tabs>
 
         <TabPanel value={tabValue} index={tabValue}>
@@ -473,39 +357,13 @@ const ContratacaoAtrasadas: React.FC = () => {
                   <TableBody>
                     {paginatedPCAs.map((pca) => (
                       <TableRow key={pca.id || pca.numero_contratacao}>
-                        <TableCell>
-                          {getStatusChip(pca)}
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" fontWeight="medium">
-                            {pca.numero_contratacao}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" noWrap sx={{ maxWidth: 250 }}>
-                            {pca.titulo_contratacao || 'N/A'}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" fontWeight="medium">
-                            {formatCurrency(pca.valor_total)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2">
-                            {pca.area_requisitante || 'N/A'}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2">
-                            {formatDate(pca.data_estimada_inicio)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" color={pca.vencida ? 'error' : pca.atrasada ? 'warning.main' : 'inherit'}>
-                            {formatDate(pca.data_estimada_conclusao)}
-                          </Typography>
-                        </TableCell>
+                        <TableCell>{getStatusChip(pca)}</TableCell>
+                        <TableCell><Typography variant="body2" fontWeight="medium">{pca.numero_contratacao}</Typography></TableCell>
+                        <TableCell><Typography variant="body2" noWrap sx={{ maxWidth: 250 }}>{pca.titulo_contratacao || 'N/A'}</Typography></TableCell>
+                        <TableCell><Typography variant="body2" fontWeight="medium">{formatCurrency(pca.valor_total)}</Typography></TableCell>
+                        <TableCell><Typography variant="body2">{pca.area_requisitante || 'N/A'}</Typography></TableCell>
+                        <TableCell><Typography variant="body2">{formatDate(pca.data_estimada_inicio)}</Typography></TableCell>
+                        <TableCell><Typography variant="body2" color={pca.vencida ? 'error' : pca.atrasada ? 'warning.main' : 'inherit'}>{formatDate(pca.data_estimada_conclusao)}</Typography></TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -521,9 +379,7 @@ const ContratacaoAtrasadas: React.FC = () => {
                 onPageChange={handleChangePage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
                 labelRowsPerPage="Linhas por página:"
-                labelDisplayedRows={({ from, to, count }) =>
-                  `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
-                }
+                labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`}
               />
             </>
           )}
@@ -534,3 +390,4 @@ const ContratacaoAtrasadas: React.FC = () => {
 };
 
 export default ContratacaoAtrasadas;
+
