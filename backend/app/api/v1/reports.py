@@ -11,7 +11,7 @@ from app.models.qualificacao import Qualificacao
 from app.models.licitacao import Licitacao
 import pandas as pd
 import io
-from datetime import datetime
+from datetime import datetime, date
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
@@ -432,11 +432,15 @@ def generate_custom_report(
             for field in config.selectedFields:
                 if hasattr(record, field):
                     value = getattr(record, field)
-                    # Tratar datas
+                    # Tratar datas (datetime/date) com segurança
                     if hasattr(value, 'strftime'):
-                        if value.tzinfo:
-                            value = value.replace(tzinfo=None)
-                        row_data[field] = value.strftime('%d/%m/%Y') if 'data' in field.lower() else value
+                        tz = getattr(value, 'tzinfo', None)
+                        if tz:
+                            try:
+                                value = value.replace(tzinfo=None)
+                            except Exception:
+                                pass
+                        row_data[field] = value.strftime('%d/%m/%Y') if ('data' in field.lower() or isinstance(value, (datetime, date))) else value
                     # Tratar valores monetários
                     elif field in ['valor_total', 'valor_estimado', 'valor_homologado', 'economia'] and value:
                         row_data[field] = float(value)
