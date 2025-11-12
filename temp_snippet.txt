@@ -1,0 +1,40 @@
+﻿    {
+      key: 'area_requisitante',
+      label: 'ï¿½rea Requisitante',
+      type: 'select',
+      options: getUniqueAreas()
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select',
+      options: [
+        { value: 'no_prazo', label: 'No Prazo' },
+        { value: 'atrasada', label: 'Atrasada' }
+      ]
+    },
+    {
+      key: 'valorMin',
+      label: 'Valor Mï¿½nimo',
+      type: 'number',
+      placeholder: '0,00'
+    },
+    {
+      key: 'valorMax',
+      label: 'Valor Mï¿½ximo',
+      type: 'number',
+      placeholder: '0,00'
+    },
+    {
+      key: 'dataInicio',
+      label: 'Data Inï¿½cio',
+      type: 'date'
+    },
+    {
+      key: 'dataFim',
+      label: 'Data Fim',
+      type: 'date'
+    },
+  ];
+
+  // Export columns configuration

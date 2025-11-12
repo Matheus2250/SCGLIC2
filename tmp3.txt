@@ -1,0 +1,109 @@
+﻿                Excel (.xlsx, .xls)
+              </ToggleButton>
+              <ToggleButton value="csv">
+                CSV (.csv)
+              </ToggleButton>
+            </ToggleButtonGroup>
+
+            <Divider sx={{ my: 2 }} />
+
+            {/* Informaï¿½ï¿½es sobre o tipo selecionado */}
+            {importType === 'excel' ? (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                  Formato Excel Requerido (.xlsx ou .xls):
+                </Typography>
+                <Typography variant="body2" component="div">
+                  O arquivo deve conter exatamente estas colunas na primeira linha:
+                  <br />ï¿½ <strong>Nï¿½mero da Contrataï¿½ï¿½o</strong> - Ex: 1/2025, 2/2025
+                  <br />ï¿½ <strong>Status da Contrataï¿½ï¿½o</strong> - Ex: Planejada, Em andamento
+                  <br />ï¿½ <strong>Situaï¿½ï¿½o da Execuï¿½ï¿½o</strong> - Ex: Nï¿½o iniciada, Em execuï¿½ï¿½o
+                  <br />ï¿½ <strong>Tï¿½tulo da Contrataï¿½ï¿½o</strong> - Descriï¿½ï¿½o completa
+                  <br />ï¿½ <strong>Categoria da Contrataï¿½ï¿½o</strong> - Ex: Serviï¿½os, Obras
+                  <br />â€¢ <strong>Valor Total</strong> - Formato: 1.000.000,00 ou 1000000.00
+                  <br />ï¿½ <strong>ï¿½rea Requisitante</strong> - Setor responsï¿½vel
+                  <br />ï¿½ <strong>Nï¿½mero DFD</strong> - Nï¿½mero do documento
+                  <br />ï¿½ <strong>Data Estimada de Inï¿½cio</strong> - Formato: DD/MM/AAAA
+                  <br />ï¿½ <strong>Data Estimada de Conclusï¿½o</strong> - Formato: DD/MM/AAAA
+                  <br /><br />
+                  <em>Dica: Use o arquivo CSV original e converta para Excel mantendo estes nomes de colunas.</em>
+                </Typography>
+              </Alert>
+            ) : (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                  Arquivo CSV Original do PCA - Sem Formataï¿½ï¿½o Necessï¿½ria:
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Simplesmente faï¿½a o upload do arquivo CSV original baixado do sistema PCA!</strong>
+                  <br /><br />
+                  <strong>O que o sistema faz automaticamente:</strong>
+                  <br />â€¢ Detecta o encoding correto (Windows-1252, UTF-8, etc.)
+                  <br />ï¿½ Mapeia as colunas automaticamente por posiï¿½ï¿½o
+                  <br />â€¢ Limpa caracteres especiais corrompidos
+                  <br />ï¿½ Formata datas e valores monetï¿½rios
+                  <br />â€¢ Evita duplicatas (atualiza registros existentes)
+                  <br /><br />
+                  <em>Nï¿½o precisa converter, formatar ou alterar o arquivo CSV original!</em>
+                </Typography>
+              </Alert>
+            )}
+
+            {/* Seletor de arquivo */}
+            <Input
+              type="file"
+              inputProps={{
+                accept: importType === 'excel' ? '.xlsx,.xls' : '.csv'
+              }}
+              onChange={(e) => {
+                const target = e.target as HTMLInputElement;
+                if (target.files && target.files[0]) {
+                  setSelectedFile(target.files[0]);
+                }
+              }}
+              fullWidth
+            />
+
+            {selectedFile && (
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                Arquivo selecionado: {selectedFile.name}
+              </Typography>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => {
+            setImportDialog(false);
+            setSelectedFile(null);
+          }}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleImport}
+            variant="contained"
+            disabled={!selectedFile || importing}
+          >
+            {importing ? 'Importando...' : `Importar ${importType === 'excel' ? 'Excel' : 'CSV'}`}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* PCA Details Modal */}
+      <PCADetailsModal
+        open={detailsOpen}
+        onClose={handleCloseDetails}
+        pca={selectedPCA}
+      />
+    </Box>
+  );
+};
+
+export default Planejamento;
+
+
+
+
+
+
+
+

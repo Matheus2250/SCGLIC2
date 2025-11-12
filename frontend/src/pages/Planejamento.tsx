@@ -67,7 +67,7 @@ const Planejamento: React.FC = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmTargetId, setConfirmTargetId] = useState<string | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const [confirmTitle, setConfirmTitle] = useState('Confirmar exclus�o');
+  const [confirmTitle, setConfirmTitle] = useState('Confirmar exclusão');
   const [confirmDescription, setConfirmDescription] = useState('Tem certeza que deseja excluir esta PCA?');
   
   // Filter states
@@ -100,7 +100,7 @@ const Planejamento: React.FC = () => {
   const filterFields: FilterField[] = [
     {
       key: 'area_requisitante',
-      label: '�rea Requisitante',
+      label: 'Área Requisitante',
       type: 'select',
       options: getUniqueAreas()
     },
@@ -115,19 +115,19 @@ const Planejamento: React.FC = () => {
     },
     {
       key: 'valorMin',
-      label: 'Valor M�nimo',
+      label: 'Valor Mínimo',
       type: 'number',
       placeholder: '0,00'
     },
     {
       key: 'valorMax',
-      label: 'Valor M�ximo',
+      label: 'Valor Máximo',
       type: 'number',
       placeholder: '0,00'
     },
     {
       key: 'dataInicio',
-      label: 'Data In�cio',
+      label: 'Data Início',
       type: 'date'
     },
     {
@@ -139,11 +139,11 @@ const Planejamento: React.FC = () => {
 
   // Export columns configuration
   const exportColumns = [
-    { key: 'numero_contratacao', label: 'N� Contrata��o' },
-    { key: 'titulo_contratacao', label: 'T�tulo' },
+    { key: 'numero_contratacao', label: 'Nº Contratação' },
+    { key: 'titulo_contratacao', label: 'Título' },
     { key: 'valor_total', label: 'Valor Total' },
-    { key: 'area_requisitante', label: '�rea Requisitante' },
-    { key: 'data_estimada_conclusao', label: 'Data Conclus�o' },
+    { key: 'area_requisitante', label: 'Área Requisitante' },
+    { key: 'data_estimada_conclusao', label: 'Data Conclusão' },
     { 
       key: 'atrasada', 
       label: 'Status',
@@ -199,7 +199,7 @@ const Planejamento: React.FC = () => {
   const handleDelete = async (id: string) => {
     setConfirmTargetId(id);
     setConfirmTitle('Excluir PCA');
-    setConfirmDescription('Tem certeza que deseja excluir esta PCA? Essa a��o n�o poder� ser desfeita.');
+    setConfirmDescription('Tem certeza que deseja excluir esta PCA? Essa ação não poderá ser desfeita.');
     setConfirmOpen(true);
   };
 
@@ -208,7 +208,7 @@ const Planejamento: React.FC = () => {
     setConfirmLoading(true);
     try {
       await pcaService.delete(confirmTargetId);
-      toast.success('PCA exclu�da com sucesso!');
+      toast.success('PCA excluída com sucesso!');
       fetchPCAs();
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Erro ao excluir PCA');
@@ -218,19 +218,10 @@ const Planejamento: React.FC = () => {
       setConfirmTargetId(null);
     }
   };
+
   const handleViewDetails = (pca: PCA) => {
     setSelectedPCA(pca);
     setDetailsOpen(true);
-      <ConfirmDialog
-        open={confirmOpen}
-        title={confirmTitle}
-        description={confirmDescription}
-        loading={confirmLoading}
-        confirmText="Excluir"
-        cancelText="Cancelar"
-        onConfirm={handleConfirmDelete}
-        onClose={() => { setConfirmOpen(false); setConfirmTargetId(null); }}
-      />
   };
 
   const handleCloseDetails = () => {
@@ -388,17 +379,18 @@ const Planejamento: React.FC = () => {
             data={filteredPCAs}
             columns={exportColumns}
             filename={`planejamento_pca_${selectedYear}`}
-            title={`Relat�rio de Planejamento - PCA ${selectedYear}`}
+            title={`Relatório de Planejamento - PCA ${selectedYear}`}
           />
           <Button
             variant="outlined"
             startIcon={<Upload />}
-            onClick={() => setImportDialog(true)} disabled={cycleStatus === 'ENCERRADO'}>
+            onClick={() => setImportDialog(true)}
+            disabled={cycleStatus === 'ENCERRADO'}
+          >
             Importar Excel
           </Button>
         </Box>
       </Box>
-
 
       <StatCards
         items={[
@@ -408,23 +400,24 @@ const Planejamento: React.FC = () => {
           { label: 'Valor total', value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalValor || 0), color: '#6f42c1' },
         ]}
       />
+      
       <TableFilters
         fields={filterFields}
         values={filters}
         onChange={handleFilterChange}
         onClear={handleClearFilters}
-        searchPlaceholder="Pesquisar por n�mero, t�tulo ou �rea..."
+        searchPlaceholder="Pesquisar por número, título ou área..."
       />
 
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>N� Contrata��o</TableCell>
-              <TableCell>T�tulo</TableCell>
+              <TableCell>Nº Contratação</TableCell>
+              <TableCell>Título</TableCell>
               <TableCell>Valor Total</TableCell>
-              <TableCell>�rea Requisitante</TableCell>
-              <TableCell align="center">A��es</TableCell>
+              <TableCell>Área Requisitante</TableCell>
+              <TableCell align="center">Ações</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -455,7 +448,7 @@ const Planejamento: React.FC = () => {
               <TableRow>
                 <TableCell colSpan={5} align="center">
                   <Typography color="textSecondary">
-                    {loading ? 'Carregando...' : 'Nenhuma PCA encontrada. Importe um arquivo Excel para come�ar.'}
+                    {loading ? 'Carregando...' : 'Nenhuma PCA encontrada. Importe um arquivo Excel para começar.'}
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -470,7 +463,7 @@ const Planejamento: React.FC = () => {
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Linhas por p�gina:"
+          labelRowsPerPage="Linhas por página:"
           labelDisplayedRows={({ from, to, count }) =>
             `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
           }
@@ -482,7 +475,7 @@ const Planejamento: React.FC = () => {
         <DialogTitle>Importar PCAs</DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2 }}>
-            {/* Sele��o do tipo de arquivo */}
+            {/* Seleção do tipo de arquivo */}
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
               Tipo de arquivo:
             </Typography>
@@ -507,7 +500,7 @@ const Planejamento: React.FC = () => {
 
             <Divider sx={{ my: 2 }} />
 
-            {/* Informa��es sobre o tipo selecionado */}
+            {/* Informações sobre o tipo selecionado */}
             {importType === 'excel' ? (
               <Alert severity="info" sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
@@ -515,16 +508,16 @@ const Planejamento: React.FC = () => {
                 </Typography>
                 <Typography variant="body2" component="div">
                   O arquivo deve conter exatamente estas colunas na primeira linha:
-                  <br />� <strong>N�mero da Contrata��o</strong> - Ex: 1/2025, 2/2025
-                  <br />� <strong>Status da Contrata��o</strong> - Ex: Planejada, Em andamento
-                  <br />� <strong>Situa��o da Execu��o</strong> - Ex: N�o iniciada, Em execu��o
-                  <br />� <strong>T�tulo da Contrata��o</strong> - Descri��o completa
-                  <br />� <strong>Categoria da Contrata��o</strong> - Ex: Servi�os, Obras
+                  <br />• <strong>Número da Contratação</strong> - Ex: 1/2025, 2/2025
+                  <br />• <strong>Status da Contratação</strong> - Ex: Planejada, Em andamento
+                  <br />• <strong>Situação da Execução</strong> - Ex: Não iniciada, Em execução
+                  <br />• <strong>Título da Contratação</strong> - Descrição completa
+                  <br />• <strong>Categoria da Contratação</strong> - Ex: Serviços, Obras
                   <br />• <strong>Valor Total</strong> - Formato: 1.000.000,00 ou 1000000.00
-                  <br />� <strong>�rea Requisitante</strong> - Setor respons�vel
-                  <br />� <strong>N�mero DFD</strong> - N�mero do documento
-                  <br />� <strong>Data Estimada de In�cio</strong> - Formato: DD/MM/AAAA
-                  <br />� <strong>Data Estimada de Conclus�o</strong> - Formato: DD/MM/AAAA
+                  <br />• <strong>Área Requisitante</strong> - Setor responsável
+                  <br />• <strong>Número DFD</strong> - Número do documento
+                  <br />• <strong>Data Estimada de Início</strong> - Formato: DD/MM/AAAA
+                  <br />• <strong>Data Estimada de Conclusão</strong> - Formato: DD/MM/AAAA
                   <br /><br />
                   <em>Dica: Use o arquivo CSV original e converta para Excel mantendo estes nomes de colunas.</em>
                 </Typography>
@@ -532,19 +525,19 @@ const Planejamento: React.FC = () => {
             ) : (
               <Alert severity="info" sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
-                  Arquivo CSV Original do PCA - Sem Formata��o Necess�ria:
+                  Arquivo CSV Original do PCA - Sem Formatação Necessária:
                 </Typography>
                 <Typography variant="body2">
-                  <strong>Simplesmente fa�a o upload do arquivo CSV original baixado do sistema PCA!</strong>
+                  <strong>Simplesmente faça o upload do arquivo CSV original baixado do sistema PCA!</strong>
                   <br /><br />
                   <strong>O que o sistema faz automaticamente:</strong>
                   <br />• Detecta o encoding correto (Windows-1252, UTF-8, etc.)
-                  <br />� Mapeia as colunas automaticamente por posi��o
+                  <br />• Mapeia as colunas automaticamente por posição
                   <br />• Limpa caracteres especiais corrompidos
-                  <br />� Formata datas e valores monet�rios
+                  <br />• Formata datas e valores monetários
                   <br />• Evita duplicatas (atualiza registros existentes)
                   <br /><br />
-                  <em>N�o precisa converter, formatar ou alterar o arquivo CSV original!</em>
+                  <em>Não precisa converter, formatar ou alterar o arquivo CSV original!</em>
                 </Typography>
               </Alert>
             )}
@@ -594,16 +587,20 @@ const Planejamento: React.FC = () => {
         onClose={handleCloseDetails}
         pca={selectedPCA}
       />
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        open={confirmOpen}
+        title={confirmTitle}
+        description={confirmDescription}
+        loading={confirmLoading}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={handleConfirmDelete}
+        onClose={() => { setConfirmOpen(false); setConfirmTargetId(null); }}
+      />
     </Box>
   );
 };
 
 export default Planejamento;
-
-
-
-
-
-
-
-

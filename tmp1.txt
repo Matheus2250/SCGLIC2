@@ -1,0 +1,250 @@
+﻿import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Button,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+  Input,
+  TablePagination,
+  ToggleButton,
+  ToggleButtonGroup,
+  Divider,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+} from '@mui/material';
+import {
+  Add,
+  Upload,
+  FileDownload,
+  Visibility,
+  Delete,
+} from '@mui/icons-material';
+import { pcaService } from '../services/pca.service';
+import { useAuth } from '../store/auth.context';
+import { PCA } from '../types';
+import { toast } from 'react-toastify';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import TableFilters, { FilterField, FilterValues } from '../components/common/TableFilters';
+import StatCards from '../components/common/StatCards';
+import TableExport from '../components/common/TableExport';
+import PCADetailsModal from '../components/common/PCADetailsModal';
+import ConfirmDialog from '../components/common/ConfirmDialog';
+
+const Planejamento: React.FC = () => {
+  const [pcas, setPcas] = useState<PCA[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [importDialog, setImportDialog] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importType, setImportType] = useState<'excel' | 'csv'>('excel');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [cycleStatus, setCycleStatus] = useState<'ABERTO' | 'ENCERRADO' | null>(null);
+  const [loadingCycle, setLoadingCycle] = useState<boolean>(false);
+  const { user } = useAuth();
+
+  // Details modal states
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedPCA, setSelectedPCA] = useState<PCA | null>(null);
+  // Confirm dialog states
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTargetId, setConfirmTargetId] = useState<string | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [confirmTitle, setConfirmTitle] = useState('Confirmar exclusï¿½o');
+  const [confirmDescription, setConfirmDescription] = useState('Tem certeza que deseja excluir esta PCA?');
+  
+  // Filter states
+  const [filters, setFilters] = useState<FilterValues>({
+    search: '',
+    area_requisitante: '',
+    status: '',
+    valorMin: null,
+    valorMax: null,
+    dataInicio: '',
+    dataFim: '',
+  });
+
+  // Get unique areas from PCAs
+  const getUniqueAreas = () => {
+    if (!pcas || !Array.isArray(pcas) || pcas.length === 0) {
+      return [];
+    }
+
+    const areas = pcas
+      .map(pca => pca.area_requisitante)
+      .filter(area => area && area.trim() !== '')
+      .filter((area, index, self) => self.indexOf(area) === index)
+      .sort();
+
+    return areas.map(area => ({ value: area, label: area }));
+  };
+
+  // Filter configuration
+  const filterFields: FilterField[] = [
+    {
+      key: 'area_requisitante',
+      label: 'ï¿½rea Requisitante',
+      type: 'select',
+      options: getUniqueAreas()
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select',
+      options: [
+        { value: 'no_prazo', label: 'No Prazo' },
+        { value: 'atrasada', label: 'Atrasada' }
+      ]
+    },
+    {
+      key: 'valorMin',
+      label: 'Valor Mï¿½nimo',
+      type: 'number',
+      placeholder: '0,00'
+    },
+    {
+      key: 'valorMax',
+      label: 'Valor Mï¿½ximo',
+      type: 'number',
+      placeholder: '0,00'
+    },
+    {
+      key: 'dataInicio',
+      label: 'Data Inï¿½cio',
+      type: 'date'
+    },
+    {
+      key: 'dataFim',
+      label: 'Data Fim',
+      type: 'date'
+    },
+  ];
+
+  // Export columns configuration
+  const exportColumns = [
+    { key: 'numero_contratacao', label: 'Nï¿½ Contrataï¿½ï¿½o' },
+    { key: 'titulo_contratacao', label: 'Tï¿½tulo' },
+    { key: 'valor_total', label: 'Valor Total' },
+    { key: 'area_requisitante', label: 'ï¿½rea Requisitante' },
+    { key: 'data_estimada_conclusao', label: 'Data Conclusï¿½o' },
+    { 
+      key: 'atrasada', 
+      label: 'Status',
+      formatter: (value: boolean) => value ? 'Atrasada' : 'No Prazo'
+    },
+  ];
+
+  useEffect(() => {
+    fetchPCAs();
+  }, [selectedYear]);
+
+  const fetchPCAs = async () => {
+    try {
+      setLoading(true);
+      const data = await pcaService.getAll(0, 10000, selectedYear);
+      // IMPORTANTE: Garantir que sempre seja um array
+      setPcas(Array.isArray(data) ? data : []);
+    } catch (error) {
+      toast.error('Erro ao carregar PCAs');
+      console.error(error);
+      setPcas([]); // Garantir array vazio em caso de erro
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImport = async () => {
+    if (!selectedFile) {
+      toast.error(`Selecione um arquivo ${importType === 'excel' ? 'Excel' : 'CSV'}`);
+      return;
+    }
+
+    try {
+      setImporting(true);
+      const result = importType === 'excel'
+        ? await pcaService.importExcel(selectedFile, selectedYear)
+        : await pcaService.importCsv(selectedFile, selectedYear);
+
+      toast.success(result.message);
+      if (result.errors && result.errors.length > 0) {
+        result.errors.forEach(error => toast.warning(error));
+      }
+      fetchPCAs();
+      setImportDialog(false);
+      setSelectedFile(null);
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Erro ao importar arquivo');
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setConfirmTargetId(id);
+    setConfirmTitle('Excluir PCA');
+    setConfirmDescription('Tem certeza que deseja excluir esta PCA? Essa aï¿½ï¿½o nï¿½o poderï¿½ ser desfeita.');
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmTargetId) return;
+    setConfirmLoading(true);
+    try {
+      await pcaService.delete(confirmTargetId);
+      toast.success('PCA excluï¿½da com sucesso!');
+      fetchPCAs();
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Erro ao excluir PCA');
+    } finally {
+      setConfirmLoading(false);
+      setConfirmOpen(false);
+      setConfirmTargetId(null);
+    }
+  };
+  const handleViewDetails = (pca: PCA) => {
+    setSelectedPCA(pca);
+    setDetailsOpen(true);
+      <ConfirmDialog
+        open={confirmOpen}
+        title={confirmTitle}
+        description={confirmDescription}
+        loading={confirmLoading}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={handleConfirmDelete}
+        onClose={() => { setConfirmOpen(false); setConfirmTargetId(null); }}
+      />
+  };
+
+  const handleCloseDetails = () => {
+    setDetailsOpen(false);
+    setSelectedPCA(null);
+  };
+
+  const formatCurrency = (value: number | undefined) => {
+    if (!value) return 'N/A';
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  };
+
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'N/A';
