@@ -1,5 +1,5 @@
 from typing import Any, List
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from app.api import deps
 from app.core.database import get_db
@@ -106,6 +106,19 @@ def parse_csv_currency(value_str):
 
 router = APIRouter()
 
+
+def _extract_year_from_num(numero: str):
+    try:
+        if not numero:
+            return None
+        m = re.search(r'(\d{4})$', str(numero).strip())
+        if m:
+            y = int(m.group(1))
+            if 2000 <= y <= 2100:
+                return y
+        return None
+    except Exception:
+        return None
 
 @router.get("/", response_model=List[PCASchema])
 def read_pcas(
@@ -252,6 +265,7 @@ def delete_pca(
 @router.post("/import")
 async def import_pca_excel(
     file: UploadFile = File(...),
+    ano: int | None = Form(default=None),
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(deps.get_user_with_write_access)
 ) -> Any:
@@ -318,6 +332,12 @@ async def import_pca_excel(
         imported = 0
         updated = 0
         errors = []
+        chosen_year = None
+        if ano is not None:
+            if 2000 <= int(ano) <= 2100:
+                chosen_year = int(ano)
+            else:
+                raise HTTPException(status_code=400, detail="Ano informado inválido")
         processed_numbers = set()  # Para evitar duplicatas no mesmo arquivo
         
         for index, row in df.iterrows():
@@ -389,6 +409,9 @@ async def import_pca_excel(
                 else:
                     # Criar novo registro
                     pca_data['created_by'] = current_user.id
+                    inferred = _extract_year_from_num(pca_data.get('numero_contratacao'))
+                    from datetime import date as _date
+                    pca_data['ano_pca'] = chosen_year or inferred or _date.today().year
                     new_pca = PCA(**pca_data)
                     db.add(new_pca)
                     imported += 1
@@ -437,6 +460,7 @@ async def import_pca_excel(
 @router.post("/import-csv")
 async def import_pca_csv(
     file: UploadFile = File(...),
+    ano: int | None = Form(default=None),
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(deps.get_user_with_write_access)
 ) -> Any:
@@ -546,6 +570,12 @@ async def import_pca_csv(
         imported = 0
         updated = 0
         errors = []
+        chosen_year = None
+        if ano is not None:
+            if 2000 <= int(ano) <= 2100:
+                chosen_year = int(ano)
+            else:
+                raise HTTPException(status_code=400, detail="Ano informado inválido")
 
         for record in clean_data:
             try:
@@ -567,6 +597,9 @@ async def import_pca_csv(
                 else:
                     # Criar novo registro
                     record['created_by'] = current_user.id
+                    inferred = _extract_year_from_num(record.get('numero_contratacao'))
+                    from datetime import date as _date
+                    record['ano_pca'] = chosen_year or inferred or _date.today().year
                     new_pca = PCA(**record)
                     db.add(new_pca)
                     imported += 1

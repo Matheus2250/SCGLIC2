@@ -175,8 +175,8 @@ const Planejamento: React.FC = () => {
     try {
       setImporting(true);
       const result = importType === 'excel'
-        ? await pcaService.importExcel(selectedFile)
-        : await pcaService.importCsv(selectedFile);
+        ? await pcaService.importExcel(selectedFile, selectedYear)
+        : await pcaService.importCsv(selectedFile, selectedYear);
 
       toast.success(result.message);
       if (result.errors && result.errors.length > 0) {

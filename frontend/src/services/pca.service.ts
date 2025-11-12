@@ -26,9 +26,12 @@ export const pcaService = {
     await api.delete(`/api/v1/pca/${id}`);
   },
 
-  async importExcel(file: File): Promise<{ message: string; errors?: string[] }> {
+  async importExcel(file: File, ano?: number): Promise<{ message: string; errors?: string[] }> {
     const formData = new FormData();
     formData.append('file', file);
+    if (ano && ano >= 2000 && ano <= 2100) {
+      formData.append('ano', String(ano));
+    }
 
     const response = await api.post('/api/v1/pca/import', formData, {
       headers: {
@@ -38,9 +41,12 @@ export const pcaService = {
     return response.data;
   },
 
-  async importCsv(file: File): Promise<{ message: string; errors?: string[] }> {
+  async importCsv(file: File, ano?: number): Promise<{ message: string; errors?: string[] }> {
     const formData = new FormData();
     formData.append('file', file);
+    if (ano && ano >= 2000 && ano <= 2100) {
+      formData.append('ano', String(ano));
+    }
 
     const response = await api.post('/api/v1/pca/import-csv', formData, {
       headers: {
