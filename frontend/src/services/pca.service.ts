@@ -81,4 +81,14 @@ export const pcaService = {
     const response = await api.get('/api/v1/pca/dashboard/charts');
     return response.data;
   },
+
+  async getCycle(ano: number): Promise<{ ano: number | null; status?: string; closed_at?: string | null; closed_by?: string | null }> {
+    const { data } = await api.get(`/api/v1/pca/cycles/${ano}`);
+    return data;
+  },
+
+  async closeCycle(ano: number): Promise<{ ano: number; status: string; closed_at?: string | null; closed_by?: string | null }> {
+    const { data } = await api.post(`/api/v1/pca/cycles/${ano}/close`);
+    return data;
+  },
 };
