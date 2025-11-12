@@ -351,9 +351,9 @@ const Relatorios: React.FC = () => {
 
       // Buscar em todas as três bases
       const [pcaData, qualificacaoData, licitacaoData] = await Promise.all([
-        pcaService.getAll().catch(() => []),
-        qualificacaoService.getAll().catch(() => []),
-        licitacaoService.getAll().catch(() => [])
+        pcaService.getAll(0, 10000).catch(() => []),
+        qualificacaoService.getAll(0, 10000).catch(() => []),
+        licitacaoService.getAll(0, 10000).catch(() => [])
       ]);
 
       // Filtrar dados por NUP ou número da contratação
@@ -1195,3 +1195,5 @@ const Relatorios: React.FC = () => {
 };
 
 export default Relatorios;
+
+
