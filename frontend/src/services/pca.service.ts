@@ -57,8 +57,9 @@ export const pcaService = {
     return response.data;
   },
 
-  async getDashboardStats(): Promise<DashboardStats> {
-    const response = await api.get<DashboardStats>('/api/v1/pca/dashboard/stats');
+  async getDashboardStats(ano?: number): Promise<DashboardStats> {
+    const anoParam = ano && ano >= 2000 && ano <= 2100 ? `?ano=${ano}` : '';
+    const response = await api.get<DashboardStats>(`/api/v1/pca/dashboard/stats${anoParam}`);
     return response.data;
   },
 
@@ -72,13 +73,14 @@ export const pcaService = {
     return response.data;
   },
 
-  async getDashboardCharts(): Promise<{
+  async getDashboardCharts(ano?: number): Promise<{
     situacao_execucao: { name: string; value: number }[];
     categoria: { name: string; value: number }[];
     status_contratacao: { name: string; value: number }[];
     valor_por_categoria: { name: string; value: number }[];
   }> {
-    const response = await api.get('/api/v1/pca/dashboard/charts');
+    const anoParam = ano && ano >= 2000 && ano <= 2100 ? `?ano=${ano}` : '';
+    const response = await api.get(`/api/v1/pca/dashboard/charts${anoParam}`);
     return response.data;
   },
 

@@ -816,7 +816,45 @@ def debug_situacoes_execucao(
     """Endpoint temporário para debugar valores de situacao_execucao"""
     from datetime import date
     from sqlalchemy import func
-    
+
+    # Optional year filter (early return path)
+    if ano is not None:
+        try:
+            year = int(ano)
+            if not (2000 <= year <= 2100):
+                raise ValueError()
+        except Exception:
+            raise HTTPException(status_code=400, detail="Parâmetro 'ano' inválido")
+
+        pcas_year = db.query(PCA).filter(PCA.ano_pca == year).all()
+
+        # Aggregate charts in Python
+        from collections import Counter, defaultdict
+        cnt_sit = Counter([(p.situacao_execucao or 'Nao iniciada') for p in pcas_year])
+        situacao_data = [{ 'name': k, 'value': v } for k, v in cnt_sit.items()]
+
+        cnt_cat = Counter([(p.categoria_contratacao or 'Nao informada') for p in pcas_year])
+        categoria_data = [{ 'name': k, 'value': v } for k, v in cnt_cat.items()]
+
+        cnt_status = Counter([(p.status_contratacao or 'Nao informado') for p in pcas_year])
+        status_data = [{ 'name': k, 'value': v } for k, v in cnt_status.items()]
+
+        sum_cat = defaultdict(float)
+        for p in pcas_year:
+            key = p.categoria_contratacao or 'Nao informada'
+            try:
+                sum_cat[key] += float(p.valor_total or 0)
+            except Exception:
+                pass
+        valor_categoria_data = [{ 'name': k, 'value': v } for k, v in sum_cat.items()]
+
+        return {
+            'situacao_execucao': situacao_data,
+            'categoria': categoria_data,
+            'status_contratacao': status_data,
+            'valor_por_categoria': valor_categoria_data,
+        }
+
     # Listar todos os valores únicos de situacao_execucao
     situacoes = db.query(PCA.situacao_execucao, func.count(PCA.id)).group_by(PCA.situacao_execucao).all()
     
@@ -841,10 +879,33 @@ def debug_situacoes_execucao(
 
 @router.get("/dashboard/stats")
 def get_dashboard_stats(
+    ano: Optional[int] = None,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(deps.get_current_active_user)
 ) -> Any:
     from sqlalchemy import text
+
+    # Filtro por ano (caminho otimizado em Python para evitar alterar SQL existente)
+    if ano is not None:
+        try:
+            year = int(ano)
+            if not (2000 <= year <= 2100):
+                raise ValueError()
+        except Exception:
+            raise HTTPException(status_code=400, detail="Parâmetro 'ano' inválido")
+
+        pcas_year = db.query(PCA).filter(PCA.ano_pca == year).all()
+        total_pcas = len(pcas_year)
+        pcas_atrasadas = sum(1 for p in pcas_year if getattr(p, 'atrasada', False))
+        pcas_vencidas = sum(1 for p in pcas_year if getattr(p, 'vencida', False))
+        pcas_no_prazo = total_pcas - pcas_atrasadas - pcas_vencidas
+
+        return {
+            "total_pcas": total_pcas,
+            "pcas_atrasadas": pcas_atrasadas,
+            "pcas_vencidas": pcas_vencidas,
+            "pcas_no_prazo": pcas_no_prazo,
+        }
 
     # Usar a consulta SQL direta conforme especificado
     sql_query = text("""
@@ -885,6 +946,7 @@ def get_dashboard_stats(
 
 @router.get("/dashboard/charts")
 def get_dashboard_charts(
+    ano: Optional[int] = None,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(deps.get_current_active_user)
 ) -> Any:
