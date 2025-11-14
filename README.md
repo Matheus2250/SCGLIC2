@@ -1,8 +1,8 @@
-# 📋 Sistema de Gestão de Contratações Públicas (SCGLIC2)
+# Sistema de Gestão de Contratações Públicas (SCGLIC2)
 
 ## Visão Geral
 
-O **SCGLIC2** é um sistema web completo desenvolvido para a **Coordenação-Geral de Licitações e Contratos (CGLIC)** da **Subsecretaria de Assuntos Administrativos (SAA)** do Ministério da Saúde. O sistema foi criado para digitalizar e gerenciar todo o ciclo de vida das contratações públicas, desde o planejamento inicial até a conclusão dos processos licitatórios, proporcionando controle, transparência e eficiência na gestão de recursos públicos.
+O **SCGLIC** é um sistema web completo desenvolvido para a **Coordenação-Geral de Licitações e Contratos (CGLIC)** da **Subsecretaria de Assuntos Administrativos (SAA)** do Ministério da Saúde. O sistema foi criado para digitalizar e gerenciar todo o ciclo de vida das contratações públicas, desde o planejamento inicial até a conclusão dos processos licitatórios, proporcionando controle, transparência e eficiência na gestão de recursos públicos.
 
 ## Propósito e Contexto
 
@@ -10,7 +10,7 @@ O sistema atende à necessidade de centralizar e organizar informações relacio
 
 ## Módulo de Planejamento (PCA)
 
-O módulo de **Planejamento** gerencia o PCA (Plano de Contratações Anual), documento fundamental que lista todas as contratações previstas para o ano. Cada contratação possui um número único, título descritivo, categoria, valor total estimado, área requisitante, número do DFD (Documento de Formalização da Demanda), status atual e datas estimadas de início e conclusão. O sistema permite cadastrar manualmente novas contratações ou importar dados em massa através de arquivos Excel, com tratamento automático de caracteres especiais e validações de dados. Uma funcionalidade importante é a identificação automática de **contratações atrasadas** (quando a data de início prevista já passou mas o processo não foi iniciado) e **contratações vencidas** (quando a data de conclusão já passou sem finalização), gerando alertas visuais e facilitando a gestão de prazos. O módulo oferece visualizações estatísticas com gráficos de distribuição por categoria, área demandante, status e evolução temporal, permitindo análises estratégicas do planejamento institucional.
+O módulo de **Planejamento** gerencia o PCA (Plano de Contratações Anual), documento fundamental que lista todas as contratações previstas para o ano. Cada contratação possui um número único, título descritivo, categoria, valor total estimado, área requisitante, número do DFD (Documento de Formalização da Demanda), status atual e datas estimadas de início e conclusão. O sistema permite importar dados em massa através de arquivos Excel, com tratamento automático de caracteres especiais e validações de dados. Uma funcionalidade importante é a identificação automática de **contratações atrasadas** (quando a data de início prevista já passou mas o processo não foi iniciado) e **contratações vencidas** (quando a data de conclusão já passou sem finalização), gerando alertas visuais e facilitando a gestão de prazos. O módulo oferece visualizações estatísticas com gráficos de distribuição por categoria, área demandante, status e evolução temporal, permitindo análises estratégicas do planejamento institucional.
 
 ## Módulo de Qualificação
 
@@ -58,4 +58,4 @@ O documento de planejamento do projeto indica melhorias futuras importantes, inc
 
 ## Impacto e Benefícios
 
-O SCGLIC2 representa uma modernização significativa na gestão de contratações públicas, trazendo benefícios como **redução de tempo** em processos manuais, **maior transparência** através de rastreabilidade completa, **identificação proativa** de atrasos e gargalos, **dados consolidados** para tomada de decisão estratégica, **padronização** de procedimentos e informações, **facilidade de auditoria** com histórico completo de alterações, e **economia de recursos** através da identificação de ineficiências. O sistema serve como ferramenta essencial para a CGLIC cumprir suas atribuições com excelência, garantindo que o dinheiro público seja empregado de forma eficiente, transparente e em conformidade com a legislação vigente.
+O SCGLIC representa uma modernização significativa na gestão de contratações públicas, trazendo benefícios como **redução de tempo** em processos manuais, **maior transparência** através de rastreabilidade completa, **identificação proativa** de atrasos e gargalos, **dados consolidados** para tomada de decisão estratégica, **padronização** de procedimentos e informações, **facilidade de auditoria** com histórico completo de alterações, e **economia de recursos** através da identificação de ineficiências. O sistema serve como ferramenta essencial para a CGLIC cumprir suas atribuições com excelência, garantindo que o dinheiro público seja empregado de forma eficiente, transparente e em conformidade com a legislação vigente.
