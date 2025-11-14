@@ -45,6 +45,16 @@ const BackgroundSlideshow: React.FC<BackgroundSlideshowProps> = ({ intervalMs = 
             backgroundPosition: 'center',
             transition: 'opacity 1s ease-in-out',
             opacity: i === index ? 1 : 0,
+            // Ken Burns effect - zoom suave durante a exibição da imagem
+            animation: i === index ? `kenBurnsZoom ${intervalMs}ms ease-in-out forwards` : 'none',
+            '@keyframes kenBurnsZoom': {
+              '0%': {
+                transform: 'scale(1)',
+              },
+              '100%': {
+                transform: 'scale(1.1)',
+              },
+            },
           }}
         />
       ))}
