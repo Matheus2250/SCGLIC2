@@ -106,7 +106,7 @@ const RegisterForm: React.FC = () => {
             </Typography>
 
             <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ width: '100%' }}>
-              <TextField margin="normal" required fullWidth id="username" label="Username" autoComplete="username" autoFocus {...register('username')} error={!!errors.username} helperText={errors.username?.message} variant="outlined" sx={inputSx} />
+              <TextField margin="normal" required fullWidth id="username" label="Username" autoComplete="username" {...register('username')} error={!!errors.username} helperText={errors.username?.message} variant="outlined" sx={inputSx} />
               <TextField margin="normal" required fullWidth id="email" label="Email" type="email" autoComplete="email" {...register('email')} error={!!errors.email} helperText={errors.email?.message} variant="outlined" sx={inputSx} />
               <TextField margin="normal" required fullWidth id="nome_completo" label="Nome Completo" autoComplete="name" {...register('nome_completo')} error={!!errors.nome_completo} helperText={errors.nome_completo?.message} variant="outlined" sx={inputSx} />
               <TextField margin="normal" required fullWidth label="Senha" type="password" id="password" autoComplete="new-password" {...register('password')} error={!!errors.password} helperText={errors.password?.message} variant="outlined" sx={inputSx} />

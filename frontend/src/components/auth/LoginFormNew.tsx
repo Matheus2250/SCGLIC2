@@ -85,7 +85,6 @@ const LoginFormNew: React.FC = () => {
                 label="Email"
                 type="email"
                 autoComplete="email"
-                autoFocus
                 {...register('email')}
                 error={!!errors.email}
                 helperText={errors.email?.message}
