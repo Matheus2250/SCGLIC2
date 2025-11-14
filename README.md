@@ -1,187 +1,61 @@
-# Sistema de Contratações
+# 📋 Sistema de Gestão de Contratações Públicas (SCGLIC2)
 
-Sistema web para gerenciamento do processo de contratações públicas, desenvolvido com FastAPI (backend) e React (frontend).
+## Visão Geral
 
-## Funcionalidades
+O **SCGLIC2** é um sistema web completo desenvolvido para a **Coordenação-Geral de Licitações e Contratos (CGLIC)** da **Subsecretaria de Assuntos Administrativos (SAA)** do Ministério da Saúde. O sistema foi criado para digitalizar e gerenciar todo o ciclo de vida das contratações públicas, desde o planejamento inicial até a conclusão dos processos licitatórios, proporcionando controle, transparência e eficiência na gestão de recursos públicos.
 
-- **Autenticação**: Login/registro de usuários com diferentes níveis de acesso
-- **Dashboard**: Visão geral com estatísticas e indicadores
-- **Planejamento (PCA)**: Gerenciamento do Plano de Contratações Anual
-- **Qualificação**: Acompanhamento do processo de qualificação
-- **Licitação**: Controle dos processos licitatórios
-- **Relatórios**: Geração de relatórios e análises
+## Propósito e Contexto
 
-## Níveis de Acesso
+O sistema atende à necessidade de centralizar e organizar informações relacionadas às contratações públicas realizadas pelo órgão, substituindo processos manuais e planilhas dispersas por uma plataforma integrada que permite acompanhamento em tempo real, geração de relatórios, identificação de gargalos e tomada de decisões baseada em dados. A solução foi projetada especificamente para atender às particularidades e exigências do setor público brasileiro, respeitando a legislação de licitações e contratos administrativos.
 
-- **COORDENADOR**: Acesso completo a todas as funcionalidades
-- **DIPLAN**: Acesso ao planejamento e dashboard
-- **DIQUALI**: Acesso à qualificação e dashboard
-- **DIPLI**: Acesso à licitação e dashboard
-- **VISITANTE**: Acesso apenas ao dashboard
+## Módulo de Planejamento (PCA)
 
-## Tecnologias
+O módulo de **Planejamento** gerencia o PCA (Plano de Contratações Anual), documento fundamental que lista todas as contratações previstas para o ano. Cada contratação possui um número único, título descritivo, categoria, valor total estimado, área requisitante, número do DFD (Documento de Formalização da Demanda), status atual e datas estimadas de início e conclusão. O sistema permite cadastrar manualmente novas contratações ou importar dados em massa através de arquivos Excel, com tratamento automático de caracteres especiais e validações de dados. Uma funcionalidade importante é a identificação automática de **contratações atrasadas** (quando a data de início prevista já passou mas o processo não foi iniciado) e **contratações vencidas** (quando a data de conclusão já passou sem finalização), gerando alertas visuais e facilitando a gestão de prazos. O módulo oferece visualizações estatísticas com gráficos de distribuição por categoria, área demandante, status e evolução temporal, permitindo análises estratégicas do planejamento institucional.
 
-### Backend
-- **FastAPI**: Framework web moderno para Python
-- **SQLAlchemy**: ORM para banco de dados
-- **PostgreSQL**: Banco de dados relacional
-- **Alembic**: Migração de banco de dados
-- **JWT**: Autenticação via tokens
-- **Pydantic**: Validação de dados
-- **ReportLab**: Geração de relatórios PDF
+## Módulo de Qualificação
 
-### Frontend
-- **React 18**: Biblioteca para interfaces
-- **TypeScript**: Tipagem estática
-- **Material-UI (MUI)**: Componentes de interface
-- **React Router**: Roteamento SPA
-- **React Hook Form**: Gerenciamento de formulários
-- **Axios**: Cliente HTTP
-- **Recharts**: Gráficos e visualizações
+O módulo de **Qualificação** representa a segunda fase do processo de contratações, onde as demandas aprovadas no PCA passam por análise técnica detalhada. Nesta etapa, é gerado o **NUP (Número Único de Processo)**, que identifica oficialmente o processo administrativo. Cada registro de qualificação está vinculado a uma contratação específica do PCA através do número de contratação, mantendo a rastreabilidade completa. O módulo registra informações como área demandante, responsável pela instrução do processo, modalidade de contratação (pregão eletrônico, dispensa, inexigibilidade, etc.), descrição detalhada do objeto, palavras-chave para busca, valor estimado da contratação e observações relevantes. O status da qualificação pode ser **EM ANÁLISE** (processo em andamento) ou **CONCLUÍDO** (processo pronto para licitação), permitindo que a equipe acompanhe o andamento de cada instrução processual. Este módulo é fundamental para garantir que apenas demandas devidamente qualificadas e com documentação completa avancem para a fase de licitação.
 
-## Estrutura do Projeto
+## Módulo de Licitação
 
-```
-sistema_contratacoes/
-├── backend/                 # API FastAPI
-│   ├── app/
-│   │   ├── api/            # Rotas da API
-│   │   ├── core/           # Configurações e segurança
-│   │   ├── db/             # Configuração do banco
-│   │   ├── models/         # Modelos SQLAlchemy
-│   │   ├── schemas/        # Esquemas Pydantic
-│   │   └── services/       # Lógica de negócio
-│   ├── alembic/           # Migrações
-│   └── requirements.txt   # Dependências Python
-├── frontend/              # Aplicação React
-│   ├── public/           # Arquivos estáticos
-│   ├── src/
-│   │   ├── components/   # Componentes React
-│   │   ├── pages/       # Páginas da aplicação
-│   │   ├── services/    # Serviços HTTP
-│   │   ├── store/       # Estado global
-│   │   └── types/       # Tipos TypeScript
-│   └── package.json     # Dependências Node.js
-└── docs/               # Documentação
-```
+O módulo de **Licitação** gerencia a fase final do processo, onde as contratações qualificadas são efetivamente levadas a pregão ou outro procedimento licitatório. Cada licitação está vinculada a uma qualificação através do NUP, mantendo o histórico completo desde o planejamento. O sistema registra informações cruciais como o pregoeiro responsável, valor homologado (valor final contratado), data de homologação, link para acompanhamento no portal de compras, e o status do processo. Os status possíveis são **HOMOLOGADA** (licitação concluída com sucesso), **FRACASSADA** (sem propostas válidas ou vencedoras), **EM ANDAMENTO** (processo em curso) ou **REVOGADA** (licitação cancelada por motivos administrativos). Uma funcionalidade importante é o cálculo automático de **economia**, que compara o valor estimado inicialmente com o valor homologado, demonstrando a eficiência da gestão e o benefício financeiro obtido. O módulo também oferece estatísticas sobre taxa de sucesso das licitações, distribuição por modalidade, economia total gerada e análise temporal dos processos licitatórios.
 
-## Configuração e Instalação
+## Sistema de Autenticação e Controle de Acesso
 
-### Pré-requisitos
-- Python 3.8+
-- Node.js 16+
-- PostgreSQL 12+
+O sistema implementa um robusto esquema de autenticação baseado em **JWT (JSON Web Tokens)**, garantindo segurança nas comunicações entre frontend e backend. Os usuários são cadastrados com email único, senha criptografada com bcrypt, nome completo e nível de acesso. Existem cinco níveis de acesso hierárquicos: **COORDENADOR** (acesso total ao sistema, incluindo administração de usuários), **DIPLAN** (acesso ao planejamento e estatísticas), **DIQUALI** (acesso à qualificação e seus dados), **DIPLI** (acesso à licitação e relatórios específicos) e **VISITANTE** (apenas visualização do dashboard geral). Cada rota e funcionalidade do sistema verifica o nível de acesso do usuário, impedindo operações não autorizadas. O sistema também possui um mecanismo de **requisição de mudança de acesso**, onde usuários podem solicitar elevação de privilégios justificando a necessidade, e coordenadores podem aprovar ou rejeitar essas solicitações com observações.
 
-### Backend
+## Gestão de Perfil de Usuário
 
-1. Clone o repositório:
-```bash
-git clone <repository-url>
-cd sistema_contratacoes/backend
-```
+Cada usuário possui uma área de perfil onde pode personalizar suas informações, incluindo nome completo, email, senha e foto de perfil (avatar). O sistema suporta duas formas de avatar: URL externa (link para imagem hospedada na web) ou upload direto de arquivo, que é armazenado como blob binário no banco de dados PostgreSQL. Os usuários podem visualizar seu histórico de atividades, configurar dashboards personalizados e gerenciar suas preferências de visualização. Coordenadores possuem acesso a uma área administrativa especial onde podem listar todos os usuários do sistema, editar níveis de acesso, ativar ou desativar contas, e visualizar requisições pendentes de mudança de acesso. A funcionalidade de troca de senha exige que o usuário informe a senha atual antes de definir uma nova, garantindo segurança adicional.
 
-2. Crie um ambiente virtual:
-```bash
-python -m venv venv
-venv\Scripts\activate  # Windows
-# ou
-source venv/bin/activate  # Linux/Mac
-```
+## Sistema de Relatórios e Exportações
 
-3. Instale as dependências:
-```bash
-pip install -r requirements.txt
-```
+O módulo de **Relatórios** permite gerar documentos consolidados em PDF com dados de múltiplos módulos, aplicando filtros personalizados por período, área, status, categoria e outros critérios. Os relatórios são gerados dinamicamente no frontend usando a biblioteca jsPDF com jspdf-autotable para tabelas formatadas, incluindo cabeçalhos institucionais, totalizadores, gráficos e análises estatísticas. O sistema também oferece exportação de dados em formato Excel (XLSX) diretamente das tabelas de cada módulo, permitindo análises offline e integração com outras ferramentas. Os usuários podem definir quais colunas exportar, aplicar filtros antes da exportação e escolher entre diferentes formatos de saída. Esta funcionalidade é essencial para prestação de contas, auditorias e tomadas de decisão baseadas em evidências.
 
-4. Configure as variáveis de ambiente criando um arquivo `.env`:
-```env
-DATABASE_URL=postgresql://user:password@localhost/sistema_contratacoes
-SECRET_KEY=seu-secret-key-aqui
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-```
+## Dashboard e Visualizações
 
-5. Execute as migrações:
-```bash
-alembic upgrade head
-```
+O **Dashboard** é a página inicial do sistema, oferecendo uma visão consolidada e de fácil acesso aos principais módulos e informações. Apresenta cards de atalho rápido para Planejamento, Qualificação, Licitação e Relatórios, facilitando a navegação. Uma seção de dicas rápidas orienta usuários iniciantes sobre as funcionalidades disponíveis. O componente de **Atividades Recentes** exibe em tempo real as últimas operações realizadas no sistema (criações, atualizações, importações), mostrando qual usuário executou a ação, em qual módulo e quando, promovendo transparência e rastreabilidade. O sistema também oferece páginas específicas de estatísticas para cada módulo, com gráficos interativos criados com Recharts, incluindo gráficos de pizza, barras, linhas temporais e indicadores numéricos (KPIs), permitindo análises visuais rápidas e identificação de padrões.
 
-6. Inicie o servidor:
-```bash
-python main.py
-```
+## Funcionalidades de Importação e Tratamento de Dados
 
-O backend estará disponível em `http://localhost:8000`
+Uma das funcionalidades mais poderosas do sistema é a **importação em massa de dados do PCA via Excel**. O sistema aceita arquivos nos formatos XLSX e XLS, processa automaticamente as planilhas identificando colunas por nome (suportando múltiplas nomenclaturas), realiza limpeza e correção de caracteres especiais (comum em arquivos exportados de outros sistemas), converte datas de diferentes formatos para o padrão ISO, trata valores monetários com separadores decimais variados, e valida a integridade de cada registro. Durante a importação, contratações existentes (identificadas pelo número único) são atualizadas automaticamente, enquanto novas contratações são inseridas no banco de dados. O sistema fornece feedback detalhado sobre o processo, indicando quantos registros foram processados, quantos falharam e os motivos específicos de cada erro, permitindo correções pontuais antes de nova tentativa.
 
-### Frontend
+## Tecnologias e Arquitetura
 
-1. Navegue até o diretório frontend:
-```bash
-cd sistema_contratacoes/frontend
-```
+O **backend** foi desenvolvido em Python utilizando o framework **FastAPI**, reconhecido por sua performance e tipagem automática via Pydantic. O banco de dados é **PostgreSQL**, um sistema robusto e amplamente utilizado no setor público. O ORM **SQLAlchemy 2.0** gerencia os modelos e relacionamentos, enquanto o **Alembic** cuida das migrações de esquema de forma versionada e rastreável. A autenticação JWT é implementada com python-jose e passlib para hashing de senhas. O backend está hospedado no Render.com usando Gunicorn com workers Uvicorn para servir a aplicação de forma escalável. O **frontend** foi construído com **React 18 e TypeScript**, garantindo tipagem estática e redução de bugs. A biblioteca **Material-UI (MUI)** fornece componentes visuais consistentes e acessíveis. O **React Router v6** gerencia a navegação SPA (Single Page Application), enquanto **Axios** realiza as requisições HTTP com interceptors para tratamento centralizado de erros e injeção de tokens. O **React Hook Form** com **Yup** valida formulários de forma eficiente. O estado global é gerenciado através de Context API (AuthContext). O frontend também está hospedado no Render.com, servido via `serve` após build de produção com Vite.
 
-2. Instale as dependências:
-```bash
-npm install
-```
+## Auditoria e Rastreabilidade
 
-3. Configure as variáveis de ambiente criando um arquivo `.env`:
-```env
-VITE_API_URL=http://localhost:8000
-```
+Todos os registros principais do sistema (PCA, Qualificação, Licitação) incluem campos de auditoria: **created_by** (UUID do usuário que criou), **updated_by** (UUID do último usuário que modificou), **created_at** (timestamp de criação) e **updated_at** (timestamp de última atualização). Isso permite rastrear completamente quem fez o quê e quando, requisito fundamental para sistemas governamentais. O módulo de atividades registra todas as operações importantes, criando um log histórico que pode ser consultado para auditorias, análises de produtividade ou investigações de incidentes. Esta camada de transparência é essencial para conformidade com normas de controle interno e externo.
 
-4. Inicie o servidor de desenvolvimento:
-```bash
-npm run dev
-```
+## Recursos de Usabilidade e Experiência do Usuário
 
-O frontend estará disponível em `http://localhost:3001`
+O sistema foi projetado com foco na experiência do usuário, incluindo uma **sidebar colapsável** com ícones coloridos para fácil identificação visual, tabelas com cabeçalhos em negrito e filtros inline, componente de confirmação customizado substituindo o alert nativo do navegador (mais elegante e consistente), toasts informativos para feedback de ações (sucesso, erro, aviso), loading states durante operações assíncronas, e responsividade para diferentes tamanhos de tela. A página de login possui branding institucional com logos da CGLIC e SAA, criando identidade visual profissional. O sistema também implementa validações em tempo real nos formulários, destacando campos com erro antes do envio, e fornece mensagens de erro claras e acionáveis, reduzindo frustração do usuário.
 
-## Scripts Disponíveis
+## Funcionalidades Planejadas
 
-### Backend
-- `python main.py` - Inicia o servidor FastAPI
-- `alembic revision --autogenerate -m "message"` - Cria nova migração
-- `alembic upgrade head` - Aplica migrações
-- `pytest` - Executa testes
+O documento de planejamento do projeto indica melhorias futuras importantes, incluindo um **sistema de envio automático de e-mails** para alertar áreas demandantes sobre contratações atrasadas ou próximas de vencer, melhorando a comunicação proativa. Está prevista a implementação de **login via Microsoft/Outlook** usando contas institucionais @saude.gov.br, facilitando o acesso e eliminando necessidade de cadastro separado. Há também planos para permitir acesso aos e-mails do usuário (com permissão) para exibir mensagens relevantes no dashboard, criando uma experiência mais integrada. A criação de **relatórios pré-prontos específicos para a SAA** está em desenvolvimento, atendendo demandas recorrentes de prestação de contas e análises estratégicas. Finalmente, existe uma pendência para resolver um problema técnico relacionado à exclusão de usuários, que atualmente apresenta restrições devido a relacionamentos no banco de dados.
 
-### Frontend
-- `npm run dev` - Servidor de desenvolvimento
-- `npm run build` - Build de produção
-- `npm run lint` - Verificação de código
-- `npm run preview` - Preview do build
+## Impacto e Benefícios
 
-## API Endpoints
-
-### Autenticação
-- `POST /api/v1/auth/login` - Login de usuário
-- `POST /api/v1/auth/register` - Registro de usuário
-- `GET /api/v1/auth/me` - Dados do usuário logado
-
-### PCA (Planejamento)
-- `GET /api/v1/pcas/` - Lista PCAs
-- `POST /api/v1/pcas/` - Cria PCA
-- `PUT /api/v1/pcas/{id}` - Atualiza PCA
-- `DELETE /api/v1/pcas/{id}` - Remove PCA
-
-### Qualificação
-- `GET /api/v1/qualificacoes/` - Lista qualificações
-- `POST /api/v1/qualificacoes/` - Cria qualificação
-- `PUT /api/v1/qualificacoes/{id}` - Atualiza qualificação
-
-### Licitação
-- `GET /api/v1/licitacoes/` - Lista licitações
-- `POST /api/v1/licitacoes/` - Cria licitação
-- `PUT /api/v1/licitacoes/{id}` - Atualiza licitação
-
-### Dashboard
-- `GET /api/v1/dashboard/stats` - Estatísticas gerais
-- `GET /api/v1/dashboard/licitacao-stats` - Estatísticas de licitações
-
-## Licença
-
-Este projeto está licenciado sob a MIT License - veja o arquivo LICENSE para detalhes.
-
-## Contato
-
-Para dúvidas ou sugestões, entre em contato através do GitHub Issues.
+O SCGLIC2 representa uma modernização significativa na gestão de contratações públicas, trazendo benefícios como **redução de tempo** em processos manuais, **maior transparência** através de rastreabilidade completa, **identificação proativa** de atrasos e gargalos, **dados consolidados** para tomada de decisão estratégica, **padronização** de procedimentos e informações, **facilidade de auditoria** com histórico completo de alterações, e **economia de recursos** através da identificação de ineficiências. O sistema serve como ferramenta essencial para a CGLIC cumprir suas atribuições com excelência, garantindo que o dinheiro público seja empregado de forma eficiente, transparente e em conformidade com a legislação vigente.
