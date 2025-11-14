@@ -66,6 +66,9 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+tmp*.txt
+temp_*.txt
+VAR*.tmp
 nul
 
 # PyInstaller
