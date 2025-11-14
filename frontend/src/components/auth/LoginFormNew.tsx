@@ -7,15 +7,15 @@ import { useAuth } from '../../store/auth.context';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import BackgroundSlideshow from './BackgroundSlideshow';
 
-const schema = yup.object({
-  email: yup.string().email('Digite um email válido').required('Email é obrigatório'),
-  password: yup.string().required('Senha é obrigatória'),
-});
-
 interface LoginFormData {
   email: string;
   password: string;
 }
+
+const schema: yup.ObjectSchema<LoginFormData> = yup.object().shape({
+  email: yup.string().email('Digite um email válido').required('Email é obrigatório'),
+  password: yup.string().required('Senha é obrigatória'),
+});
 
 const LoginFormNew: React.FC = () => {
   const { login, isLoading } = useAuth();
@@ -30,7 +30,7 @@ const LoginFormNew: React.FC = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormData>({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(schema) as any,
   });
 
   const onSubmit = async (data: LoginFormData) => {
@@ -44,14 +44,14 @@ const LoginFormNew: React.FC = () => {
   };
 
   return (
-    <Box sx={{ position: 'relative', minHeight: '100vh' }}>
+    <Box sx={{ position: 'relative', height: '100vh', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <BackgroundSlideshow />
       <Container component="main" maxWidth="xs" sx={{ position: 'relative', zIndex: 1 }}>
-        <Box sx={{ mt: 10, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <Paper
             elevation={0}
             sx={{
-              p: 4,
+              p: 3,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -63,14 +63,16 @@ const LoginFormNew: React.FC = () => {
               backgroundColor: 'rgba(255,255,255,0.18)',
               borderRadius: '20px',
               border: '1px solid rgba(255,255,255,0.5)',
-              boxShadow: '0 12px 40px rgba(0,0,0,0.25)'
+              boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
+              maxHeight: '90vh',
+              overflowY: 'auto'
             }}
           >
-            <Typography component="h1" variant="h4" sx={{ mb: 3, color: '#ffffff', textAlign: 'center' }}>
+            <Typography component="h1" variant="h4" sx={{ mb: 2, color: '#ffffff', textAlign: 'center', fontSize: '1.75rem' }}>
               Sistemas de Informações CGLIC
             </Typography>
 
-            <Typography component="h2" variant="h5" sx={{ mb: 2, color: '#e9ecef', fontWeight: 700, letterSpacing: 0.3 }}>
+            <Typography component="h2" variant="h5" sx={{ mb: 2, color: '#e9ecef', fontWeight: 700, letterSpacing: 0.3, fontSize: '1.35rem' }}>
               Login
             </Typography>
 

@@ -9,14 +9,6 @@ import { useAuth } from '../../store/auth.context';
 import PostRegistrationQuestionnaire from './PostRegistrationQuestionnaire';
 import BackgroundSlideshow from './BackgroundSlideshow';
 
-const schema = yup.object({
-  username: yup.string().required('Username é obrigatório').min(3, 'Username deve ter pelo menos 3 caracteres'),
-  email: yup.string().email('Email inválido').required('Email é obrigatório'),
-  nome_completo: yup.string().required('Nome completo é obrigatório').min(2, 'Nome deve ter pelo menos 2 caracteres'),
-  password: yup.string().required('Senha é obrigatória').min(6, 'Senha deve ter pelo menos 6 caracteres'),
-  confirmPassword: yup.string().required('Confirmação de senha é obrigatória').oneOf([yup.ref('password')], 'Senhas devem ser iguais'),
-});
-
 interface RegisterFormData {
   username: string;
   email: string;
@@ -24,6 +16,14 @@ interface RegisterFormData {
   password: string;
   confirmPassword: string;
 }
+
+const schema: yup.ObjectSchema<RegisterFormData> = yup.object().shape({
+  username: yup.string().required('Username é obrigatório').min(3, 'Username deve ter pelo menos 3 caracteres'),
+  email: yup.string().email('Email inválido').required('Email é obrigatório'),
+  nome_completo: yup.string().required('Nome completo é obrigatório').min(2, 'Nome deve ter pelo menos 2 caracteres'),
+  password: yup.string().required('Senha é obrigatória').min(6, 'Senha deve ter pelo menos 6 caracteres'),
+  confirmPassword: yup.string().required('Confirmação de senha é obrigatória').oneOf([yup.ref('password')], 'Senhas devem ser iguais'),
+});
 
 const inputSx = {
   '& .MuiOutlinedInput-root': {
@@ -47,7 +47,7 @@ const RegisterForm: React.FC = () => {
   const [registerSuccess, setRegisterSuccess] = useState(false);
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({ resolver: yupResolver(schema) });
+  const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({ resolver: yupResolver(schema) as any });
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
@@ -74,10 +74,10 @@ const RegisterForm: React.FC = () => {
 
   if (registerSuccess) {
     return (
-      <Box sx={{ position: 'relative', minHeight: '100vh' }}>
+      <Box sx={{ position: 'relative', height: '100vh', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <BackgroundSlideshow />
         <Container component="main" maxWidth="xs" sx={{ position: 'relative', zIndex: 1 }}>
-          <Box sx={{ marginTop: 10 }}>
+          <Box>
             <Paper elevation={0} sx={{ p: 4, textAlign: 'center', color: '#fff', backdropFilter: 'blur(16px) saturate(130%)', WebkitBackdropFilter: 'blur(16px) saturate(130%)', backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.5)' }}>
               <Typography variant="h5" gutterBottom>
                 Conta criada com sucesso!
@@ -93,15 +93,15 @@ const RegisterForm: React.FC = () => {
   }
 
   return (
-    <Box sx={{ position: 'relative', minHeight: '100vh' }}>
+    <Box sx={{ position: 'relative', height: '100vh', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <BackgroundSlideshow />
       <Container component="main" maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
-        <Box sx={{ marginTop: 6, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <Paper elevation={0} sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', color: '#fff', backdropFilter: 'blur(16px) saturate(130%)', WebkitBackdropFilter: 'blur(16px) saturate(130%)', backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.5)', boxShadow: '0 12px 40px rgba(0,0,0,0.25)' }}>
-            <Typography component="h1" variant="h4" sx={{ mb: 2, color: '#ffffff', textAlign: 'center' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Paper elevation={0} sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', color: '#fff', backdropFilter: 'blur(16px) saturate(130%)', WebkitBackdropFilter: 'blur(16px) saturate(130%)', backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.5)', boxShadow: '0 12px 40px rgba(0,0,0,0.25)', maxHeight: '90vh', overflowY: 'auto' }}>
+            <Typography component="h1" variant="h4" sx={{ mb: 1, color: '#ffffff', textAlign: 'center', fontSize: '1.75rem' }}>
               Sistemas de Informações CGLIC
             </Typography>
-            <Typography component="h2" variant="h5" sx={{ mb: 3, color: '#e9ecef', fontWeight: 700, letterSpacing: 0.3 }}>
+            <Typography component="h2" variant="h5" sx={{ mb: 2, color: '#e9ecef', fontWeight: 700, letterSpacing: 0.3, fontSize: '1.35rem' }}>
               Criar Nova Conta
             </Typography>
 

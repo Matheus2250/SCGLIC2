@@ -26,7 +26,7 @@ interface PostRegistrationQuestionnaireProps {
 
 interface AccessRequestData {
   trabalha_cglic: boolean;
-  nivel_solicitado?: string;
+  nivel_solicitado: string;
   justificativa?: string;
 }
 
@@ -92,15 +92,15 @@ const PostRegistrationQuestionnaire: React.FC<PostRegistrationQuestionnaireProps
 
   if (success) {
     return (
-      <Container component="main" maxWidth="sm">
-        <Box
-          sx={{
-            marginTop: 8,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
-        >
+      <Box sx={{ position: 'relative', height: '100vh', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
+        <Container component="main" maxWidth="sm">
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
+          >
           <Paper
             elevation={3}
             sx={{
@@ -123,30 +123,33 @@ const PostRegistrationQuestionnaire: React.FC<PostRegistrationQuestionnaireProps
           </Paper>
         </Box>
       </Container>
+      </Box>
     );
   }
 
   return (
-    <Container component="main" maxWidth="sm">
-      <Box
-        sx={{
-          marginTop: 4,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Paper
-          elevation={3}
+    <Box sx={{ position: 'relative', height: '100vh', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
+      <Container component="main" maxWidth="sm">
+        <Box
           sx={{
-            padding: 4,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            width: '100%',
           }}
         >
-          <Typography component="h1" variant="h4" sx={{ mb: 2, color: '#004085' }}>
+          <Paper
+            elevation={3}
+            sx={{
+              padding: 3,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              width: '100%',
+              maxHeight: '85vh',
+              overflowY: 'auto'
+            }}
+          >
+          <Typography component="h1" variant="h4" sx={{ mb: 1.5, color: '#004085', fontSize: '1.75rem' }}>
             Configuração de Acesso
           </Typography>
 
@@ -267,6 +270,7 @@ const PostRegistrationQuestionnaire: React.FC<PostRegistrationQuestionnaireProps
         </Paper>
       </Box>
     </Container>
+    </Box>
   );
 };
 
