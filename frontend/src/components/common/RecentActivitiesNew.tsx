@@ -30,24 +30,26 @@ const RecentActivitiesNew: React.FC = () => {
   }, []);
 
   return (
-    <Paper sx={{ p: 3, mt: 2 }}>
-      <Typography variant="h6" sx={{ mb: 1, fontWeight: 700 }}>Atividades Recentes</Typography>
+    <Paper sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Typography variant="h6" sx={{ mb: 1, fontWeight: 700, fontSize: '1.1rem', flexShrink: 0 }}>Atividades Recentes</Typography>
       {items === null ? (
         <Box>
           {[...Array(5)].map((_, i) => (<Skeleton key={i} height={36} />))}
         </Box>
       ) : (
-        <Box sx={{ maxHeight: 320, overflowY: 'auto', pr: 1 }}>
+        <Box sx={{ flexGrow: 1, overflowY: 'auto', pr: 1, minHeight: 0 }}>
           <List dense disablePadding>
             {items.length === 0 && (
               <Typography variant="body2" color="text.secondary">Nenhuma atividade encontrada.</Typography>
             )}
             {items.map((it, idx) => (
-              <ListItem key={idx} disableGutters>
+              <ListItem key={idx} disableGutters sx={{ py: 0.5 }}>
                 <ListItemIcon sx={{ minWidth: 36 }}>{iconFor(it.module, it.action)}</ListItemIcon>
                 <ListItemText
                   primary={`${it.user} ${it.action === 'created' ? 'criou' : it.action === 'updated' ? 'atualizou' : 'importou'} ${it.module}: ${it.title}`}
                   secondary={formatDistanceToNow(new Date(it.at), { addSuffix: true, locale: ptBR })}
+                  primaryTypographyProps={{ fontSize: '0.875rem' }}
+                  secondaryTypographyProps={{ fontSize: '0.75rem' }}
                 />
               </ListItem>
             ))}

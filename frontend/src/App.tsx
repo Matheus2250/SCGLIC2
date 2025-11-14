@@ -86,8 +86,10 @@ function App() {
                       sx={{
                         flexGrow: 1,
                         bgcolor: 'background.default',
-                        p: 3,
+                        p: 2.5,
                         mt: 8, // Account for AppBar height
+                        height: 'calc(100vh - 64px)',
+                        overflowY: 'auto',
                         overflowX: 'hidden',
                         transition: (theme) => theme.transitions.create(['margin'], {
                           easing: theme.transitions.easing.sharp,
