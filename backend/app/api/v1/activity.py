@@ -16,6 +16,10 @@ from app.models.pca import PCA
 from app.models.qualificacao import Qualificacao
 from app.models.licitacao import Licitacao
 from app.models.usuario import Usuario
+try:
+    from app.models.activity_event import ActivityEvent
+except Exception:
+    ActivityEvent = None
 
 router = APIRouter()
 
@@ -102,6 +106,30 @@ def recent_activities(limit: int = 20, db: Session = Depends(get_db)) -> List[di
                 "user": _user_name(getattr(l, "updater", None) or getattr(l, "creator", None)),
                 "at": l.updated_at,
             })
+
+    # Aggregated events (imports)
+    if ActivityEvent is not None:
+        try:
+            evs = (
+                db.query(ActivityEvent)
+                .order_by(ActivityEvent.at.desc())
+                .limit(limit)
+                .all()
+            )
+            for ev in evs:
+                items.append({
+                    "module": getattr(ev, "module", None) or "Sistema",
+                    "action": getattr(ev, "action", None) or "import",
+                    "title": getattr(ev, "title", None) or "",
+                    "user": _user_name(getattr(ev, "user", None)),
+                    "at": getattr(ev, "at", None),
+                })
+        except Exception:
+            try:
+                import traceback
+                print("[ACTIVITY EVENTS READ ERROR]", traceback.format_exc())
+            except Exception:
+                pass
 
     # Ordenar por data desc e limitar
     items.sort(key=lambda x: x.get("at") or datetime.min, reverse=True)

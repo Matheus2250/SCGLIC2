@@ -1,5 +1,5 @@
 import React from 'react';
-import RecentActivities from '../components/common/RecentActivities';
+import RecentActivities from '../components/common/RecentActivitiesNew';
 import { Box, Typography, Paper, Grid, Button } from '@mui/material';
 import { Assignment, CheckCircle, Gavel, Assessment } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';

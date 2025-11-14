@@ -537,7 +537,7 @@ async def import_pca_excel(
         # Commit das alterações
         db.commit()
         
-        return {
+        result_payload = {
             "success": True,
             "message": f"Importação concluída",
             "imported": imported,
@@ -545,6 +545,35 @@ async def import_pca_excel(
             "total": len(df),
             "errors": errors[:5] if errors else []  # Retornar apenas os 5 primeiros erros
         }
+
+        # Registrar evento agregado de importa��ǜo (best-effort)
+        try:
+            from app.models.activity_event import ActivityEvent  # lazy import
+            ev = ActivityEvent(
+                module="PCA",
+                action="import",
+                title=f"Importa��ǜo de PCA: {imported} novos, {updated} atualizados",
+                details={
+                    "imported": imported,
+                    "updated": updated,
+                    "total_rows": int(len(df)),
+                    "errors_count": int(len(errors) if errors else 0),
+                    "filename": file.filename,
+                    "source": "excel",
+                },
+                user_id=current_user.id,
+            )
+            db.add(ev)
+            db.commit()
+        except Exception:
+            # N�o bloquear fluxo se logging falhar
+            try:
+                import traceback
+                print("[IMPORT EXCEL EVENT LOGGING ERROR]", traceback.format_exc())
+            except Exception:
+                pass
+
+        return result_payload
         
     except pd.errors.EmptyDataError:
         raise HTTPException(
@@ -725,7 +754,7 @@ async def import_pca_csv(
         # Commit das alterações
         db.commit()
 
-        return {
+        result_payload = {
             "success": True,
             "message": f"Importação CSV concluída",
             "imported": imported,
@@ -733,6 +762,35 @@ async def import_pca_csv(
             "total": len(clean_data),
             "errors": errors[:5] if errors else []
         }
+
+        # Registrar evento agregado de importa��ǜo (best-effort)
+        try:
+            from app.models.activity_event import ActivityEvent  # lazy import
+            ev = ActivityEvent(
+                module="PCA",
+                action="import",
+                title=f"Importa��ǜo de PCA (CSV): {imported} novos, {updated} atualizados",
+                details={
+                    "imported": imported,
+                    "updated": updated,
+                    "total_rows": int(len(clean_data)),
+                    "errors_count": int(len(errors) if errors else 0),
+                    "filename": file.filename,
+                    "source": "csv",
+                },
+                user_id=current_user.id,
+            )
+            db.add(ev)
+            db.commit()
+        except Exception:
+            # N�o bloquear fluxo se logging falhar
+            try:
+                import traceback
+                print("[IMPORT CSV EVENT LOGGING ERROR]", traceback.format_exc())
+            except Exception:
+                pass
+
+        return result_payload
 
     except pd.errors.EmptyDataError:
         raise HTTPException(

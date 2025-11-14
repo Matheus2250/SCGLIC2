@@ -2,7 +2,7 @@
 
 export interface ActivityItem {
   module: string;
-  action: 'created'|'updated';
+  action: 'created' | 'updated' | 'import';
   title: string;
   user: string;
   at: string; // ISO
