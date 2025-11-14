@@ -1,6 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" fill="#004085"/>
-  <text x="50" y="50" font-family="Arial, sans-serif" font-size="40" font-weight="bold" text-anchor="middle" dominant-baseline="middle" fill="white">
-    SG
-  </text>
+  <!-- Background circle with gradient -->
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#004085;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0056b3;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <circle cx="50" cy="50" r="48" fill="url(#bgGrad)"/>
+  
+  <!-- Document/Clipboard icon -->
+  <rect x="28" y="18" width="44" height="58" rx="4" fill="#ffffff" stroke="#e9ecef" stroke-width="1"/>
+  <rect x="32" y="22" width="36" height="50" fill="#f5f6fa"/>
+  
+  <!-- Header bar -->
+  <rect x="32" y="22" width="36" height="8" fill="#004085"/>
+  
+  <!-- Checklist items with status colors -->
+  <!-- Item 1 - Success (verde) -->
+  <rect x="36" y="35" width="16" height="3" rx="1.5" fill="#28a745"/>
+  <circle cx="58" cy="36.5" r="2.5" fill="#28a745"/>
+  
+  <!-- Item 2 - Success (verde) -->
+  <rect x="36" y="43" width="16" height="3" rx="1.5" fill="#28a745"/>
+  <circle cx="58" cy="44.5" r="2.5" fill="#28a745"/>
+  
+  <!-- Item 3 - Warning (laranja) -->
+  <rect x="36" y="51" width="16" height="3" rx="1.5" fill="#fd7e14"/>
+  <circle cx="58" cy="52.5" r="2.5" fill="#fd7e14"/>
+  
+  <!-- Item 4 - Pending (cinza) -->
+  <rect x="36" y="59" width="16" height="3" rx="1.5" fill="#6c757d"/>
+  <circle cx="58" cy="60.5" r="2.5" fill="#6c757d" opacity="0.4"/>
+  
+  <!-- Small badge/seal accent -->
+  <circle cx="62" cy="66" r="6" fill="#28a745"/>
+  <path d="M 59 66 L 61 68 L 65 64" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
