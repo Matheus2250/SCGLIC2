@@ -64,30 +64,8 @@ const EstatisticasPlanejamento: React.FC = () => {
     return Array.from(map.entries()).map(([name, value]) => ({ name, value }));
   };
 
-  const datasets: Record<string, ChartDatum[]> = {
-    'Status (pizza)': [
-      { name: 'No Prazo', value: noPrazo },
-      { name: 'Atrasadas', value: atrasadas },
-      { name: 'Vencidas', value: vencidas },
-    ],
-    'Situação da Execução': groupCount(pcas, p => (p as any).situacao_execucao || 'Não iniciada', 'Não iniciada'),
-    'Categorias': groupCount(pcas, p => (p as any).categoria_contratacao || 'Não informada', 'Não informada'),
-    'Valores por Categoria': sumBy(
-      pcas,
-      p => (p as any).categoria_contratacao || 'Não informada',
-      p => typeof (p as any).valor_total === 'number' ? (p as any).valor_total : Number((p as any).valor_total || 0),
-      'Não informada'
-    ),
-    'Status da Contratação': groupCount(pcas, p => (p as any).status_contratacao || 'Não informado', 'Não informado'),
-  };
-
-  const defaults = [
-    { id: 'w1', title: 'Status das Contratações', type: 'pie' as const, dataset: 'Status (pizza)', md: 6 },
-    { id: 'w2', title: 'Situação da Execução', type: 'bar' as const, dataset: 'Situação da Execução', xKey: 'name', yKey: 'value', color: '#004085', md: 6 },
-    { id: 'w3', title: 'Contratações por Categoria', type: 'bar' as const, dataset: 'Categorias', xKey: 'name', yKey: 'value', color: '#28a745', md: 6 },
-    { id: 'w4', title: 'Valores por Categoria', type: 'bar' as const, dataset: 'Valores por Categoria', xKey: 'name', yKey: 'value', color: '#ffc107', md: 6 },
-    { id: 'w5', title: 'Status da Contratação', type: 'bar' as const, dataset: 'Status da Contratação', xKey: 'name', yKey: 'value', color: '#dc3545', md: 12 },
-  ];
+  // O DashboardBuilder busca os dados internamente e permite configuração interativa
+  // Os dados de statusData, situacaoExecucaoData, etc. são calculados aqui apenas para os cards de resumo
 
   if (loading) return <Typography>Carregando estatísticas...</Typography>;
   if (error) return <Alert severity="error">{error}</Alert>;
@@ -146,11 +124,13 @@ const EstatisticasPlanejamento: React.FC = () => {
       </Grid>
 
       <Box sx={{ mt: 2, mb: 4 }}>
-        <DashboardBuilder storageKey={'dash:planejamento'} datasets={datasets} defaults={defaults} />
+        <DashboardBuilder 
+          storageKey="dash:planejamento" 
+          selectedYear={selectedYear}
+        />
       </Box>
     </Box>
   );
 };
 
 export default EstatisticasPlanejamento;
-

@@ -25,6 +25,7 @@ export interface WidgetConfig {
 
 interface DashboardBuilderProps {
   storageKey: string;
+  selectedYear?: number; // NOVO: filtro de ano opcional
 }
 
 const fieldLabels: { label: string; key: keyof PCA | string }[] = [
@@ -157,7 +158,7 @@ const ChartRenderer: React.FC<{ cfg: WidgetConfig; data: any[]; seriesKeys?: str
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-const DashboardBuilder: React.FC<DashboardBuilderProps> = ({ storageKey }) => {
+const DashboardBuilder: React.FC<DashboardBuilderProps> = ({ storageKey, selectedYear }) => {
   const [widgets, setWidgets] = useState<WidgetConfig[]>([]);
   const [layouts, setLayouts] = useState<Layouts>({ lg: [] });
   const [open, setOpen] = useState(false);
@@ -171,21 +172,33 @@ const DashboardBuilder: React.FC<DashboardBuilderProps> = ({ storageKey }) => {
   const WIDGETS_KEY = `${KEY_BASE}:widgets`;
   const scope = React.useMemo(() => (storageKey.includes(':') ? storageKey.split(':').pop() as string : storageKey), [storageKey]);
 
+  // MODIFICADO: Buscar dados filtrados por ano
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const limit = 500; let skip = 0; let all: PCA[] = [];
-        for (let i = 0; i < 20; i++) {
-          const batch = await pcaService.getAll(skip, limit);
-          all = all.concat(batch || []);
-          if (!batch || batch.length < limit) break;
-          skip += limit;
+        if (selectedYear) {
+          // Se há ano selecionado, buscar apenas esse ano
+          const data = await pcaService.getAll(0, 10000, selectedYear);
+          setPca(Array.isArray(data) ? data : []);
+        } else {
+          // Se não há ano, buscar todos (comportamento original)
+          const limit = 500; 
+          let skip = 0; 
+          let all: PCA[] = [];
+          for (let i = 0; i < 20; i++) {
+            const batch = await pcaService.getAll(skip, limit);
+            all = all.concat(batch || []);
+            if (!batch || batch.length < limit) break;
+            skip += limit;
+          }
+          setPca(all);
         }
-        setPca(all);
-      } catch { setPca([]); }
+      } catch { 
+        setPca([]); 
+      }
     };
     fetchAll();
-  }, []);
+  }, [selectedYear]); // MODIFICADO: Observar mudanças no ano
 
   // Carregar do servidor (se disponível); fallback ao localStorage
   useEffect(() => {
@@ -268,7 +281,9 @@ const DashboardBuilder: React.FC<DashboardBuilderProps> = ({ storageKey }) => {
   return (
     <Box>
       <Box sx={{ display:'flex', justifyContent:'space-between', alignItems:'center', mb:2 }}>
-        <Typography variant="h6">Seu painel</Typography>
+        <Typography variant="h6">
+          Seu painel {selectedYear ? `(${selectedYear})` : ''}
+        </Typography>
         <Button startIcon={<Add />} variant="contained" onClick={handleAdd}>Adicionar gráfico</Button>
       </Box>
       <ResponsiveGridLayout className="layout" layouts={layouts} cols={{ lg: 12, md: 12, sm: 12, xs: 6, xxs: 4 }} rowHeight={40} breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }} onLayoutChange={(current, all) => persist(widgets, all as any)} isDraggable isResizable>
