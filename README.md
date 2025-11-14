@@ -1,4 +1,4 @@
-# Sistema de Gestão de Contratações Públicas (SCGLIC2)
+# Sistema de Gestão de Contratações Públicas
 
 ## Visão Geral
 
